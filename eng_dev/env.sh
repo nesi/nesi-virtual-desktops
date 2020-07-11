@@ -1,0 +1,77 @@
+# Licences
+shared_apps_normal=( "COMSOL" )
+for app in "${shared_apps_normal[@]}";do
+    export SINGULARITY_BINDPATH="$SINGULARITY_BINDPATH,/opt/nesi/share/${app}"
+    licence_dir="/opt/nesi/share/${app}/Licenses/*"
+    name_of_var="SINGULARITYENV_${app}LM_LICENSE_FILE"
+    found="0"
+    for licence in  $licence_dir;do
+        if [ "${licence: -4}" == ".lic" ]; then
+            if [ -r "$licence" ];then
+                export "$(echo ${name_of_var})=${licence}"
+                found="1"
+                export FOUND_LIC="${FOUND_LIC}${app}, "
+            fi
+        fi
+    done
+    if [ "${found}" != "1" ]; then
+        echo "No valid licence found for $app. :("
+    fi
+done
+# Special Snowflakes
+#ANSYS
+# Slightly different file sytax.
+# LMD rather than LM
+licence_dir="/opt/nesi/share/ANSYS/Licenses/*"
+export SINGULARITY_BINDPATH="$SINGULARITY_BINDPATH,/opt/nesi/share/ANSYS"
+found="0"
+for licence in $licence_dir; do
+    if [ "${licence: -4}" == ".lic" ]; then
+        if [ -r "$licence" ]; then
+            export SINGULARITYENV_ANSYSLMD_LICENSE_FILE="$(sed -ne 's/^SERVER=// p'  $licence)"
+            export SINGULARITYENV_ANSOFTD_LICENSE_FILE="$(sed -ne 's/^SERVER=// p' $licence)"
+            found="1"
+            export FOUND_LIC="${FOUND_LIC}ANSYS, "
+        fi
+    fi
+done
+if [ "${found}" != "1" ]; then
+    echo "No valid licence found for ANSYS. :("
+fi
+# ABAQUS
+# Has to have an '@' symbol for some reason.
+licence_dir="/opt/nesi/share/ABAQUS/Licenses/*"
+export SINGULARITY_BINDPATH="$SINGULARITY_BINDPATH,/opt/nesi/share/ABAQUS"
+found="0"
+for licence in  $licence_dir; do
+    if [ "${licence: -4}" == ".lic" ]; then
+        if [ -r "$licence" ];then
+            export "SINGULARITYENV_ABAQUSLM_LICENSE_FILE=@$(awk '{print $2}' $licence)"
+            found="1"
+            export FOUND_LIC="${FOUND_LIC}ABAQUS, "
+        fi
+    fi
+done
+if [ "${found}" != "1" ]; then
+    echo "No valid licence found for ABAQUS. :("
+fi
+    licence_dir="/opt/nesi/share/MATLAB/Licenses/*"
+export SINGULARITY_BINDPATH="$SINGULARITY_BINDPATH,/opt/nesi/share/MATLAB"
+found="0"
+for licence in $licence_dir; do
+    if [ "${licence: -4}" == ".lic" ]; then
+        if [ -r "$licence" ]; then
+            export SINGULARITYENV_MLM_LICENSE_FILE=$licence
+            found="1"
+            export FOUND_LIC="${FOUND_LIC}MATLAB, "
+        fi
+    fi
+done
+if [ "${found}" != "1" ]; then
+    echo "No valid licence found for MATLAB. :("
+fi
+if [ ! -z "$FOUND_LIC" ]; then
+    echo "Valid licence files found for ${FOUND_LIC}"
+fi
+
+vecho $SINGULARITY_BINDPATH

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Terminal Emulator
+Comment=Use the command line
+Exec=/bin/gnome-terminal
+Icon=utilities-terminal
+Path=
+Terminal=false
+StartupNotify=true

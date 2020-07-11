@@ -1,0 +1,343 @@
+#!/bin/bash -e
+
+# Provides simple inteface for setting up VNC sessions, connecting, hosting noVNC etc etc.
+# Author: Callum
+
+
+
+# TODO
+# Add filesystem shortcuts to desktop
+module unload XALT/NeSI
+
+module load Singularity
+
+#Location of this script
+ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+XDG_HOME="$HOME/.nesi_vdt"
+
+SIF_DIR="$(dirname $(dirname $(realpath $0)))/sif/centos"
+SIF_NAME="turbo_xfce_centos"
+
+TEMP_HOME="$(dirname $(dirname $(realpath $0)))/dt_config/eng"
+
+# Where files are saved in user home.
+
+# Name of singularity instance.
+INSTANCE_NAME="TEST_INSTANCE"
+
+cleanup_graceful() {
+    # Run this when dying.
+    if [[ ! $PERSISTENT ]]; then
+        if [[ $DISPLAY_PORT ]]; then
+            singularity exec instance://$INSTANCE_NAME vncserver -kill :${DISPLAY_PORT}
+            singularity instance stop $INSTANCE_NAME > /dev/null 2>&1
+            printf "bye. :(\n"
+        fi
+    else
+        printf "Virtual Desktop/s has not been killed. Run the '$(basename $0)' command again to manage connections.\n"
+    fi
+    exit 0
+}
+
+help() {
+cat << EndOfHelp
+[1m$CWD[0m
+
+[1mSYNOPSIS[0m
+        $CWD [-h -P -n -v] [-j jobid] [port]
+
+[1mDESCRIPTION[0m
+        Starts a VGL enabled virtual desktop and sets up noVNC server.
+
+[1mPARAMETERS[0m
+
+    -h --help               This is help.
+
+    -p --persistent         Don't kill the virtual desktop on closing connection.
+
+    -n --nosocket           Start the virtual desktop without the websocket.
+
+    -c --clean              Overwrite User desktop settings.
+
+    -j --jobid [jobid]      Forward connection to host of [jobid]
+
+    -l --host [hostname]    Forward connection to [hostname]
+
+    -v --verbose
+
+EndOfHelp
+    exit 0
+}
+
+parse_input() {
+
+    # If desktop named. Use. Else default.
+    if $(ls $ROOT/$1 > /dev/null);then
+        export DESKTOP="$(echo $1 | tr -d /)"
+        vecho "selected desktop '$DESKTOP'"
+        shift
+    else
+        DESKTOP="default"
+    fi
+
+    # Parse flags + port
+    while [[ $# -gt 0 ]];do
+        case $1 in
+            -v|--verbose)
+                export VERBOSE="true"
+                export v="-v"
+                #set -x
+                shift
+            ;;
+            -p|--persistent)
+                export PERSISTENT="true"
+                shift
+            ;;
+            -n|--nosocket)
+                export NOSOCKET="true"
+                shift
+            ;;
+            -c|--clean)
+                export CLEAN="true"
+                shift
+            ;;
+            -h|--help)
+                help $0
+                exit 0
+            ;;
+            -j|--jobid)
+                export CONNECT_JOBID="$2"
+                shift
+                shift
+            ;;
+            -f|--forward)
+                export CONNECT_HOSTNAME="$2"
+                shift
+                shift
+            ;;
+            [0-9]*)
+                if [[ $# -lt 2 ]]; then
+                    export INBOUND_PORT=$1
+                    break
+                fi
+                ;&
+                *)
+                    printf "Unknown option '${1}', -h for help.\n"
+                    shift
+                ;;
+        esac
+    done
+    # Get 'environmental inputs'.
+    # If no jobid specified, but launched from env with SLURM env set. Go there.
+    if [[ -z "$CONNECT_JOBID" && ! -z "$SLURM_JOB_ID" ]]; then
+        printf "'SLURM_JOB_ID' set. Connection will be forwarded to job $SLURM_JOB_ID.\n"
+        export CONNECT_JOBID="$SLURM_JOB_ID"
+    fi
+    
+    # If no port given, can't make socket.
+    if [ -z "$INBOUND_PORT" ]; then
+        export NOSOCKET="true"    
+    fi
+}
+
+forward(){
+    # If jobid is specified, but no host.
+    if [[ ! -z "$CONNECT_JOBID" ]] && [[ -z "$DESITINATION_HOST" ]]; then #If jobid given.                    
+        while true;do
+            sqout=$(squeue -h -u $USER -j $CONNECT_JOBID -O "State,NodeList")
+            vecho $sqout
+            jobstate=$(echo $sqout | awk '{print $1}')
+            export DESITINATION_HOST=$(echo $sqout | awk '{print $2}')    
+            if [[ $jobstate=="R" ]]; then
+                printf "Forwarding connection to $DESITINATION_HOST\n"
+                break
+            elif [[ $jobstate=="P" ]]; then
+                printf "'$CONNECT_JOBID' is pending. Will try again in 5/s\r"
+            else
+                printf "'$CONNECT_JOBID' is not a valid slurm session to connect to.\n"
+                return 1
+            fi
+        done
+    fi
+
+    vecho "DESITINATION_HOST: $DESITINATION_HOST"
+    vecho "CURRENT_HOST: $HOSTNAME"
+
+    if [[ ! -z "$DESITINATION_HOST" ]] && [[ ! "$DESITINATION_HOST" = $HOSTNAME ]]; then
+        vex "ssh -L $INBOUND_PORT:localhost:$INBOUND_PORT $DESITINATION_HOST $0 $INBOUND_PORT" 
+        exit 0        
+    fi
+}
+
+set_env(){      
+    # clear existing if exists.
+    if [[ $CLEAN ]];then
+        vecho "Clearing cache"
+        rm -rI $XDG_HOME/$DESKTOP
+    fi
+
+    # Copy template for desktop, if not exist.
+    #if [[ ! -d "$XDG_HOME/$DESKTOP" ]]; then
+    #echo "ls -d "$ROOT/$DESKTOP/*/" "$ROOT/default/*/""
+    mkdir ${v} -p $XDG_HOME/$DESKTOP
+    for DIR in  $(ls -d $ROOT/$DESKTOP/*/ $ROOT/default/*/) ; do
+        cp ${v} -rn $DIR "$XDG_HOME/$DESKTOP"
+    done
+
+    # Cache
+    export SINGULARITYENV_XDG_CONFIG_HOME="$XDG_HOME/$DESKTOP/config"
+    export SINGULARITYENV_XDG_CACHE_HOME="$XDG_HOME/$DESKTOP/cache"
+
+    # Bindpaths
+    # DONT ADD EXISTING BINDPATH. XALT IS UNWELCOME
+    export SINGULARITY_BINDPATH="/opt/slurm,$XDG_HOME/$DESKTOP/Desktop:$HOME/Desktop,/scale_wlg_persistent/filesets/project,/scale_wlg_nobackup/filesets/nobackup"
+
+    # env
+    export SINGULARITYENV_INBOUND_PORT=$INBOUND_PORT
+    
+    # If environment setup for desktop flavor.
+    if [[ -f "$ROOT/$DESKTOP/env.sh" ]];then
+        vex source $ROOT/$DESKTOP/env.sh
+    fi
+}
+
+create_vnc(){
+    printf "Creating new session...";
+    DISPLAY_PORT=$(shuf -i 1100-2000 -n 1) #Randomy generate port number. Add lockfiles later.
+    SOCKET_PORT=$((DISPLAY_PORT+5900))
+    singularity exec instance://$INSTANCE_NAME vncserver -wm startxfce4 -geometry 1920x1080 -securitytypes TLSNone,X509None,None ":${DISPLAY_PORT}"
+    
+    if [[ $NOSOCKET ]]; then
+        printf "Websocket will not be created. Connect to this desktop using the $(basename $0) command, or using a VNC client to connect to http://localhost:$SOCKET_PORT (through a forwarded port).\n"
+    fi
+}
+adopt_slurm(){
+    OPT_COUNT_SQUEUE="0"
+    OUTPUT=${MENU_HEAD}
+    while true; do
+        PROMPT="[yo]"
+        for SQUEUE in $(squeue -h -u $USER -O "Jobid,State,NodeList"); do
+            OUTPUT="$OUTPUT\n\t${OPT_COUNT_SQUEUE}${SQUEUE}"
+            OPT_COUNT_SQUEUE=$((OPT_COUNT_SQUEUE + 1))
+            echo "hey"
+        done
+        printf "$OUTPUT\n\tq)"
+        read -p "$PROMPT: " reply
+    done
+}
+
+quit(){
+    printf "bye. :(\n"
+    exit 0
+}
+
+kill_vnc(){
+    # Get appropriate display number
+    REPLY_DIV2="$(($reply / 2))"
+    vecho "Input number: $REPLY_DIV2"
+
+    SELECTED_SOCKET="${VNC_LIST[$REPLY_DIV2]}"
+    vecho " VNC list: $VNC_LIST"
+    vecho "Selected Socket: $SELECTED_SOCKET"
+    DISPLAY_PORT=$(echo $SELECTED_SOCKET | awk -F[:,] '{print $2}')
+    singularity run --app kill instance://$INSTANCE_NAME ${DISPLAY_PORT}
+}
+
+connect_vnc(){
+    if [[ -z "$DISPLAY_PORT" ]]; then # If not fallthough (existing connection)
+        SELECTED_SOCKET="${VNC_LIST[$reply]}"
+        DISPLAY_PORT=$(echo $SELECTED_SOCKET | awk -F[:,] '{print $2}')
+        SOCKET_PORT=$((DISPLAY_PORT+5900))
+    fi
+    singularity run --app connect instance://$INSTANCE_NAME $INBOUND_PORT $SOCKET_PORT
+}
+
+start_container(){
+    vecho "Bind path: $SINGULARITY_BINDPATH"
+    # This way the same singularity container is always used.
+    vecho $((singularity ${v} instance start --cleanenv "$(readlink -f "$ROOT/$DESKTOP/image")" $INSTANCE_NAME) 2>&1) 
+}
+
+menu(){
+    # Genrate Menu Header
+    
+    # Track number of options.
+    OPT_COUNT="0"
+    MENU_HEAD="${MENU_HEAD}\nHost:          ${HOSTNAME}"
+    MENU_HEAD="${MENU_HEAD}\nDesktop:       ${DESKTOP}"
+    MENU_HEAD="${MENU_HEAD}\nPersistent:    ${PERSISTENT:-"false (Desktop will be closed when you end this session)."}"
+    MENU_HEAD="${MENU_HEAD}\nInbound Port:  ${INBOUND_PORT:-"false. (Connect with VNC or run this command again with a port number)."}"
+    
+    MENU_HEAD="${MENU_HEAD}\n\nWhat would you like to do\?\n" 
+
+    # Add a new desktop.
+    OUTPUT="${MENU_HEAD}\n\tn) New desktop."
+    
+    # This could be done a tidier way...
+    # Arrays containing numbers associated with kill/connect.
+    CONNECT_VALID=""
+    KILL_VALID=""
+
+    # Get list of open VNC sessions.
+    VNC_LIST=( $(singularity run --app vnclist instance://$INSTANCE_NAME | tail -n+5 | tr -s '[:blank:]' ',' | tr -s '\n' ' ') )
+    #VNC_LIST
+    vecho "${VNC_LIST[@]}"
+    
+    # Print options for connecting to desktops.
+    for SESSION in ${VNC_LIST[@]} ; do
+        OUTPUT="${OUTPUT}\n\t${OPT_COUNT}) Connect to '$SESSION'"
+        CONNECT_VALID="$CONNECT_VALID $OPT_COUNT"
+        OPT_COUNT=$((OPT_COUNT + 1))
+    done
+    
+    # Print options for killing sessions.
+    for SESSION in ${VNC_LIST[@]} ; do
+        OUTPUT="${OUTPUT}\n\t${OPT_COUNT}) Kill '$SESSION'"
+        KILL_VALID="$KILL_VALID $OPT_COUNT"     
+        OPT_COUNT=$((OPT_COUNT + 1))
+    done
+    
+    # Print the damn thing.
+    printf "${OUTPUT}\n\ta) Adopt a SLURM session.\n\tq) Quit\n"
+    
+    # Main menu loop. Using functions for tidyness.
+    while true; do
+        PROMPT="[n/q/a$(echo "$CONNECT_VALID" | tr " " /)$(echo "$KILL_VALID" | tr " " /)]"
+        read -p "$PROMPT: " reply
+        case $reply in
+            n)                      create_vnc;& # Fallthough.
+            ["$CONNECT_VALID[@]"])  connect_vnc;;
+            ["$KILL_VALID[@]"])     kill_vnc;;
+            a)                      adopt_slurm;;
+            q)                      quit;; 
+            * )                     printf "Please answer $PROMPT\n";;
+        esac
+    done
+}
+
+vecho () {
+    # For verbose print.
+    if [[ $VERBOSE ]]; then
+        echo "$@"
+    fi
+}
+
+vex () {
+    # Verbose execute.
+    vecho "$@"
+    $@
+}
+
+main() {
+
+    parse_input "$@"
+    forward
+    set_env
+    start_container
+    menu
+}
+trap "cleanup_graceful" 0 #EXIT SIGHUP HUP INT
+
+main "$@"
+

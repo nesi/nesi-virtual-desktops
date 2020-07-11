@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Firefox
+Comment=
+Exec=/opt/firefox/firefox/firefox
+Icon=/opt/firefox/firefox/icons/mozicon128.png
+Path=
+Terminal=true
+StartupNotify=false
