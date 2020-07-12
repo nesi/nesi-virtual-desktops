@@ -15,6 +15,9 @@ module load Singularity
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 XDG_HOME="$HOME/.nesi_vdt"
+WEBSOCKIFY_HOME="$(dirname $ROOT)/websockify_modified"
+NOVNC_HOME="$(dirname $ROOT)/noVNC_modified"
+
 
 SIF_DIR="$(dirname $(dirname $(realpath $0)))/sif/centos"
 SIF_NAME="turbo_xfce_centos"
@@ -27,7 +30,7 @@ TEMP_HOME="$(dirname $(dirname $(realpath $0)))/dt_config/eng"
 INSTANCE_NAME="TEST_INSTANCE"
 
 cleanup_graceful() {
-    # Run this when dying.
+     # Run this when dying.
     if [[ ! $PERSISTENT ]]; then
         if [[ $DISPLAY_PORT ]]; then
             singularity exec instance://$INSTANCE_NAME vncserver -kill :${DISPLAY_PORT}
@@ -37,6 +40,7 @@ cleanup_graceful() {
     else
         printf "Virtual Desktop/s has not been killed. Run the '$(basename $0)' command again to manage connections.\n"
     fi
+    printf "bye. :(\n"
     exit 0
 }
 
@@ -174,7 +178,7 @@ set_env(){
     # clear existing if exists.
     if [[ $CLEAN ]];then
         vecho "Clearing cache"
-        rm -rI $XDG_HOME/$DESKTOP
+        rm -vrI $XDG_HOME/$DESKTOP
     fi
 
     # Copy template for desktop, if not exist.
@@ -242,6 +246,7 @@ kill_vnc(){
     vecho "Selected Socket: $SELECTED_SOCKET"
     DISPLAY_PORT=$(echo $SELECTED_SOCKET | awk -F[:,] '{print $2}')
     singularity run --app kill instance://$INSTANCE_NAME ${DISPLAY_PORT}
+    menu && exit 0
 }
 
 connect_vnc(){
@@ -250,7 +255,9 @@ connect_vnc(){
         DISPLAY_PORT=$(echo $SELECTED_SOCKET | awk -F[:,] '{print $2}')
         SOCKET_PORT=$((DISPLAY_PORT+5900))
     fi
-    singularity run --app connect instance://$INSTANCE_NAME $INBOUND_PORT $SOCKET_PORT
+    # Might be better way to do this. Socket made outside of main container.
+    # $WEBSOCKIFY_HOME/run --web $NOVNC_HOME $INBOUND_PORT $HOSTNAME:$SOCKET_PORT
+    singularity ${v} exec --cleanenv "$(readlink -f "$ROOT/$DESKTOP/image")" /opt/websockify/run --web /opt/noVNC/ $INBOUND_PORT $HOSTNAME:$SOCKET_PORT
 }
 
 start_container(){
