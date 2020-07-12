@@ -184,7 +184,7 @@ set_env(){
     # Copy template for desktop, if not exist.
     #if [[ ! -d "$XDG_HOME/$DESKTOP" ]]; then
     #echo "ls -d "$ROOT/$DESKTOP/*/" "$ROOT/default/*/""
-    mkdir ${v} -p $XDG_HOME/$DESKTOP
+    mkdir ${v} -p "$XDG_HOME/$DESKTOP/Desktop"
     for DIR in  $(ls -d $ROOT/$DESKTOP/*/ $ROOT/default/*/) ; do
         cp ${v} -rn $DIR "$XDG_HOME/$DESKTOP"
     done
