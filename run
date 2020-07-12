@@ -8,21 +8,22 @@
 # TODO
 # Add filesystem shortcuts to desktop
 module unload XALT/NeSI
-
 module load Singularity
 
 #Location of this script
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
 
 XDG_HOME="$HOME/.nesi_vdt"
 WEBSOCKIFY_HOME="$(dirname $ROOT)/websockify_modified"
 NOVNC_HOME="$(dirname $ROOT)/noVNC_modified"
 
 
-SIF_DIR="$(dirname $(dirname $(realpath $0)))/sif/centos"
+SIF_DIR="$(dirname $ROOT)/containers/images"
 SIF_NAME="turbo_xfce_centos"
 
-TEMP_HOME="$(dirname $(dirname $(realpath $0)))/dt_config/eng"
+
+#TEMP_HOME="$(dirname $(dirname $(realpath $0)))/dt_config/eng"
 
 # Where files are saved in user home.
 
@@ -175,6 +176,10 @@ forward(){
 }
 
 set_env(){      
+     
+    vecho "This script is in $ROOT"
+    vecho "Available SIFs $(ls $SIF_DIR)"
+
     # clear existing if exists.
     if [[ $CLEAN ]];then
         vecho "Clearing cache"
