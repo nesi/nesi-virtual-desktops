@@ -13,10 +13,11 @@ module load Singularity
 #Location of this script
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
+stat $0
 
 XDG_HOME="$HOME/.nesi_vdt"
-WEBSOCKIFY_HOME="$(dirname $ROOT)/websockify_modified"
-NOVNC_HOME="$(dirname $ROOT)/noVNC_modified"
+WEBSOCKIFY_HOME="$ROOT/websockify_modified"
+NOVNC_HOME="$ROOT/noVNC_modified"
 
 
 SIF_DIR="$(dirname $ROOT)/containers/images"
@@ -28,18 +29,20 @@ SIF_NAME="turbo_xfce_centos"
 # Where files are saved in user home.
 
 # Name of singularity instance.
-INSTANCE_NAME="TEST_INSTANCE"
+PERSISTENT_INSTANCE_NAME="PERSISTENT_SINGULARITY"
+EPHEMERAL_INSTANCE_NAME="EPHEMERAL_SINGULARITY"
+
 
 cleanup_graceful() {
      # Run this when dying.
     if [[ ! $PERSISTENT ]]; then
         if [[ $DISPLAY_PORT ]]; then
-            singularity exec instance://$INSTANCE_NAME vncserver -kill :${DISPLAY_PORT}
-            singularity instance stop $INSTANCE_NAME > /dev/null 2>&1
+            singularity exec instance://$EPHEMERAL_INSTANCE_NAME vncserver -kill :${DISPLAY_PORT}
+            singularity instance stop $EPHEMERAL_INSTANCE_NAME > /dev/null 2>&1
             printf "bye. :(\n"
         fi
     else
-        printf "Virtual Desktop/s has not been killed. Run the '$(basename $0)' command again to manage connections.\n"
+        printf "Desktops will persist in the background. Run '$(basename $0)' again to manage connections.\n"
     fi
     printf "bye. :(\n"
     exit 0
@@ -85,6 +88,8 @@ parse_input() {
     else
         DESKTOP="default"
     fi
+
+
 
     # Parse flags + port
     while [[ $# -gt 0 ]];do
@@ -180,16 +185,20 @@ set_env(){
     vecho "This script is in $ROOT"
     vecho "Available SIFs $(ls $SIF_DIR)"
 
-    # clear existing if exists.
+    # If clean flag exists remove cache.
     if [[ $CLEAN ]];then
         vecho "Clearing cache"
         rm -vrI $XDG_HOME/$DESKTOP
     fi
 
+    # Set 
+
+
     # Copy template for desktop, if not exist.
     #if [[ ! -d "$XDG_HOME/$DESKTOP" ]]; then
     #echo "ls -d "$ROOT/$DESKTOP/*/" "$ROOT/default/*/""
     mkdir ${v} -p "$XDG_HOME/$DESKTOP/Desktop"
+
     for DIR in  $(ls -d $ROOT/$DESKTOP/*/ $ROOT/default/*/) ; do
         cp ${v} -rn $DIR "$XDG_HOME/$DESKTOP"
     done
@@ -200,7 +209,7 @@ set_env(){
 
     # Bindpaths
     # DONT ADD EXISTING BINDPATH. XALT IS UNWELCOME
-    export SINGULARITY_BINDPATH="/opt/slurm,$XDG_HOME/$DESKTOP/Desktop:$HOME/Desktop,/scale_wlg_persistent/filesets/project,/scale_wlg_nobackup/filesets/nobackup"
+    export SINGULARITY_BINDPATH="/opt/slurm,$XDG_HOME/$DESKTOP/Desktop:$HOME/Desktop,/scale_wlg_persistent/filesets/project,/scale_wlg_nobackup/filesets/nobackup,$ROOT"
 
     # env
     export SINGULARITYENV_INBOUND_PORT=$INBOUND_PORT
@@ -221,6 +230,7 @@ create_vnc(){
         printf "Websocket will not be created. Connect to this desktop using the $(basename $0) command, or using a VNC client to connect to http://localhost:$SOCKET_PORT (through a forwarded port).\n"
     fi
 }
+
 adopt_slurm(){
     OPT_COUNT_SQUEUE="0"
     OUTPUT=${MENU_HEAD}
@@ -237,7 +247,6 @@ adopt_slurm(){
 }
 
 quit(){
-    printf "bye. :(\n"
     exit 0
 }
 
@@ -250,8 +259,9 @@ kill_vnc(){
     vecho " VNC list: $VNC_LIST"
     vecho "Selected Socket: $SELECTED_SOCKET"
     DISPLAY_PORT=$(echo $SELECTED_SOCKET | awk -F[:,] '{print $2}')
-    singularity run --app kill instance://$INSTANCE_NAME ${DISPLAY_PORT}
-    menu && exit 0
+    singularity exec instance://$INSTANCE_NAME vncserver -kill :${DISPLAY_PORT}
+    menu 
+    exit 0
 }
 
 connect_vnc(){
@@ -260,13 +270,29 @@ connect_vnc(){
         DISPLAY_PORT=$(echo $SELECTED_SOCKET | awk -F[:,] '{print $2}')
         SOCKET_PORT=$((DISPLAY_PORT+5900))
     fi
+
+    # If something else using port. Kill it.
+    # kill -9 $(ps -o ppid= $(fuser $INBOUND_PORT/tcp 2>/dev/null | awk '{ print $1 }'))
+
+    # Too much kill
+    # kill -9 $(ps -o ppid= $(fuser $INBOUND_PORT/tcp 2>/dev/null | awk '{ print $1 }'))
+
     # Might be better way to do this. Socket made outside of main container.
-    # $WEBSOCKIFY_HOME/run --web $NOVNC_HOME $INBOUND_PORT $HOSTNAME:$SOCKET_PORT
-    singularity ${v} exec --cleanenv "$(readlink -f "$ROOT/$DESKTOP/image")" /opt/websockify/run --web /opt/noVNC/ $INBOUND_PORT $HOSTNAME:$SOCKET_PORT
+    $WEBSOCKIFY_HOME/run --web $NOVNC_HOME $INBOUND_PORT localhost:$SOCKET_PORT
+    #singularity ${v} exec --cleanenv "$(readlink -f "$ROOT/$DESKTOP/image")" /opt/websockify/run --web /opt/noVNC/ $INBOUND_PORT localhost:$SOCKET_PORT
 }
 
 start_container(){
     vecho "Bind path: $SINGULARITY_BINDPATH"
+
+    # Set instance name
+    # If given persist name. Won't be killed on exit.
+    if [[ "$PERSISTENT" ]];then
+        export INSTANCE_NAME=$PERSISTENT_INSTANCE_NAME
+    else
+        export INSTANCE_NAME=$EPHEMERAL_INSTANCE_NAME
+    fi
+
     # This way the same singularity container is always used.
     vecho $((singularity ${v} instance start --cleanenv "$(readlink -f "$ROOT/$DESKTOP/image")" $INSTANCE_NAME) 2>&1) 
 }
