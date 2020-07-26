@@ -1,0 +1,143 @@
+#!/bin/bash -e
+
+# Command for starting 'virtual desktop'. A VNC server running inside a container with XFCE with pre-made config/cache.
+# Author: Callum
+# https://github.com/nesi/nesi-virtual-desktops
+
+
+# TODO: Add filesystem shortcuts to desktop.
+
+help() {
+cat << EndOfHelp
+[1m$CWD[0m
+
+[1mSYNOPSIS[0m
+        $CWD [-h -c -v] [ template ] [ socket ]
+
+[1mDESCRIPTION[0m
+        Starts a VGL enabled virtual desktop.
+
+[1mPARAMETERS[0m
+
+    -h --help               This is help.
+
+    -c --clean              Overwrite User desktop settings.
+
+    -v --verbose
+
+EndOfHelp
+}
+
+parse_input() {
+    if [[ $# -lt 2 ]];then
+        if [[ $1 == "-h"  ]] || [[ $1 == "--help" ]];then
+            help "$0"
+            exit 0
+        fi
+        echo "Not enough arguments, -h for help."  >&2
+        exit 1
+    fi     
+    # Parse flags + port
+    while [[ $# -gt 2 ]];do
+        case $1 in
+            -v|--verbose)
+                verbose="true"
+                v="-v"
+                #set -x
+                shift
+            ;;
+            -c|--clean)
+                clean="true"
+                shift
+            ;;
+            -h|--help)
+                help "$0"
+                shift
+            ;;
+            *)
+                echo $@
+                echo "Unknown option '${1}', -h for help."  >&2
+                exit 1
+            ;;
+        esac
+    done
+
+    desktop="$1"
+    socket_port="$2"
+}
+
+set_env(){
+
+    module load Singularity
+    module unload XALT/NeSI
+
+    root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"    # Location of this script 
+    xdg_home="$HOME/.nesi_vdt"                                                  # Location to save in home directory.  
+    instance_name="${desktop}_${socket_port}"
+
+    vecho "This script is in $root"
+    
+    # If clean flag exists remove cache.
+    if [[ $clean ]];then
+        vecho "Clearing cache"
+        rm -rf ${v} "${xdg_home:?}/${desktop}"
+    fi
+ 
+    # Set
+    # groups $USER | tr ' ' '\n' | tail -n +3 | grep -v -- - | grep -v $USER
+    # Copy template for desktop, if not exist.
+    #if [[ ! -d "$xdg_home/$desktop" ]]; then
+    #echo "ls -d "$root/$desktop/*/" "$root/default/*/""
+
+    #mkdir ${v} -p "${xdg_home}/${desktop}/Desktop"
+    
+    for dir in  "${root}"/"${desktop}"/*/ ; do
+        cp ${v} -rn "$dir" "$xdg_home/$desktop"
+    done
+    
+    for dir in  "${root}"/default/*/ ; do
+        cp ${v} -rn "$dir" "$xdg_home/$desktop"
+    done
+
+    # Environment Variables
+    export SINGULARITYENV_XDG_CONFIG_HOME="$xdg_home/$desktop/config"
+    export SINGULARITYENV_XDG_CACHE_HOME="$xdg_home/$desktop/cache"
+    export SINGULARITYENV_INBOUND_PORT=$INBOUND_PORT
+
+    # Bindpaths
+    # DONT ADD EXISTING BINDPATH. XALT IS UNWELCOME
+    export SINGULARITY_BINDPATH="/opt/slurm,$xdg_home/$desktop/:$HOME,/scale_wlg_persistent/filesets/project,/scale_wlg_nobackup/filesets/nobackup"
+    
+    # If environment setup for desktop flavor.
+    if [[ -f "${root}/${desktop}/env.sh" ]];then
+        source "${root}/${desktop}/env.sh"
+    fi
+}
+
+create_vnc(){    
+
+    #Randomy generate port number. Add lockfiles later.
+
+    # Set instance name
+    # If given persist name. Won't be killed on exit.
+    vecho "Singularity bindpath is $(echo "${SINGULARITY_BINDPATH}" | tr , '\n')"
+    # This way the same singularity container is always used.
+    singularity ${v} instance start -C --cleanenv "$(readlink -f "$root/$desktop/image")" "${instance_name}"
+    singularity ${v} exec "instance://${instance_name}" vncserver -wm startxfce4 -geometry 1920x1080 -securitytypes TLSNone,X509None,None :$((socket_port-5900))
+}
+
+vecho () {
+    # For verbose print.
+    if [[ $verbose ]]; then
+        echo "$@"
+    fi
+}
+
+main() {
+    parse_input "$@"
+    set_env
+    create_vnc
+}
+
+main "$@"
+

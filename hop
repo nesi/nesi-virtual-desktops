@@ -15,7 +15,7 @@ unset LD_PRELOAD
 
 #Location of this script
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-#ROOT="$( dirname "${0}")"
+
 echo "$@"
 
 XDG_HOME="$HOME/.nesi_vdt"
@@ -90,7 +90,7 @@ parse_input() {
     while [[ $# -gt 0 ]];do
         case $1 in
             -v|--verbose)
-                export VERBOSE="-v"
+                export VERBOSE="true"
                 export v="-v"
                 #set -x
                 shift
@@ -105,7 +105,7 @@ parse_input() {
                 shift
             ;;
             -c|--clean)
-                export CLEAN="-c"
+                export CLEAN="true"
                 shift
             ;;
             -h|--help)
@@ -183,26 +183,66 @@ forward(){
     fi
 }
 
-create_vnc(){
+set_env(){
+    
     vecho "This script is in $ROOT"
-    vecho "Bind path: $SINGULARITY_BINDPATH"
     vecho "Available SIFs $(ls $SIF_DIR)"
+    
+    # If clean flag exists remove cache.
+    if [[ $CLEAN ]];then
+        vecho "Clearing cache"
+        rm -vrI $XDG_HOME/$DESKTOP
+    fi
+    
+    vecho stat $0
+    
+    # Set
+    
+    # groups $USER | tr ' ' '\n' | tail -n +3 | grep -v -- - | grep -v $USER
+    # Copy template for desktop, if not exist.
+    #if [[ ! -d "$XDG_HOME/$DESKTOP" ]]; then
+    #echo "ls -d "$ROOT/$DESKTOP/*/" "$ROOT/default/*/""
+    mkdir ${v} -p "$XDG_HOME/$DESKTOP/Desktop"
+    
+    for DIR in  $(ls -d $ROOT/$DESKTOP/*/ $ROOT/default/*/) ; do
+        cp ${v} -rn $DIR "$XDG_HOME/$DESKTOP"
+    done
+    
+    # Cache
+    export SINGULARITYENV_XDG_CONFIG_HOME="$XDG_HOME/$DESKTOP/config"
+    export SINGULARITYENV_XDG_CACHE_HOME="$XDG_HOME/$DESKTOP/cache"
+    
+    # Bindpaths
+    # DONT ADD EXISTING BINDPATH. XALT IS UNWELCOME
+    export SINGULARITY_BINDPATH="/opt/slurm,$XDG_HOME/$DESKTOP/Desktop:$HOME/Desktop,/scale_wlg_persistent/filesets/project,/scale_wlg_nobackup/filesets/nobackup"
+    # env
+    export SINGULARITYENV_INBOUND_PORT=$INBOUND_PORT
+    
+    # If environment setup for desktop flavor.
+    if [[ -f "$ROOT/$DESKTOP/env.sh" ]];then
+        vex source $ROOT/$DESKTOP/env.sh
+    fi
+}
 
+create_vnc(){
+    vecho "Bind path: $SINGULARITY_BINDPATH"
+    
     DISPLAY_PORT=$(shuf -i 1100-2000 -n 1)
     SOCKET_PORT=$((DISPLAY_PORT+5900))
-    SELECTED_INST="${DESKTOP}_${SOCKET_PORT}"
     # Set instance name
     # If given persist name. Won't be killed on exit.
-   
+    if [[ "$PERSISTENT" ]];then
+        export INSTANCE_NAME=${DESKTOP}_${SOCKET_PORT}
+    else
+        export INSTANCE_NAME=${DESKTOP}_${SOCKET_PORT}
+    fi
+    
     # This way the same singularity container is always used.
-    # vecho $((singularity ${v} instance start --cleanenv "$(readlink -f "$ROOT/$DESKTOP/image")" $INSTANCE_NAME) 2>&1)
-    # singularity ${v} exec instance://${INSTANCE_NAME} vncserver -wm startxfce4 -geometry 1920x1080 -securitytypes TLSNone,X509None,None ":${DISPLAY_PORT}"
-    iprint "Creating new session... ($DISPLAY_PORT)";
+    vecho $((singularity ${v} instance start --cleanenv "$(readlink -f "$ROOT/$DESKTOP/image")" $INSTANCE_NAME) 2>&1)
+    singularity ${v} exec instance://${INSTANCE_NAME} vncserver -wm startxfce4 -geometry 1920x1080 -securitytypes TLSNone,X509None,None ":${DISPLAY_PORT}"
+    iprint "Creating new session...";
     #Randomy generate port number. Add lockfiles later.
-
-    "${ROOT}/start_vdt" $v $CLEAN "$DESKTOP" "$SOCKET_PORT"
-
-
+    
     if [[ $NOSOCKET ]]; then
         iprint "Websocket will not be created. Connect to this desktop using the $(basename $0) command, or using a VNC client to connect to http://localhost:$SOCKET_PORT (through a forwarded port).\n"
     fi
@@ -255,10 +295,8 @@ kill_vnc(){
     vecho "Instance list: $INST_LIST"
     
     vecho "Selected Instance: $INSTANCE_NAME"
-
-    "${ROOT}/kill_vdt" "${INSTANCE_NAME}" && NUM_INST=$((NUM_INST-1))
     #DISPLAY_PORT=$(echo $SELECTED_SOCKET | awk -F[:,] '{print $2}')
-    #singularity instance stop $INSTANCE_NAME
+    singularity instance stop $INSTANCE_NAME
     #singularity exec instance://$INSTANCE_NAME vncserver -kill :${DISPLAY_PORT}
     menu
     exit 0
@@ -278,15 +316,14 @@ connect_vnc(){
         SOCKET_PORT=$(echo $SELECTED_INST | grep -o '[^_]*$')
         vecho "Socket Port: $SOCKET_PORT"
         
-        DESKTOP=$(echo $SELECTED_INST | grep -oP '^.*(?=_)')
+        DESKTOP=$(echo $SELECTED_INST | grep -o '^.*_')
         vecho "Desktop: $DESKTOP"
     fi
     
-    test_port "${INBOUND_PORT}"
+    test_port $INBOUND_PORT
     
-    "$ROOT/connect_vdt" ${VERBOSE} "${SELECTED_INST}" "${INBOUND_PORT}"
     # Might be better way to do this. Socket made outside of main container.
-    #$WEBSOCKIFY_HOME/run --web $NOVNC_HOME $INBOUND_PORT localhost:$SOCKET_PORT
+    $WEBSOCKIFY_HOME/run --web $NOVNC_HOME $INBOUND_PORT localhost:$SOCKET_PORT
     #singularity ${v} exec --cleanenv "$(readlink -f "$ROOT/$DESKTOP/image")" /opt/websockify/run --web /opt/noVNC/ $INBOUND_PORT localhost:$SOCKET_PORT
 }
 
@@ -343,7 +380,7 @@ menu(){
         PROMPT="[n/q/a$(echo "$CONNECT_VALID" | tr " " /)$(echo "$KILL_VALID" | tr " " /)]"
         read -e -p "$PROMPT: " reply
         case $reply in
-                n)                      create_vnc;&    #;& # Fallthough.
+            n)                      create_vnc;& # Fallthough.
                 ["$CONNECT_VALID[@]"])  connect_vnc;;
                 ["$KILL_VALID[@]"])     kill_vnc;;
                 a)                      slurm_adopt;;
@@ -395,6 +432,7 @@ test_port () {
 main() {
     parse_input $@
     forward
+    set_env
     menu
 }
 
