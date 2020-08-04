@@ -355,8 +355,8 @@ class WebSocketProxy(websockifyserver.WebSockifyServer):
 
         if self.ssl_target:
             msg += " (using SSL)"
-
-	msg+="\n  - Now open a browser to http://localhost:" + str(os.getenv("INBOUND_PORT")) + " (assuming it was the port you forwarded.)\n  - Press CTRL + C to kill."
+        msg += "\n  - Now open a browser to http://localhost:" + str(os.getenv("SOCKET_PORT")) + " (assuming it was the port you forwarded.)"
+        msg += "\n  - Press CTRL + C to kill."
         self.msg("%s", msg)
 
         if self.wrap_cmd:

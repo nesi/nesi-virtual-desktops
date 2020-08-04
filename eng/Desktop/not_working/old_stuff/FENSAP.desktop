@@ -1,0 +1,19 @@
+[Desktop Entry]
+Comment[en_US]=
+Comment=
+Exec=/opt/nesi/share/ANSYS/v201/fensapice/bin/fensapiceGUI
+GenericName[en_US]=
+GenericName=
+Icon=/opt/nesi/share/ANSYS/v192/fensapice/data/db/crystals/P1b.png
+MimeType=
+Name[en_US]=FENSAP
+Name=FENSAP
+Path=
+StartupNotify=true
+Terminal=false
+TerminalOptions=
+Type=Application
+X-DBUS-ServiceName=
+X-DBUS-StartupType=
+X-KDE-SubstituteUID=false
+X-KDE-Username=

@@ -1,0 +1,17 @@
+[Desktop Entry]
+Comment[en_US]=
+Comment=
+Exec=/opt/nesi/share/ABAQUS/2019/SIMULIA/Commands/abaqus cae -mesa
+Icon=/opt/nesi/share/ANSYS/v195/AnsysEM/Linux64/syslib/Bitmaps/HFSS.png
+MimeType=
+Name[en_US]=ABAQUS
+Name=ABAQUS
+Path=
+StartupNotify=true
+Terminal=true
+TerminalOptions=
+Type=Application
+X-DBUS-ServiceName=
+X-DBUS-StartupType=
+X-KDE-SubstituteUID=false
+X-KDE-Username=

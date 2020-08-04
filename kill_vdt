@@ -4,7 +4,7 @@
 # Author: Callum
 # https://github.com/nesi/nesi-virtual-desktops
 
-module load Singularity
+module load Singularity/3.5.2
 module unload XALT/NeSI
 
 #Location of this script
@@ -16,7 +16,7 @@ cat << EndOfHelp
 [1m$CWD[0m
 
 [1mSYNOPSIS[0m
-        $CWD [-h ] [ name ]
+        $CWD [-h ] < display-port >
 
 [1mDESCRIPTION[0m
         Kills Virtual Desktop.
@@ -45,9 +45,10 @@ kill_vnc(){
     display_port=$(($(echo "${name}" | grep -o '[^_]*$')-5900))
     #singularity instance list
     #singularity exec --cleanenv instance://${name} vncserver -list #":"  # || singularity instance stop "${name}"
-    singularity exec --cleanenv instance://${name} vncserver -v -kill :$display_port
+    singularity exec --cleanenv instance://${name} vncserver -v -kill :$name
     singularity instance stop ${name}
     rm -vf "/tmp/.X$display_port-lock"
+    rm -vf "$HOME"/.vnc/*"${name}".pid
     exit 0
 }
 

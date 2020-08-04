@@ -1,0 +1,13 @@
+#!/bin/bash
+
+module purge
+module unload XALT/NeSI
+module load  Singularity/3.5.2
+
+root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"    # Location of this script 
+
+display_port=$(shuf -i 1100-2000 -n 1)
+
+"${root}/start_vdt" eng "${display_port}"
+"${root}/connect_vdt" "${display_port}" "${1}"
+

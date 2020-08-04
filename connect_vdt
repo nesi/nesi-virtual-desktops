@@ -8,7 +8,8 @@
 # TODO: Creates a web socket connecting port to VNC server
 
 
-module load Singularity
+module load Singularity/3.5.2
+module load Python/3.8.2-gimkl-2020a
 module unload XALT/NeSI
 
 
@@ -25,10 +26,10 @@ cat << EndOfHelp
 [1m$CWD[0m
 
 [1mSYNOPSIS[0m
-        $CWD [-h -v] [ desktop ] [ port ]
+        $CWD [-h -v] < display-port > < socket-port >
 
 [1mDESCRIPTION[0m
-        Creates a websocket connecting [ desktop ] and [ port ].
+        Creates a websocket connecting the VNC server.
 
 [1mPARAMETERS[0m
 
@@ -40,7 +41,7 @@ EndOfHelp
 }
 
 cleanup() {
-    pkill -P $$
+    pkill --signal 15 -P $$
 
     # while [[ "$(fuser $1/tcp 2>/dev/null | wc -w)" -gt 0 ]];do
     #     kill -9 "$(fuser $1/tcp 2>/dev/null | awk '{ print $1 }')"
@@ -53,7 +54,8 @@ parse_input() {
             help "$0"
             exit 0
         fi
-        echo "Not enough arguments, -h for help."  >&2
+        echo "Not enough arguments."  >&2
+        help "$0"
         exit 1
     fi
     # Parse flags + port
@@ -75,25 +77,29 @@ parse_input() {
             ;;
         esac
     done
-    echo $@
-    desktop="$1"
-    export INBOUND_PORT="$2"
+    display_port="$1"
+    socket_port="$2"
 }
 
 connect_vnc(){
 
     #SOCKET_PORT=$(echo $SELECTED_INST | cut -d'_' -f2)
-    socket_port=$(echo ${desktop} | grep -o '[^_]*$')
-    
+    #echo $socket_port
+    #chmod 0700 -R "$HOME"/.cache "$HOME"/.xfce4 "$HOME"/.config "$HOME"/.fontconfig "$HOME"/.gnupg "$HOME"/.xfce4 > /dev/null 2>&1 || true
+    #chmod 0600 -R "$HOME"/.ICEauthority "$HOME"/.Xauthority "$HOME"/.singularity > /dev/null 2>&1 || true
+
     #echo $socket_port
     # Might be better way to do this. Socket made outside of main container.
     #echo     "${websockify_home}/run" ${v} --web "${novnc_home}" "${INBOUND_PORT}" "localhost:${socket_port}"
-    "${websockify_home}/run" ${v} --web "${novnc_home}" "${INBOUND_PORT}" "localhost:${socket_port}"
+    export SOCKET_PORT=$socket_port
+    echo "${websockify_home}/run" ${v} --web "${novnc_home}" "${socket_port}" "localhost:$((display_port+5900))"
+    "${websockify_home}/run" ${v} --web "${novnc_home}" "${socket_port}" "localhost:$((display_port+5900))"
     #singularity ${v} exec --cleanenv "$(readlink -f "$ROOT/$DESKTOP/image")" /opt/websockify/run --web /opt/noVNC/ $INBOUND_PORT localhost:$SOCKET_PORT
 }
 main() {
     parse_input "$@"
     connect_vnc
+    return 0
 }
 trap cleanup INT
 main "$@"
