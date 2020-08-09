@@ -75,7 +75,7 @@ parse_input() {
     args=( "$@" )
     
     # If desktop named. Use. Else default.
-    DESKTOP="eng_dev"
+    DESKTOP="eng"
     
     # Parse flags + port
     while [[ $# -gt 0 ]];do
