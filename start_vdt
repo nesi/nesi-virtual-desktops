@@ -7,6 +7,10 @@
 
 # TODO: Add filesystem shortcuts to desktop.
 
+module purge > /dev/null  2>&1
+module load Python Singularity/3.6.1 -q 
+module unload XALT/NeSI -q
+
 help() {
 cat << EndOfHelp
 [1m$CWD[0m
@@ -23,6 +27,8 @@ cat << EndOfHelp
 
     -c --clean              Overwrite User desktop settings.
 
+    -C --nohome             Don't mount home directory. Good for debugging.
+
     -v --verbose
 
 EndOfHelp
@@ -35,6 +41,7 @@ parse_input() {
             exit 0
         fi
         echo "Not enough arguments, -h for help."  >&2
+        help "$0"
         exit 1
     fi     
     # Parse flags + port
@@ -61,6 +68,7 @@ parse_input() {
             *)
                 echo $@
                 echo "Unknown option '${1}', -h for help."  >&2
+                help "$0"
                 exit 1
             ;;
         esac
@@ -72,9 +80,6 @@ parse_input() {
 
 set_env(){
 
-    module load  Singularity/3.5.2
-    module unload XALT/NeSI
-
     root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"    # Location of this script 
     instance_name="${display_port}"
 
@@ -85,7 +90,7 @@ set_env(){
         vecho "Clearing cache"
         rm -rf ${V} "$HOME"/.cache "$HOME"/.xfce4 "$HOME"/.config "$HOME"/.fontconfig "$HOME"/.gnupg "$HOME"/.Xauthority "$HOME"/.ICEauthority "$HOME"/.xfce4 "$HOME"/.singularity 
     fi
- 
+    
     # Set
     # groups $USER | tr ' ' '\n' | tail -n +3 | grep -v -- - | grep -v $USER
     # Copy template for desktop, if not exist.
@@ -93,11 +98,9 @@ set_env(){
     #echo "ls -d "$root/$desktop/*/" "$root/default/*/""
 
     # Black sceen bug. Still dont understand.
-    #mkdir -p "$HOME"/.cache && chmod -R 0700 "$HOME"/.cache
-    #mkdir -p "$HOME"/.config && chmod -R 0700 "$HOME"/.config
+    mkdir -p "$HOME"/.cache && chmod -R 0700 "$HOME"/.cache
+    mkdir -p "$HOME"/.config && chmod -R 0700 "$HOME"/.config
 
-    rm -rf "$HOME"/.config
-    rm -rf "$HOME"/.cache
 
     # Environment Variables
 
@@ -107,7 +110,7 @@ set_env(){
 
     # Bindpaths
     # DONT ADD EXISTING BINDPATH. XALT IS UNWELCOME #$xdg_home:$HOME,
-    export SINGULARITY_BINDPATH="/etc/opt/slurm,/opt/slurm,/nesi,/scale_wlg_persistent/filesets/project,/scale_wlg_nobackup/filesets/nobackup"
+    export SINGULARITY_BINDPATH="/etc/opt/slurm,/opt/nesi,/opt/slurm,/nesi,/scale_wlg_persistent/filesets/project,/scale_wlg_nobackup/filesets/nobackup"
     
     # If environment setup for desktop flavor.
     if [[ -f "${root}/${desktop}/env.sh" ]];then

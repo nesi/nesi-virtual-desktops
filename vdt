@@ -6,11 +6,9 @@
 
 
 # TODO: Add filesystem shortcuts to desktop.
-
-
-module load Singularity/3.5.2
-module unload XALT/NeSI
-module load Python
+module purge > /dev/null  2>&1
+module load Python Singularity/3.6.1 -q 
+module unload XALT/NeSI -q
 
 unset LD_PRELOAD
 
@@ -25,7 +23,6 @@ vnc_pid_root="${HOME}/.vnc"
 # export XDG_CACHE_HOME="$xdg_root/.cache/"
 
 SIF_DIR="$(dirname $ROOT)/containers/images"
-
 
 #TEMP_HOME="$(dirname $(dirname $(realpath $0)))/dt_config/eng"
 
@@ -56,11 +53,11 @@ cat << EndOfHelp
 
     -h --help               This is help.
 
-    -p --persistent         Don't kill the virtual desktop on closing connection.
-
     -s --socketless           Start the virtual desktop without the websocket.
 
     -c --clean              Overwrite User desktop settings.
+
+    -C --nohome             Don't mount home directory. Good for debugging.
 
     -j --jobid [jobid]      Forward connection to host of [jobid]
 
@@ -99,12 +96,16 @@ parse_input() {
                 shift
             ;;
             -c|--clean)
-                export CLEAN="-c"
+                clean="--clean"
                 shift
             ;;
             -h|--help)
                 help $0
                 exit 0
+            ;;
+            -C|--nohome)
+                nohome="--nohome"
+                shift
             ;;
             -j|--jobid)
                 export session_jobid="$2"
@@ -199,7 +200,7 @@ create_vnc(){
     # singularity ${v} exec instance://${INSTANCE_NAME} vncserver -wm startxfce4 -geometry 1920x1080 -securitytypes TLSNone,X509None,None ":${display_port}"
     iprint "Creating new session... ($display_port)";
     #Randomy generate port number. Add lockfiles later.
-    construct_ssh "${ROOT}/start_vdt" $v $CLEAN $DESKTOP $display_port
+    construct_ssh "${ROOT}/start_vdt" $v $clean $nohome $DESKTOP $display_port
     
     if [[ $NOSOCKET ]]; then
         iprint "Websocket will not be created. Connect to this desktop using the $(basename $0) command, or using a VNC client to connect to http://localhost:$SOCKET_PORT (through a forwarded port).\n"
@@ -273,7 +274,8 @@ menu(){
         # Genrate Menu Header
         menu_text="\nTemplate:      ${DESKTOP}\nDestination:   ${session_hostname:-${session_jobid:-"none. (Next desktop will be started on the login node)"}}"
         menu_text="${menu_text}\nInbound Port:  ${INBOUND_PORT:-"false. (Connect with VNC or run this command again with a port number)."}"
-              
+        menu_text="${menu_text}\nWARNING: To avoid bugs, only run 1 desktop at a time"
+ 
         # Get list of open VNC sessions. 
         vnc_list=( $(ls "${vnc_pid_root}"/*.pid 2> /dev/null || true) )
         vecho "${vnc_list[@]}"

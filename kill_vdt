@@ -4,8 +4,9 @@
 # Author: Callum
 # https://github.com/nesi/nesi-virtual-desktops
 
-module load Singularity/3.5.2
-module unload XALT/NeSI
+module purge > /dev/null  2>&1
+module load Python Singularity/3.6.1 -q 
+module unload XALT/NeSI -q
 
 #Location of this script
 echo "$@"

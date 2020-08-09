@@ -1,13 +1,14 @@
 #!/bin/bash
 
-module purge
-module unload XALT/NeSI
-module load  Singularity/3.5.2
+module purge > /dev/null  2>&1
+module load Python Singularity/3.6.1 -q 
+module unload XALT/NeSI -q
 
 root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"    # Location of this script 
 
 display_port=$(shuf -i 1100-2000 -n 1)
 
-"${root}/start_vdt" eng "${display_port}"
-"${root}/connect_vdt" "${display_port}" "${1}"
+"${root}/start_vdt" -v eng_dev "${display_port}" 
+
+"${root}/connect_vdt" -v "${display_port}" "${1}"
 

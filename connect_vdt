@@ -7,10 +7,9 @@
 
 # TODO: Creates a web socket connecting port to VNC server
 
-
-module load Singularity/3.5.2
-module load Python/3.8.2-gimkl-2020a
-module unload XALT/NeSI
+module purge > /dev/null  2>&1
+module load Python Singularity/3.6.1 -q 
+module unload XALT/NeSI -q
 
 
 #Location of this script
@@ -92,7 +91,7 @@ connect_vnc(){
     # Might be better way to do this. Socket made outside of main container.
     #echo     "${websockify_home}/run" ${v} --web "${novnc_home}" "${INBOUND_PORT}" "localhost:${socket_port}"
     export SOCKET_PORT=$socket_port
-    echo "${websockify_home}/run" ${v} --web "${novnc_home}" "${socket_port}" "localhost:$((display_port+5900))"
+    #echo "${websockify_home}/run" ${v} --web "${novnc_home}" "${socket_port}" "localhost:$((display_port+5900))"
     "${websockify_home}/run" ${v} --web "${novnc_home}" "${socket_port}" "localhost:$((display_port+5900))"
     #singularity ${v} exec --cleanenv "$(readlink -f "$ROOT/$DESKTOP/image")" /opt/websockify/run --web /opt/noVNC/ $INBOUND_PORT localhost:$SOCKET_PORT
 }
