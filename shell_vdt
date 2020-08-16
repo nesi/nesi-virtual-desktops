@@ -8,7 +8,7 @@
 # TODO: Creates a web socket connecting port to VNC server
 
 module purge > /dev/null  2>&1
-module load Python Singularity/3.6.1 -q 
+module load Python Singularity/3.5.2 -q 
 module unload XALT/NeSI -q
 
 

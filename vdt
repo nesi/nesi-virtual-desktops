@@ -200,7 +200,7 @@ create_vnc(){
     # singularity ${v} exec instance://${INSTANCE_NAME} vncserver -wm startxfce4 -geometry 1920x1080 -securitytypes TLSNone,X509None,None ":${display_port}"
     iprint "Creating new session... ($display_port)";
     #Randomy generate port number. Add lockfiles later.
-    construct_ssh "${ROOT}/start_vdt" $v $clean $nohome $DESKTOP $display_port
+    construct_ssh "${ROOT}/start_vdt" $v $clean $nohome $display_port
     
     if [[ $NOSOCKET ]]; then
         iprint "Websocket will not be created. Connect to this desktop using the $(basename $0) command, or using a VNC client to connect to http://localhost:$SOCKET_PORT (through a forwarded port).\n"
