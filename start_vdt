@@ -88,10 +88,11 @@ set_env(){
     # If clean flag exists remove cache.
     if [[ $clean ]];then
         vecho "Clearing cache"
-        rm -rf ${V} "$HOME"/.cache "$HOME"/.xfce4 "$HOME"/.config "$HOME"/.fontconfig "$HOME"/.gnupg "$HOME"/.Xauthority "$HOME"/.ICEauthority "$HOME"/.xfce4 "$HOME"/.singularity 
+        rm -rf ${V} "$HOME"/.cache "$HOME"/.xfce4 "$HOME"/.config "$HOME"/.fontconfig "$HOME"/.gnupg  "$HOME"/.ICEauthority "$HOME"/.xfce4 "$HOME"/.singularity 
+        rm -rf /tmp/.ICE-unix/* > /dev/null  2>&1 || true
     fi
     
-    # Set
+    # Set   
     # groups $USER | tr ' ' '\n' | tail -n +3 | grep -v -- - | grep -v $USER
     # Copy template for desktop, if not exist.
     #if [[ ! -d "$xdg_home/$desktop" ]]; then
@@ -111,7 +112,7 @@ set_env(){
 
     # Bindpaths
     # DONT ADD EXISTING BINDPATH. XALT IS UNWELCOME #$xdg_home:$HOME, /run,/etc,/tmp,/nesi/tmp,/run,
-    export SINGULARITY_BINDPATH="/run,/tmp,/etc/machine-id,/opt/nesi,/scale_wlg_persistent/filesets/project,/scale_wlg_nobackup/filesets/nobackup"
+    export SINGULARITY_BINDPATH="/run,/etc/machine-id,/opt/nesi,/scale_wlg_persistent/filesets/project,/scale_wlg_nobackup/filesets/nobackup"
     
     # If environment setup for desktop flavor.
     if [[ -f "${root}/${desktop}/env.sh" ]];then
@@ -124,11 +125,18 @@ create_vnc(){
     # Set instance name
     # If given persist name. Won't be killed on exit.
     vecho "Singularity bindpath is $(echo "${SINGULARITY_BINDPATH}" | tr , '\n')"
-    mkdir -p "/opt/nesi/vdt/logs/$USER"
+    #mkdir -p "/opt/nesi/vdt/logs/$USER"
 
-    # This way the same singularity container is always used.--pid-file "/opt/nesi/vdt/logs/${USER}/${HOSTNAME}:${display_port}.pids"
-    singularity ${V} instance start $nohome --pid-file "/opt/nesi/vdt/logs/${USER}/${HOSTNAME}:${display_port}.pid" --cleanenv "$(readlink -f "$root/$desktop/image")" "${instance_name}" ":$display_port"
-    #singularity ${V} exec "instance://${instance_name}" vncserver -wm startxfce4 -geometry 1920x1080 -securitytypes TLSNone,X509None,None 
+    
+    rm -f "/tmp/.X11-unix/X${display_port}"
+    rm  -f "/tmp/.X${display_port}"
+    rm -f $HOME/.ICEauthority
+    # This way the same singularity container is always used.--pid-file "/opt/nesi/vdt/logs/${USER}/${HOSTNAME}:${display_port}.pids"--pid-file "/opt/nesi/vdt/logs/${USER}/${HOSTNAME}:${display_port}.pid" 
+    singularity ${V} instance start $nohome --cleanenv "$(readlink -f "$root/$desktop/image")" "${instance_name}" ":$display_port"
+    #singularity ${V} exec "instance://${instance_name}" vncserver -kill ":$display_port"; vncserver -wm startxfce4 -geometry 1920x1080 -securitytypes TLSNone,X509None,None ":$display_port"
+    #singularity ${V} exec "instance://${instance_name}" vncserver -xstartup /opt/nesi/vdt/xstartup_nesi  -securitytypes TLSNone,X509None,None ":$display_port"
+    # -xstartup /opt/nesi/vdt/xstartup_nesi 
+    # -wm xfce4-session
 }
 
 vecho () {

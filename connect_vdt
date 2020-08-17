@@ -92,7 +92,7 @@ connect_vnc(){
     #echo     "${websockify_home}/run" ${v} --web "${novnc_home}" "${INBOUND_PORT}" "localhost:${socket_port}"
     export SOCKET_PORT=$socket_port
     #echo "${websockify_home}/run" ${v} --web "${novnc_home}" "${socket_port}" "localhost:$((display_port+5900))"
-    "${websockify_home}/run" ${v} --web "${novnc_home}" "${socket_port}" "localhost:$((display_port+5900))" || > /dev/null
+    "${websockify_home}/run" ${v} --web "${novnc_home}" "${socket_port}" "localhost:$((display_port+5900))"
     #singularity ${v} exec --cleanenv "$(readlink -f "$ROOT/$DESKTOP/image")" /opt/websockify/run --web /opt/noVNC/ $INBOUND_PORT localhost:$SOCKET_PORT
 }
 main() {

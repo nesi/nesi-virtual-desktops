@@ -8,9 +8,6 @@ module purge > /dev/null  2>&1
 module load Python Singularity/3.5.2 -q 
 module unload XALT/NeSI -q
 
-#Location of this script
-echo "$@"
-
 # Where files are saved in user home.
 help() {
 cat << EndOfHelp
@@ -48,8 +45,9 @@ kill_vnc(){
     #singularity exec --cleanenv instance://${name} vncserver -list #":"  # || singularity instance stop "${name}"
     singularity exec --cleanenv instance://${name} vncserver -v -kill :$name
     singularity instance stop ${name}
-    rm -vf "/tmp/.X$display_port-lock"
-    rm -vf "$HOME"/.vnc/*"${name}".pid
+    #rm -f "/tmp/.X$display_port-lock"
+    rm -f "/tmp/.X$display_port-lock"
+    rm -f "$HOME"/.vnc/*"${name}".pid
     exit 0
 }
 
