@@ -88,8 +88,8 @@ set_env(){
     # If clean flag exists remove cache.
     if [[ $clean ]];then
         vecho "Clearing cache"
-        rm -rf ${V} "$HOME"/.cache "$HOME"/.xfce4 "$HOME"/.config "$HOME"/.fontconfig "$HOME"/.gnupg  "$HOME"/.ICEauthority "$HOME"/.xfce4 "$HOME"/.singularity 
-        rm -rf /tmp/.ICE-unix/* > /dev/null  2>&1 || true
+        rm -rf ${V} "$HOME"/.cache/sessions "$HOME"/.cache/gpg-agent-info "$HOME"/.config/xfce4 "$HOME"/.xfce4 "$HOME"/.fontconfig "$HOME"/.gnupg  "$HOME"/.ICEauthority "$HOME"/.xfce4 "$HOME"/.singularity 
+        find /tmp/ -user "$USER" -exec rm -rf {} \; > /dev/null  2>&1 || true
     fi
     
     # Set   
@@ -127,10 +127,10 @@ create_vnc(){
     vecho "Singularity bindpath is $(echo "${SINGULARITY_BINDPATH}" | tr , '\n')"
     #mkdir -p "/opt/nesi/vdt/logs/$USER"
 
-    
-    rm -f "/tmp/.X11-unix/X${display_port}"
-    rm  -f "/tmp/.X${display_port}"
-    rm -f $HOME/.ICEauthority
+    #rm -rf /tmp/.x* /tmp/.X* /tmp/.X11-unix/X /tmp/.ICE-unix/*
+    #rm -f "/tmp/.X11-unix/X${display_port}"
+    #rm  -f "/tmp/.X${display_port}"
+    #rm -f $HOME/.ICEauthority
     # This way the same singularity container is always used.--pid-file "/opt/nesi/vdt/logs/${USER}/${HOSTNAME}:${display_port}.pids"--pid-file "/opt/nesi/vdt/logs/${USER}/${HOSTNAME}:${display_port}.pid" 
     singularity ${V} instance start $nohome --cleanenv "$(readlink -f "$root/$desktop/image")" "${instance_name}" ":$display_port"
     #singularity ${V} exec "instance://${instance_name}" vncserver -kill ":$display_port"; vncserver -wm startxfce4 -geometry 1920x1080 -securitytypes TLSNone,X509None,None ":$display_port"
