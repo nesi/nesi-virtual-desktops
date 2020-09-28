@@ -13,16 +13,15 @@ module unload XALT/NeSI -q
 unset LD_PRELOAD
 
 #Location of this script
-ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 #ROOT="$( dirname "${0}")"
 
-xdg_root="${HOME}/.nesi_vdt"
-vnc_pid_root="${HOME}/.vnc"
 
+max_desktops=3;
 # export XDG_CONFIG_HOME="$xdg_root/.config/"
 # export XDG_CACHE_HOME="$xdg_root/.cache/"
 
-SIF_DIR="$(dirname $ROOT)/containers/images"
+SIF_DIR="$(dirname $root)/containers/images"
 
 #TEMP_HOME="$(dirname $(dirname $(realpath $0)))/dt_config/eng"
 
@@ -41,31 +40,36 @@ cleanup_graceful() {
 
 help() {
 cat << EndOfHelp
-[1m$CWD[0m
+[1mNAME[0m
+        $(basename "$0") - virtual desktop
 
 [1mSYNOPSIS[0m
-        $CWD [-h -P -n -v] [-j jobid] [port]
+        $(basename "$0") [-v -h] [command] [<args>]
 
 [1mDESCRIPTION[0m
-        Starts a VGL enabled virtual desktop and sets up noVNC server.
+        Virtual DeskTop - A VGL enabled virtual desktop and sets up noVNC server. Main command for starting and managing sessions on NeSI.
 
-[1mPARAMETERS[0m
+[1mOPTIONS[0m
+        -h --help               This is help.
+        -v --verbose        
 
-    -h --help               This is help.
-
-    -s --socketless           Start the virtual desktop without the websocket.
-
-    -c --clean              Overwrite User desktop settings.
-
-    -C --nohome             Don't mount home directory. Good for debugging.
-
-    -j --jobid [jobid]      Forward connection to host of [jobid]
-
-    -n --node [hostname]    Forward connection to [hostname]
-
-    -v --verbose
-
+[1mCOMMANDS[0m
+$(find . -name 'vdt_*' -type f -executable | sed "s/.\/vdt_/        $(basename "$0") /")
 EndOfHelp
+
+    #$(find . -name 'vdt_*' -type f -executable -exec sed -n "\:NAME: {n;p;}" {} \; )
+
+    # -b --base [template]    Template (default=eng)
+
+    # -s --socketless         Start the virtual desktop without the websocket.
+
+    # -c --clean              Overwrite User desktop settings.
+
+    # -C --nohome             Don't mount home directory. Good for debugging.
+
+    # -j --jobid [jobid]      Forward connection to host of [jobid]
+
+    # -n --node [hostname]    Forward connection to [hostname]
 }
 
 parse_input() {
@@ -73,9 +77,6 @@ parse_input() {
     vecho "$@"
     # Command line input before being shifted
     args=( "$@" )
-    
-    # If desktop named. Use. Else default.
-    DESKTOP="eng"
     
     # Parse flags + port
     while [[ $# -gt 0 ]];do
@@ -86,53 +87,75 @@ parse_input() {
                 #set -x
                 shift
             ;;
-            -p|--persistent)
-                export PERSISTENT="true"
-                echo "Currently '-p' does nothing. All instances are persistant."
-                shift
-            ;;
-            -s|--socketless)
-                export NOSOCKET="true"
-                shift
-            ;;
-            -c|--clean)
-                clean="--clean"
-                shift
-            ;;
             -h|--help)
-                help $0
+                help "$0"
                 exit 0
             ;;
-            -C|--nohome)
-                nohome="--nohome"
+            kill)
                 shift
-            ;;
-            -j|--jobid)
-                export session_jobid="$2"
+                "$root/vdt_kill" "$@" && exit 0
+                ;;
+            shell)
                 shift
+                "$root/vdt_shell" "$@" && exit 0
+                ;;
+            connect)
                 shift
-            ;;
-            -n|--node)
-                export session_hostname="$2"
+                "$root/vdt_connect" "$@" && exit 0
+                ;;
+            start)
                 shift
+                "$root/vdt_start" "$@" && exit 0
+                ;;
+            list)
                 shift
-            ;;
-            [0-9]*)
-                export INBOUND_PORT=$1
-                shift
-            ;;
+                "$root/vdt_list" "$@" && exit 0
+                ;;
+            # ;;
+            # -p|--persistent)
+            #     export PERSISTENT="true"
+            #     echo "Currently '-p' does nothing. All instances are persistant."
+            #     shift
+            # ;;
+            # -s|--socketless)
+            #     export NOSOCKET="true"
+            #     shift
+            # ;;
+            # -c|--clean)
+            #     clean="--clean"
+            #     shift
+            # ;;
+            # -b|--base)
+            #     base="${2}"
+            #     shift
+            #     shift
+            # ;;
+
+            # -C|--nohome)
+            #     nohome="--nohome"
+            #     shift
+            # ;;
+            # -j|--jobid)
+            #     export session_jobid="$2"
+            #     shift
+            #     shift
+            # ;;
+            # -n|--node)
+            #     export session_hostname="$2"
+            #     shift
+            #     shift
+            # ;;
+            # [0-9]*)
+            #     export VDT_SOCKET_PORT=$1
+            #     shift
+            # ;;
             *)
-                if (ls ${ROOT}/${1} > /dev/null); then
-                    DESKTOP=$1
-                    shift
-                else
-                    iprint "Unknown option '${1}', -h for help.\n"
-                    shift
-                fi
+                iprint "Unknown option '${1}', -h for help.\n"
+                shift
             ;;
         esac
     done
-    
+    if [[ -z "${base}" ]];then base="eng";fi
     # Get 'environmental inputs'.
     # If no jobid specified, but launched from env with SLURM env set. Go there.
     if [[ -z "$session_jobid" && -n "$SLURM_JOB_ID" ]]; then
@@ -151,7 +174,7 @@ construct_ssh() {
             echo $jobstate
             session_hostname=$(echo $sqout | awk '{print $2}')
             if [[ $jobstate == "RUNNING" ]]; then
-                iprint "Connection will be forwarded to $session_hostname\n"
+                iprint "Connection will be forwarded to $session_hostname. Run 'unset SLURM_JOB_ID' if this isn't what you want.\n"
                 break
                 elif [[ $jobstate == "PENDING" ]]; then
                 iprint "'$session_jobid' is pending. Waiting..."
@@ -171,10 +194,10 @@ construct_ssh() {
         elif [[ ! "$session_jobid" ]] && [[ ! "$session_hostname" ]];then
         "$@"
         # Case 2 - Node specified, forwarding port specified. (Forward port to node)
-        elif [[ "$INBOUND_PORT" ]]; then
-            ssh -L "${INBOUND_PORT}:localhost:${INBOUND_PORT}" "${session_hostname}" "$@"
+        elif [[ "$VDT_SOCKET_PORT" ]]; then
+            ssh -L "${VDT_SOCKET_PORT}:localhost:${VDT_SOCKET_PORT}" "${session_hostname}" "$@"
         # Case 3 - Node specified, forwarding port not specified. (Run command on node)
-        elif [[ ! "$INBOUND_PORT" ]]; then
+        elif [[ ! "$VDT_SOCKET_PORT" ]]; then
             ssh "${session_hostname}" "$@"
     else
         echo "Something went wrong, couldn't construct SSH tunnel"
@@ -183,25 +206,16 @@ construct_ssh() {
 }
 
 create_vnc(){
-    vecho "This script is in $ROOT"
+    vecho "This script is in $root"
     vecho "Bind path: $SINGULARITY_BINDPATH"
     vecho "Available SIFs $(ls $SIF_DIR)"
-    
-    display_port=$(shuf -i 1100-2000 -n 1)
-    #SOCKET_PORT=$((5900))
-    SELECTED_INST="${DESKTOP}_${SOCKET_PORT}"
-    
-    
-    # Set instance name
-    # If given persist name. Won't be killed on exit.
-    
-    # This way the same singularity container is always used.
-    # vecho $((singularity ${v} instance start --cleanenv "$(readlink -f "$ROOT/$DESKTOP/image")" $INSTANCE_NAME) 2>&1)
-    # singularity ${v} exec instance://${INSTANCE_NAME} vncserver -wm startxfce4 -geometry 1920x1080 -securitytypes TLSNone,X509None,None ":${display_port}"
-    iprint "Creating new session... ($display_port)";
+
+    # Set instance name    
+    test_name ${VDT_INSTANCE_NAME}
+    iprint "Creating new session...";
+
     #Randomy generate port number. Add lockfiles later.
-    construct_ssh "${ROOT}/start_vdt" $v $clean $nohome $display_port
-    
+    construct_ssh "${ROOT}/start_vdt" -N $VDT_INSTANCE_NAME -b $base $v $clean $nohome    
     if [[ $NOSOCKET ]]; then
         iprint "Websocket will not be created. Connect to this desktop using the $(basename $0) command, or using a VNC client to connect to http://localhost:$SOCKET_PORT (through a forwarded port).\n"
     fi
@@ -210,7 +224,7 @@ create_vnc(){
 slurm_adopt(){
     OPT_COUNT_SQUEUE="0"
     menu_text="${MENU_HEAD}\nSelect a job\?\n"
-    sq_menu_text=( $(squeue -h -u $USER -O "Jobid,Name,State,NodeList" | tr -s ' ' '|' | tr -s '\n' ' ' ) )
+    mapfile -t sq_menu_text < <(squeue -h -u $USER -O "Jobid,Name,State,NodeList" | tr -s ' ' '|' | tr -s '\n' ' ' )
     #echo "${sq_menu_text[1]}"
     #echo "${#sq_menu_text[@]}"
     for sq in "${sq_menu_text[@]}"; do
@@ -228,7 +242,7 @@ slurm_adopt(){
     
     menu_text="$menu_text\n\tq)\n"
     mprint "$menu_text"
-    # if [[ ${INBOUND_PORT} ]];then
+    # if [[ ${VDT_SOCKET_PORT} ]];then
     #     iprint "You must set a port before \n\tq)"
     #     return
     # fi
@@ -256,7 +270,8 @@ quit(){
 kill_vnc(){
     # Get appropriate display number     
     vecho "Selected Instance: $session"  
-    construct_ssh "${ROOT}/kill_vdt" "${session_display_port}" && NUM_INST=$((NUM_INST-1))
+    construct_ssh "${ROOT}/kill_vdt" "${VDT_INSTANCE_NAME}" && NUM_INST=$((NUM_INST-1))
+    iprint "Desktop closed"
     #display_port=$(echo $SELECTED_SOCKET | awk -F[:,] '{print $2}')
     #singularity instance stop $INSTANCE_NAME
     #singularity exec instance://$INSTANCE_NAME vncserver -kill :${display_port}
@@ -264,55 +279,55 @@ kill_vnc(){
 
 connect_vnc(){
     vecho "Selected instance: ${session}"
-    
-    test_port "${INBOUND_PORT}"
-    construct_ssh "${ROOT}/connect_vdt" ${VERBOSE} "${session_display_port}" "${INBOUND_PORT}"
+    test_port ${VDT_SOCKET_PORT}
+    construct_ssh ${ROOT}/connect_vdt ${VERBOSE} ${VDT_INSTANCE_NAME} ${VDT_SOCKET_PORT}
 }
 
 menu(){
     while true; do
         # Genrate Menu Header
         menu_text="\nTemplate:      ${DESKTOP}\nDestination:   ${session_hostname:-${session_jobid:-"none. (Next desktop will be started on the login node)"}}"
-        menu_text="${menu_text}\nInbound Port:  ${INBOUND_PORT:-"false. (Connect with VNC or run this command again with a port number)."}"
-        menu_text="${menu_text}\nWARNING: To avoid bugs, only run 1 desktop at a time"
- 
+        menu_text="${menu_text}\nInbound Port:  ${VDT_SOCKET_PORT:-"false. (Connect with VNC or run this command again with a port number)."}"
+
         # Get list of open VNC sessions. 
-        vnc_list=( $(ls "${vnc_pid_root}"/*.pid 2> /dev/null || true) )
-        vecho "${vnc_list[@]}"
+        # vnc_list=( $(ls "${vnc_pid_root}"/*.pid 2> /dev/null || true) )
+        # vecho "${vnc_list[@]}"
         #INST_LIST=( $(singularity instance list | tail -n +2 | awk '{print $1}' ) )
-
-        opt_count="0"
-
+        mapfile -t vdt_list < <( $root/list_vdt -n )
+        opt_count=0
         # Print options for connecting to desktops.
-        for session in "${vnc_list[@]}" ; do
-            _display_port=$(echo "${session}" | sed -e 's/.*:\([0-9]*\).pid/\1/')
-            _hostname=$(echo "$session" | sed -e 's/.*\/\(.*\):.*/\1/')
-            
-            menu_text="${menu_text}\n\n     Desktop: ${DESKTOP}"
-            if [[ $(session_hostname=${_hostname};construct_ssh singularity instance list "*${_display_port}" | wc -l)  -lt 2 ]]; then
-                menu_text="${menu_text}  (DEAD!)"
-            fi
-            menu_text="$menu_text\n     Host:    ${_hostname}:${_display_port}"
+        #for session in "${vdt_list[@]}" ; do
+        for session in "${vdt_list[@]}";do 
+            if [[ -z "$session" ]];then continue;fi
+            _hostname=$(echo $session | awk '{print $3}')
+            _name=$(echo $session | awk '{print $1}')
+            menu_text="${menu_text}\n\n     Name: ${_name}"
+            # if [[ $(session_hostname=${_hostname};construct_ssh singularity instance list "*${_display_port}" | wc -l)  -lt 2 ]]; then
+            #     menu_text="${menu_text}  (DEAD!)"
+            # fi
+            menu_text="$menu_text\n     Host: ${_hostname}"
             menu_text="${menu_text}\n\t${opt_count}) Connect."
             opt_count=$((opt_count + 1))
             menu_text="${menu_text}\n\t${opt_count}) Kill."
             opt_count=$((opt_count + 1))
-        done
+        done # < <(echo $vdt_list)
 
        
         # Print the damn thing.
-        mprint "${menu_text}\n\n\tn) New desktop.\n\ta) Adopt a SLURM session.\n\tq) Quit\n\nWhat would you like to do\?\n"
+        mprint "${menu_text}\n\n\tn) New desktop.\n\ta) Adopt a SLURM session.\n\tq) Quit\n\n${l_message:-"Select option."}\n"
         # Main menu loop. Using functions for tidyness.
         
         PROMPT="[$(seq 0 $((opt_count - 1)) | tr "\n" /)n/a/q]"
         read -e -p "$PROMPT: " reply
-
         opt_count_m1=$((opt_count - 1))
         case $reply in
-                n)                      create_vnc;&    #;& # Fallthough.
-                [0-$opt_count_m1])      session="${vnc_list[$((reply / 2))]}"
-                                        session_display_port=${display_port:-$(echo "${session}" | sed -e 's/.*:\([0-9]*\).pid/\1/')}
-                                        session_hostname=$(echo "$session" | sed -e 's/.*\/\(.*\):.*/\1/')
+                n)                      if [[ ${#vdt_list[@]} -ge ${max_desktops} ]];then iprint "You already have the maximum allowed desktops. Please close one and try again.";continue; else create_vnc && connect_vnc;fi ;; 
+                                        #;& # Fallthough.
+                [0-$opt_count_m1])      session="${vdt_list[$((reply / 2))]}"
+                                        #session_display_port=${display_port:-$(echo "${session}" | sed -e 's/.*:\([0-9]*\).pid/\1/')}
+                                        #session_hostname=$(echo "$session" | sed -e 's/.*\/\(.*\):.*/\1/')
+                                        session_hostname=$(echo $session | awk '{print $3}')
+                                        export VDT_INSTANCE_NAME=$(echo "$session" | awk '{print $1}')
                                         if [ $((reply%2)) -eq 0 ];then 
                                             connect_vnc
                                         else
@@ -335,7 +350,9 @@ vecho () {
 
 iprint () {
     # Inline print
-    printf "\033[K\033[B$2$1"
+    printf "\033[K\033[B$*"
+    l_message="$*"
+
 }
 
 mprint () {
@@ -346,23 +363,31 @@ mprint () {
 
 test_port () {
     
-    if [[ ! $INBOUND_PORT ]];then
+    if [[ ! $VDT_SOCKET_PORT ]];then
         iprint "Missing a forwarding port. Please enter one now."
         PROMPT="[port]: "
-        read -r -e -p "$PROMPT" INBOUND_PORT
+        read -r -e -p "$PROMPT" VDT_SOCKET_PORT
     fi
     
     # Tests if port is available. If not KILLS IT. Might need consideration.
-    vecho "|$INBOUND_PORT|"
     
-    while [[ "$(fuser "$INBOUND_PORT"/tcp 2>/dev/null | wc -w)" -gt 0 ]];do
+    while [[ "$(fuser "$VDT_SOCKET_PORT"/tcp 2>/dev/null | wc -w)" -gt 0 ]];do
         #iprint "Port $1 in use. Please find another."
-        iprint "Port '$INBOUND_PORT' in use. Killing $INBOUND_PORT"
+        iprint "Port '$VDT_SOCKET_PORT' in use. Killing $VDT_SOCKET_PORT"
         # Kill
-        kill -9 $(fuser "$INBOUND_PORT"/tcp 2>/dev/null | awk '{ print $1 }')
+        kill -9 $(fuser "$VDT_SOCKET_PORT"/tcp 2>/dev/null | awk '{ print $1 }')
     done
     # Too much kill
-    # kill -9 $(ps -o ppid= $(fuser $INBOUND_PORT/tcp 2>/dev/null | awk '{ print $1 }'))
+    # kill -9 $(ps -o ppid= $(fuser $VDT_SOCKET_PORT/tcp 2>/dev/null | awk '{ print $1 }'))
+}
+
+test_name () {
+    echo "$VDT_INSTANCE_NAME"
+    if [[ -z $VDT_INSTANCE_NAME ]];then
+        iprint "Enter a name for your desktop."
+        PROMPT="[name]: "
+        read -r -e -i "${base}_vdt" -p "$PROMPT" VDT_INSTANCE_NAME
+    fi
 }
 
 main() {

@@ -1,0 +1,68 @@
+#!/bin/bash -e
+
+# Kills named singularity instance.
+# Author: Callum
+# https://github.com/nesi/nesi-virtual-desktops
+
+module purge > /dev/null  2>&1
+module load Python Singularity/3.5.2 -q 
+module unload XALT/NeSI -q
+
+# Where files are saved in user home.
+help() {
+cat << EndOfHelp
+[1mNAME[0m
+        $(basename "$0") - Kill a virtual desktop.
+
+[1mSYNOPSIS[0m
+        $(basename "$0") [-h ] < display-port >
+
+[1mDESCRIPTION[0m
+        Kills Virtual Desktop.
+
+[1mPARAMETERS[0m
+
+    -h --help               This is help.
+
+[1mSEE ALSO[0m
+
+EndOfHelp
+}
+
+parse_input() {
+        
+    # Parse flags + port
+    if [[ $# -gt 1 ]];then
+        echo "Too many arguments '${1}', -h for help."  >&2
+    fi
+    if [[ $1 == "-h"  ]] || [[ $1 == "--help" ]];then
+        help "$0"
+        exit 0
+    fi
+    export VDT_INSTANCE_NAME="$1"
+    root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"    # Location of this script 
+    export VDT_LOCKFILES="$root/lockfiles"
+
+}
+
+
+kill_vnc(){
+    #display_port=$(($(echo "${name}" | grep -o '[^_]*$')-5900))
+    #singularity instance list
+    #singularity exec --cleanenv instance://${name} vncserver -list #":"  # || singularity instance stop "${name}"
+    #singularity exec --cleanenv instance://${VDT_INSTANCE_NAME} vncserver -v -kill :$name
+    singularity instance stop ${VDT_INSTANCE_NAME}
+    #rm -f "/tmp/.X$display_port-lock"
+    rm -f "/tmp/.X$display_port-lock"
+    rm -f "$HOME"/.vnc/*"${VDT_INSTANCE_NAME}".pid
+    rm "${VDT_LOCKFILES}/${VDT_INSTANCE_NAME}.$(hostname)"
+    exit 0
+}
+
+main() {
+    parse_input "$@"
+    kill_vnc
+}
+
+main "$@"
+

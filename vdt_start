@@ -1,0 +1,234 @@
+#!/bin/bash -e
+
+# Command for starting 'virtual desktop'. A VNC server running inside a container with XFCE with pre-made config/cache.
+# Author: Callum
+# https://github.com/nesi/nesi-virtual-desktops
+
+
+# TODO: Add filesystem shortcuts to desktop.
+
+root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"    # Location of this script 
+
+export VDT_HOME=${VDT_HOME:-"$HOME/.vdt"}
+export VDT_LOCKFILES=${VDT_LOCKFILES:-"$root/lockfiles"} 
+export VDT_TEMPLATES=${VDT_TEMPLATES:-"$root/templates"}
+
+module purge > /dev/null  2>&1
+module load Python Singularity/3.5.2 -q 
+module unload XALT/NeSI -q
+
+
+
+help() {
+cat << EndOfHelp
+[1mNAME[0m
+        $(basename "$0") - Start a new virtual desktop
+
+[1mSYNOPSIS[0m
+        $(basename "$0") [-h -c -v] [-b template] [-r host] -N [name]  -t [s]
+
+[1mDESCRIPTION[0m
+        Starts a VGL enabled virtual desktop.
+
+[1mPARAMETERS[0m
+
+    -h --help               This is help.
+
+    -r --remote [host]      Start vdt on [host].
+
+    -c --clean              Overwrite User desktop settings.
+
+    -b --base [template]    Template (default=eng)
+
+    -N --name [name]        Desktop name (default=base).
+
+    -t --timeout [s]        Timeout server after [s] seconds.
+
+    -C --nohome             Don't mount home directory. Good for debugging.
+
+    -v --verbose
+
+EndOfHelp
+}
+
+parse_input() {
+    while [[ $# -gt 0 ]];do
+        case $1 in
+            -v|--verbose)
+                export VERBOSE="true"
+                cmd1="${cmd1} -v"
+                #set -x
+                shift
+            ;;
+            -c|--clean)
+                clean="true"
+                shift
+            ;;
+            -C|--nohome)
+                nohome="true"
+                cmd2="${cmd2} -C"
+                shift
+            ;;
+            -t|--timeout)
+                secure="true"
+                cmd0="$cmd0 timeout ${2}"
+                shift
+                shift
+            ;;
+            -b|--base)
+                base="${2}"
+                shift
+                shift
+            ;;
+            -N|--name)
+                export VDT_INSTANCE_NAME="${2}"
+                shift
+                shift
+            ;;
+            -h|--help)
+                help "$0"
+                exit 0
+                shift
+            ;;
+            *)
+                echo $@
+                echo "Unknown option '${1}', -h for help."  >&2
+                help "$0"
+                exit 1
+            ;;
+        esac
+    done
+
+    mkdir -p "${VDT_HOME:="${HOME}/.vdt"}"
+
+    if [[ -z "${base}" ]];then base="eng";fi
+
+    if (ls ${VDT_TEMPLATES}/${base} > /dev/null); then
+        echo "Using '${base}' as template."
+    else
+        echo "Unknown template '${1}', valid options are '$(ls ${VDT_TEMPLATES})'.\n"
+    fi
+    if [[ -z ${VDT_INSTANCE_NAME} ]];then export VDT_INSTANCE_NAME="${base}_vdt";fi    
+}
+
+set_env(){
+   
+    # If clean flag exists remove cache.
+    if [[ $clean ]];then
+        vecho "Clearing cache"
+        rm -rf ${V} "$HOME"/.cache/sessions "$HOME"/.cache/gpg-agent-info "$HOME"/.config/xfce4 "$HOME"/.xfce4 "$HOME"/.fontconfig "$HOME"/.gnupg  "$HOME"/.ICEauthority "$HOME"/.xfce4 "$HOME"/.singularity 
+        find /tmp/ -user "$USER" -exec rm -rf {} \; > /dev/null  2>&1 || true
+    fi
+    
+    # Set   
+    # groups $USER | tr ' ' '\n' | tail -n +3 | grep -v -- - | grep -v $USER
+    # Copy template for desktop, if not exist.
+    #if [[ ! -d "$xdg_home/$desktop" ]]; then
+    #echo "ls -d "$root/$desktop/*/" "$root/default/*/""
+
+    # Black sceen bug. Still dont understand.
+    # mkdir -p "$HOME"/.cache && chmod -R 0700 "$HOME"/.cache
+    # mkdir -p "$HOME"/.config && chmod -R 0700 "$HOME"/.config
+
+    # Possibly redundant.
+    #export SINGULARITYENV_XDG_CONFIG_HOME="$HOME/.config"
+    #export SINGULARITYENV_XDG_CACHE_HOME="$HOME/.cache"
+
+    # Bindpaths
+    # DONT ADD EXISTING BINDPATH. XALT IS UNWELCOME #$xdg_home:$HOME, /run,/etc,/tmp,/nesi/tmp,/run,
+    export SINGULARITY_BINDPATH="/run,/etc/machine-id,/opt/nesi,/scale_wlg_persistent/filesets/project,/scale_wlg_nobackup/filesets/nobackup"
+    touch "${VDT_LOCKFILES}/${VDT_INSTANCE_NAME}.$(hostname)"
+
+    # If environment setup for desktop flavor.
+    if [[ -f "${root}/${base}/env.sh" ]];then
+        source "${VDT_TEMPLATES}/${base}/env.sh"
+    fi
+    
+}
+
+create_vnc(){    
+    #Randomy generate port number. Add lockfiles later.
+    # Set instance name
+    # If given persist name. Won't be killed on exit.
+    vecho "Singularity bindpath is $(echo "${SINGULARITY_BINDPATH}" | tr , '\n')"
+    #mkdir -p "/opt/nesi/vdt/logs/$USER"
+    vex ${cmd0} singularity ${cmd1} instance start ${cmd2} --cleanenv "$(readlink -f "$VDT_TEMPLATES/$base/image")" "${VDT_INSTANCE_NAME}"
+    #rm -rf /tmp/.x* /tmp/.X* /tmp/.X11-unix/X /tmp/.ICE-unix/*
+    #rm -f "/tmp/.X11-unix/X${display_port}"
+    #rm  -f "/tmp/.X${display_port}"
+    #rm -f $HOME/.ICEauthority
+    # This way the same singularity container is always used.--pid-file "/opt/nesi/vdt/logs/${USER}/${HOSTNAME}:${display_port}.pids"--pid-file "/opt/nesi/vdt/logs/${USER}/${HOSTNAME}:${display_port}.pid" 
+    #singularity ${V} instance start $nohome --cleanenv "$(readlink -f "$root/$desktop/image")" "${instance_name}" ":$display_port"
+    #singularity ${V} exec "instance://${instance_name}" vncserver -kill ":$display_port"; vncserver -wm startxfce4 -geometry 1920x1080 -securitytypes TLSNone,X509None,None ":$display_port"
+    #singularity ${V} exec "instance://${instance_name}" vncserver -xstartup /opt/nesi/vdt/xstartup_nesi  -securitytypes TLSNone,X509None,None ":$display_port"
+    # -xstartup /opt/nesi/vdt/xstartup_nesi 
+    # -wm xfce4-session
+    echo "Started instance '$VDT_INSTANCE_NAME'"
+}
+
+vecho () {
+    # For verbose print.
+    if [[ $VERBOSE ]]; then
+        echo "$@"
+    fi
+}
+
+vex () {
+    # For verbose print.
+    if [[ $VERBOSE ]]; then
+        echo "$@"
+    fi
+    $@
+}
+
+main() {
+    parse_input "$@"
+    set_env
+    create_vnc
+    vecho "'start_vdt' exiting"
+    return 0
+}
+
+# construct_ssh() {
+#     # If jobid is specified, get host of jobid.
+#     if [[ "$session_jobid" ]];then
+#         while true;do
+#             sqout=$(squeue -h -u "$USER" -j "$session_jobid" -O "State,NodeList")
+#             vecho $sqout
+#             jobstate=$(echo $sqout | awk '{print $1}')
+#             echo $jobstate
+#             session_hostname=$(echo $sqout | awk '{print $2}')
+#             if [[ $jobstate == "RUNNING" ]]; then
+#                 iprint "Connection will be forwarded to $session_hostname\n"
+#                 break
+#                 elif [[ $jobstate == "PENDING" ]]; then
+#                 iprint "'$session_jobid' is pending. Waiting..."
+#                 sleep 10
+#             else
+#                 iprint "'$session_jobid' is not a valid slurm session to connect to.\n"
+#                 unset session_jobid session_hostname
+#                 exit 1
+#             fi
+#         done
+#     fi
+    
+#     # Case 0 - Already on correct node.
+#     if [[ "$session_hostname" = "$HOSTNAME" ]];then
+#         "$@"
+#         # Case 1 - No node specified. (Do nothing)
+#         elif [[ ! "$session_jobid" ]] && [[ ! "$session_hostname" ]];then
+#         "$@"
+#         # Case 2 - Node specified, forwarding port specified. (Forward port to node)
+#         elif [[ "$INBOUND_PORT" ]]; then
+#             ssh -L "${INBOUND_PORT}:localhost:${INBOUND_PORT}" "${session_hostname}" "$@"
+#         # Case 3 - Node specified, forwarding port not specified. (Run command on node)
+#         elif [[ ! "$INBOUND_PORT" ]]; then
+#             ssh "${session_hostname}" "$@"
+#     else
+#         echo "Something went wrong, couldn't construct SSH tunnel"
+#         return 1
+#     fi
+# }
+
+main "$@"
+
