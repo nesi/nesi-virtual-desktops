@@ -14,7 +14,7 @@ unset LD_PRELOAD
 
 #Location of this script
 root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-#ROOT="$( dirname "${0}")"
+#root="$( dirname "${0}")"
 
 
 max_desktops=3;
@@ -93,23 +93,28 @@ parse_input() {
             ;;
             kill)
                 shift
-                "$root/vdt_kill" "$@" && exit 0
+                "$root/vdt_kill" "$@" 
+                exit 0
                 ;;
             shell)
                 shift
-                "$root/vdt_shell" "$@" && exit 0
+                "$root/vdt_shell" "$@" 
+                exit 0
                 ;;
             connect)
                 shift
-                "$root/vdt_connect" "$@" && exit 0
+                "$root/vdt_connect" "$@" 
+                exit 0
                 ;;
             start)
                 shift
-                "$root/vdt_start" "$@" && exit 0
+                "$root/vdt_start" "$@" 
+                exit 0
                 ;;
             list)
                 shift
-                "$root/vdt_list" "$@" && exit 0
+                "$root/vdt_list" "$@" 
+                exit 0
                 ;;
             # ;;
             # -p|--persistent)
@@ -215,7 +220,7 @@ create_vnc(){
     iprint "Creating new session...";
 
     #Randomy generate port number. Add lockfiles later.
-    construct_ssh "${ROOT}/start_vdt" -N $VDT_INSTANCE_NAME -b $base $v $clean $nohome    
+    construct_ssh "${root}/vdt_start" -N $VDT_INSTANCE_NAME -b $base $v $clean $nohome    
     if [[ $NOSOCKET ]]; then
         iprint "Websocket will not be created. Connect to this desktop using the $(basename $0) command, or using a VNC client to connect to http://localhost:$SOCKET_PORT (through a forwarded port).\n"
     fi
@@ -270,7 +275,7 @@ quit(){
 kill_vnc(){
     # Get appropriate display number     
     vecho "Selected Instance: $session"  
-    construct_ssh "${ROOT}/kill_vdt" "${VDT_INSTANCE_NAME}" && NUM_INST=$((NUM_INST-1))
+    construct_ssh "${root}/vdt_kill" "${VDT_INSTANCE_NAME}" && NUM_INST=$((NUM_INST-1))
     iprint "Desktop closed"
     #display_port=$(echo $SELECTED_SOCKET | awk -F[:,] '{print $2}')
     #singularity instance stop $INSTANCE_NAME
@@ -280,7 +285,7 @@ kill_vnc(){
 connect_vnc(){
     vecho "Selected instance: ${session}"
     test_port ${VDT_SOCKET_PORT}
-    construct_ssh ${ROOT}/connect_vdt ${VERBOSE} ${VDT_INSTANCE_NAME} ${VDT_SOCKET_PORT}
+    construct_ssh ${root}/vdt_connect ${VERBOSE} ${VDT_INSTANCE_NAME} ${VDT_SOCKET_PORT}
 }
 
 menu(){
@@ -293,7 +298,7 @@ menu(){
         # vnc_list=( $(ls "${vnc_pid_root}"/*.pid 2> /dev/null || true) )
         # vecho "${vnc_list[@]}"
         #INST_LIST=( $(singularity instance list | tail -n +2 | awk '{print $1}' ) )
-        mapfile -t vdt_list < <( $root/list_vdt -n )
+        mapfile -t vdt_list < <( $root/vdt_list -n )
         opt_count=0
         # Print options for connecting to desktops.
         #for session in "${vdt_list[@]}" ; do

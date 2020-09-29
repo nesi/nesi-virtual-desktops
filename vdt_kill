@@ -53,7 +53,6 @@ kill_vnc(){
     #singularity exec --cleanenv instance://${VDT_INSTANCE_NAME} vncserver -v -kill :$name
     singularity instance stop ${VDT_INSTANCE_NAME}
     #rm -f "/tmp/.X$display_port-lock"
-    rm -f "/tmp/.X$display_port-lock"
     rm -f "$HOME"/.vnc/*"${VDT_INSTANCE_NAME}".pid
     rm "${VDT_LOCKFILES}/${VDT_INSTANCE_NAME}.$(hostname)"
     exit 0

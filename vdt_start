@@ -25,7 +25,7 @@ cat << EndOfHelp
         $(basename "$0") - Start a new virtual desktop
 
 [1mSYNOPSIS[0m
-        $(basename "$0") [-h -c -v] [-b template] [-r host] -N [name]  -t [s]
+        $(basename "$0") [-h -c -v -p -s] [-b template] [-r host] [-N name] [-t seconds] [-d port] <port>
 
 [1mDESCRIPTION[0m
         Starts a VGL enabled virtual desktop.
@@ -35,6 +35,8 @@ cat << EndOfHelp
     -h --help               This is help.
 
     -r --remote [host]      Start vdt on [host].
+
+    -p --persistent         Container will be run as a service. (e.g. will stay alive after closing your terminal)
 
     -c --clean              Overwrite User desktop settings.
 
@@ -52,11 +54,10 @@ EndOfHelp
 }
 
 parse_input() {
-    while [[ $# -gt 0 ]];do
+    while [[ $# -gt 1 ]];do
         case $1 in
             -v|--verbose)
-                export VERBOSE="true"
-                cmd1="${cmd1} -v"
+                verbose="-v"
                 #set -x
                 shift
             ;;
@@ -65,13 +66,17 @@ parse_input() {
                 shift
             ;;
             -C|--nohome)
-                nohome="true"
-                cmd2="${cmd2} -C"
+                nohome="-C"
+                shift
+            ;;
+            -p|--persistent)
+                echo "persistant containers currently disabled"
+                exit 1 
+                persistent="true"
                 shift
             ;;
             -t|--timeout)
-                secure="true"
-                cmd0="$cmd0 timeout ${2}"
+                timeout="timeout ${2}"
                 shift
                 shift
             ;;
@@ -85,24 +90,36 @@ parse_input() {
                 shift
                 shift
             ;;
+            -d|--display)
+                export VDT_DISPLAY_PORT="${2}"
+                v="-v"
+                #set -x
+                shift
+                shift
+            ;;
+            -s|--secure)
+                secure="true"
+                shift
+            ;;
             -h|--help)
                 help "$0"
                 exit 0
                 shift
             ;;
             *)
-                echo $@
+                echo "$@"
                 echo "Unknown option '${1}', -h for help."  >&2
                 help "$0"
                 exit 1
             ;;
         esac
     done
+    export VDT_SOCKET_PORT="$1"
 
     mkdir -p "${VDT_HOME:="${HOME}/.vdt"}"
 
     if [[ -z "${base}" ]];then base="eng";fi
-
+    
     if (ls ${VDT_TEMPLATES}/${base} > /dev/null); then
         echo "Using '${base}' as template."
     else
@@ -112,14 +129,24 @@ parse_input() {
 }
 
 set_env(){
-   
+    # export VDT_INSTANCE_NAME="$1"
+    # export VDT_SOCKET_PORT="$2"
+    # export SINGULARITYENV_VDT_SOCKET_PORT="$VDT_SOCKET_PORT" 
+
     # If clean flag exists remove cache.
-    if [[ $clean ]];then
+    if [[ -n $clean ]];then
         vecho "Clearing cache"
-        rm -rf ${V} "$HOME"/.cache/sessions "$HOME"/.cache/gpg-agent-info "$HOME"/.config/xfce4 "$HOME"/.xfce4 "$HOME"/.fontconfig "$HOME"/.gnupg  "$HOME"/.ICEauthority "$HOME"/.xfce4 "$HOME"/.singularity 
+        rm -rf ${verbose} "$HOME"/.cache/sessions "$HOME"/.cache/gpg-agent-info "$HOME"/.config/xfce4 "$HOME"/.xfce4 "$HOME"/.fontconfig "$HOME"/.gnupg  "$HOME"/.ICEauthority "$HOME"/.xfce4 "$HOME"/.singularity 
         find /tmp/ -user "$USER" -exec rm -rf {} \; > /dev/null  2>&1 || true
     fi
-    
+    if [[ -n $secure ]];then
+        # If environment setup for desktop flavor.
+        echo "Generating security certificate."
+        if [[ ! -f "${VDT_HOME}/self.pem" ]];then
+            openssl req -new -x509 -days 365 -nodes -subj "/C=NZ/ST=Wellington/L=Wellington/O=NeSI/CN=$(hostname)" -out "${VDT_HOME}/self.pem" -keyout "${VDT_HOME}/self.pem"
+        fi    
+        cmd3="$cmd3 --cert=${VDT_HOME}/self.pem"
+    fi
     # Set   
     # groups $USER | tr ' ' '\n' | tail -n +3 | grep -v -- - | grep -v $USER
     # Copy template for desktop, if not exist.
@@ -137,22 +164,33 @@ set_env(){
     # Bindpaths
     # DONT ADD EXISTING BINDPATH. XALT IS UNWELCOME #$xdg_home:$HOME, /run,/etc,/tmp,/nesi/tmp,/run,
     export SINGULARITY_BINDPATH="/run,/etc/machine-id,/opt/nesi,/scale_wlg_persistent/filesets/project,/scale_wlg_nobackup/filesets/nobackup"
-    touch "${VDT_LOCKFILES}/${VDT_INSTANCE_NAME}.$(hostname)"
+    lockfile="${VDT_LOCKFILES}/${VDT_INSTANCE_NAME}.$(hostname):${VDT_SOCKET_PORT}"
+    touch "${lockfile}"
 
     # If environment setup for desktop flavor.
-    if [[ -f "${root}/${base}/env.sh" ]];then
-        source "${VDT_TEMPLATES}/${base}/env.sh"
+    if [[ -f "${VDT_TEMPLATES}/${base}/pre.sh" ]];then
+        source "${VDT_TEMPLATES}/${base}/pre.sh"
     fi
-    
+    if [[ -f "${VDT_TEMPLATES}/${base}/setup.sh" ]];then
+        export SINGULARITYENV_VDT_SETUP="${VDT_TEMPLATES}/${base}/setup.sh"
+    fi
 }
 
 create_vnc(){    
     #Randomy generate port number. Add lockfiles later.
     # Set instance name
     # If given persist name. Won't be killed on exit.
-    vecho "Singularity bindpath is $(echo "${SINGULARITY_BINDPATH}" | tr , '\n')"
+    vecho "Singularity bindpath is $(echo "${SINGULARITY_BINDPATH}" | tr , '\n')"     
+    img_path=$(readlink -f "$VDT_TEMPLATES/$base/image")
+
     #mkdir -p "/opt/nesi/vdt/logs/$USER"
-    vex ${cmd0} singularity ${cmd1} instance start ${cmd2} --cleanenv "$(readlink -f "$VDT_TEMPLATES/$base/image")" "${VDT_INSTANCE_NAME}"
+    if [[ -n $persistent ]];then
+        vex "${timeout}" singularity "${verbose}" instance start "${nohome}" "$(readlink -f "$VDT_TEMPLATES/$base/image")" "${VDT_INSTANCE_NAME}" "${VDT_SOCKET_PORT}"
+        img_path="instance://${VDT_INSTANCE_NAME}"
+    else
+         vex "${timeout}" singularity "${verbose}" run "${nohome}" "$(readlink -f "$VDT_TEMPLATES/$base/image")" "${VDT_SOCKET_PORT}"
+    fi
+   
     #rm -rf /tmp/.x* /tmp/.X* /tmp/.X11-unix/X /tmp/.ICE-unix/*
     #rm -f "/tmp/.X11-unix/X${display_port}"
     #rm  -f "/tmp/.X${display_port}"
@@ -163,19 +201,18 @@ create_vnc(){
     #singularity ${V} exec "instance://${instance_name}" vncserver -xstartup /opt/nesi/vdt/xstartup_nesi  -securitytypes TLSNone,X509None,None ":$display_port"
     # -xstartup /opt/nesi/vdt/xstartup_nesi 
     # -wm xfce4-session
-    echo "Started instance '$VDT_INSTANCE_NAME'"
 }
 
 vecho () {
     # For verbose print.
-    if [[ $VERBOSE ]]; then
+    if [[ $verbose ]]; then
         echo "$@"
     fi
 }
 
 vex () {
     # For verbose print.
-    if [[ $VERBOSE ]]; then
+    if [[ $verbose ]]; then
         echo "$@"
     fi
     $@
@@ -188,7 +225,17 @@ main() {
     vecho "'start_vdt' exiting"
     return 0
 }
-
+cleanup() {
+    pkill --signal 15 -P $$ > /dev/null 2>&1
+    #rm -f "/tmp/.X$display_port-lock"
+    rm -f "/tmp/.X11-unix/.X$display_port"
+    rm -f "$HOME"/.vnc/*"${VDT_INSTANCE_NAME}".pid
+    rm "${lockfile}"
+    return 0
+    # while [[ "$(fuser $1/tcp 2>/dev/null | wc -w)" -gt 0 ]];do
+    #     kill -9 "$(fuser $1/tcp 2>/dev/null | awk '{ print $1 }')"
+    # done
+}
 # construct_ssh() {
 #     # If jobid is specified, get host of jobid.
 #     if [[ "$session_jobid" ]];then
