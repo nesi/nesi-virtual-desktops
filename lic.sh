@@ -17,7 +17,7 @@ main(){
     found="Setting licence environment variables:\n"
     
     get_lic "/opt/nesi/share/COMSOL/Licenses/*" "SINGULARITYENV_LMCOMSOL_LICENSE_FILE" lecho
-    get_lic "/opt/nesi/share/MATLAB/Licenses/*" "SINGULARITYENV_MLM_LICENSE_FILE" abaqus
+    get_lic "/opt/nesi/share/MATLAB/Licenses/*" "SINGULARITYENV_MLM_LICENSE_FILE" labaqus
     get_lic "/opt/nesi/share/ANSYS/Licenses/*" "SINGULARITYENV_ANSYSLMD_LICENSE_FILE" lansys
     get_lic "/opt/nesi/share/ANSYS/Licenses/*" "SINGULARITYENV_ANSOFTD_LICENSE_FILE" lansys
     get_lic "/opt/nesi/share/ABAQUS/Licenses/*" "SINGULARITYENV_ABAQUSLM_LICENSE_FILE" lecho
