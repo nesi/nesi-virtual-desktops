@@ -294,6 +294,6 @@ cleanup() {
 #         return 1
 #     fi
 # }
-
+trap cleanup INT
 main "$@"
 
