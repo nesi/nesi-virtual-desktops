@@ -98,7 +98,7 @@ parse_input() {
         esac
     done
 
-    #if [[ -z ${VDT_DISPLAY_PORT} ]];then export VDT_DISPLAY_PORT=$(shuf -i 1100-2000 -n 1);fi
+    
 
     # if  [[ $# -gt 1 ]]; then
     #     export VDT_DISPLAY_PORT="$1"

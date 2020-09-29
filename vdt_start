@@ -9,9 +9,9 @@
 
 root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"    # Location of this script 
 
-export VDT_HOME=${VDT_HOME:-"$HOME/.vdt"}
-export VDT_LOCKFILES=${VDT_LOCKFILES:-"$root/lockfiles"} 
-export VDT_TEMPLATES=${VDT_TEMPLATES:-"$root/templates"}
+VDT_HOME=${VDT_HOME:-"$HOME/.vdt"}
+VDT_LOCKFILES=${VDT_LOCKFILES:-"$root/lockfiles"} 
+VDT_TEMPLATES=${VDT_TEMPLATES:-"$root/templates"}
 
 module purge > /dev/null  2>&1
 module load Python Singularity/3.5.2 -q 
@@ -54,7 +54,7 @@ EndOfHelp
 }
 
 parse_input() {
-    while [[ $# -gt 1 ]];do
+    while true;do
         case $1 in
             -v|--verbose)
                 verbose="-v"
@@ -86,13 +86,12 @@ parse_input() {
                 shift
             ;;
             -N|--name)
-                export VDT_INSTANCE_NAME="${2}"
+                VDT_INSTANCE_NAME="${2}"
                 shift
                 shift
             ;;
             -d|--display)
-                export VDT_DISPLAY_PORT="${2}"
-                v="-v"
+                VDT_DISPLAY_PORT="${2}"
                 #set -x
                 shift
                 shift
@@ -106,16 +105,22 @@ parse_input() {
                 exit 0
                 shift
             ;;
-            *)
+            *)  
+                if [[ $# -eq 1 ]] && (($1 >= 1 && $1 <= 65535));then
+                    VDT_SOCKET_PORT="$1"
+                    break
+                fi
+                if [[ $# -eq 0 ]];then
+                    echo "You must include a valid port number. '$(basename "$0") -h' for help."
+                    exit 1
+                fi
                 echo "$@"
-                echo "Unknown option '${1}', -h for help."  >&2
+                echo "Unknown option '${1}', '$(basename "$0") -h' for help."  >&2
                 help "$0"
                 exit 1
             ;;
         esac
     done
-    export VDT_SOCKET_PORT="$1"
-
     mkdir -p "${VDT_HOME:="${HOME}/.vdt"}"
 
     if [[ -z "${base}" ]];then base="eng";fi
@@ -125,14 +130,9 @@ parse_input() {
     else
         echo "Unknown template '${1}', valid options are '$(ls ${VDT_TEMPLATES})'.\n"
     fi
-    if [[ -z ${VDT_INSTANCE_NAME} ]];then export VDT_INSTANCE_NAME="${base}_vdt";fi    
 }
 
 set_env(){
-    # export VDT_INSTANCE_NAME="$1"
-    # export VDT_SOCKET_PORT="$2"
-    # export SINGULARITYENV_VDT_SOCKET_PORT="$VDT_SOCKET_PORT" 
-
     # If clean flag exists remove cache.
     if [[ -n $clean ]];then
         vecho "Clearing cache"
@@ -147,6 +147,16 @@ set_env(){
         fi    
         cmd3="$cmd3 --cert=${VDT_HOME}/self.pem"
     fi
+
+    while true; do
+        VDT_INSTANCE_NAME="${base}_vdt${num}";
+        if ! ls "${VDT_LOCKFILES}/*${VDT_INSTANCE_NAME}*" 1> /dev/null 2>&1;then break;fi    
+        num=$((num+1))
+    done    
+    while true;do 
+        VDT_DISPLAY_PORT=$(shuf -i 1100-2000 -n 1);
+        if ! ls "${VDT_LOCKFILES}/*:${VDT_DISPLAY_PORT}" 1> /dev/null 2>&1;then vecho "Display port: $VDT_DISPLAY_PORT"; break;fi    
+    done
     # Set   
     # groups $USER | tr ' ' '\n' | tail -n +3 | grep -v -- - | grep -v $USER
     # Copy template for desktop, if not exist.
@@ -158,13 +168,16 @@ set_env(){
     # mkdir -p "$HOME"/.config && chmod -R 0700 "$HOME"/.config
 
     # Possibly redundant.
-    #export SINGULARITYENV_XDG_CONFIG_HOME="$HOME/.config"
-    #export SINGULARITYENV_XDG_CACHE_HOME="$HOME/.cache"
+    #SINGULARITYENV_XDG_CONFIG_HOME="$HOME/.config"
+    #SINGULARITYENV_XDG_CACHE_HOME="$HOME/.cache"
 
     # Bindpaths
     # DONT ADD EXISTING BINDPATH. XALT IS UNWELCOME #$xdg_home:$HOME, /run,/etc,/tmp,/nesi/tmp,/run,
     export SINGULARITY_BINDPATH="/run,/etc/machine-id,/opt/nesi,/scale_wlg_persistent/filesets/project,/scale_wlg_nobackup/filesets/nobackup"
+    vecho "Singularity bindpath is $(echo "${SINGULARITY_BINDPATH}" | tr , '\n')"     
+
     lockfile="${VDT_LOCKFILES}/${VDT_INSTANCE_NAME}.$(hostname):${VDT_SOCKET_PORT}"
+
     touch "${lockfile}"
 
     # If environment setup for desktop flavor.
@@ -172,15 +185,20 @@ set_env(){
         source "${VDT_TEMPLATES}/${base}/pre.sh"
     fi
     if [[ -f "${VDT_TEMPLATES}/${base}/setup.sh" ]];then
-        export SINGULARITYENV_VDT_SETUP="${VDT_TEMPLATES}/${base}/setup.sh"
+        VDT_SETUP="${VDT_TEMPLATES}/${base}/setup.sh"
     fi
+    
+    for ev in $(compgen -A variable | grep ^VDT );do
+        export "SINGULARITYENV_$ev"="${!ev}"
+        vecho "SINGULARITYENV_$ev=${!ev}"
+    done
+    
 }
 
-create_vnc(){    
+create_vnc(){   
     #Randomy generate port number. Add lockfiles later.
     # Set instance name
     # If given persist name. Won't be killed on exit.
-    vecho "Singularity bindpath is $(echo "${SINGULARITY_BINDPATH}" | tr , '\n')"     
     img_path=$(readlink -f "$VDT_TEMPLATES/$base/image")
 
     #mkdir -p "/opt/nesi/vdt/logs/$USER"
@@ -188,9 +206,9 @@ create_vnc(){
         vex "${timeout}" singularity "${verbose}" instance start "${nohome}" "$(readlink -f "$VDT_TEMPLATES/$base/image")" "${VDT_INSTANCE_NAME}" "${VDT_SOCKET_PORT}"
         img_path="instance://${VDT_INSTANCE_NAME}"
     else
-         vex "${timeout}" singularity "${verbose}" run "${nohome}" "$(readlink -f "$VDT_TEMPLATES/$base/image")" "${VDT_SOCKET_PORT}"
+        vex "${timeout}" singularity "${verbose}" run "${nohome}" "$(readlink -f "$VDT_TEMPLATES/$base/image")"
     fi
-   
+    
     #rm -rf /tmp/.x* /tmp/.X* /tmp/.X11-unix/X /tmp/.ICE-unix/*
     #rm -f "/tmp/.X11-unix/X${display_port}"
     #rm  -f "/tmp/.X${display_port}"
