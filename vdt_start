@@ -13,6 +13,8 @@ VDT_HOME=${VDT_HOME:-"$HOME/.vdt"}
 VDT_LOCKFILES=${VDT_LOCKFILES:-"$root/lockfiles"} 
 VDT_TEMPLATES=${VDT_TEMPLATES:-"$root/templates"}
 
+max_desktops=3;
+
 module purge > /dev/null  2>&1
 module load Python Singularity/3.5.2 -q 
 module unload XALT/NeSI -q
@@ -106,13 +108,17 @@ parse_input() {
                 shift
             ;;
             *)  
-                if [[ $# -eq 1 ]] && (($1 >= 1 && $1 <= 65535));then
-                    VDT_SOCKET_PORT="$1"
-                    break
+                if [[ $# -eq 1 ]];then
+                    if (($1 < 2));then
+                        echo "Port number must be larger than 1.";exit 1
+                    elif (($1 > 65535));then
+                        echo "Port number must be less than 65536.";exit 1
+                    else (($1 >= 1 && $1 <= 65535))
+                        VDT_SOCKET_PORT="$1";break
+                    fi
                 fi
                 if [[ $# -eq 0 ]];then
-                    echo "You must include a valid port number. '$(basename "$0") -h' for help."
-                    exit 1
+                    echo "You must include a valid port number. '$(basename "$0") -h' for help.";exit 1
                 fi
                 echo "$@"
                 echo "Unknown option '${1}', '$(basename "$0") -h' for help."  >&2
@@ -150,13 +156,13 @@ set_env(){
 
     while true; do
         VDT_INSTANCE_NAME="${base}_vdt${num}";
-        if ! ls "${VDT_LOCKFILES}/*${VDT_INSTANCE_NAME}*" 1> /dev/null 2>&1;then break;fi    
+        if ! ls "${VDT_LOCKFILES}"/*"${VDT_INSTANCE_NAME}"* 1> /dev/null 2>&1;then vecho "Instance name: ${VDT_INSTANCE_NAME}";break;fi    
         num=$((num+1))
     done    
-    while true;do 
-        VDT_DISPLAY_PORT=$(shuf -i 1100-2000 -n 1);
-        if ! ls "${VDT_LOCKFILES}/*:${VDT_DISPLAY_PORT}" 1> /dev/null 2>&1;then vecho "Display port: $VDT_DISPLAY_PORT"; break;fi    
-    done
+    if ls "${VDT_LOCKFILES}"/*"$(hostname)":"${VDT_SOCKET_PORT}" 1> /dev/null 2>&1;then echo "Socket port: $VDT_SOCKET_PORT is in use on $(hostname), please choose another.";exit 1;fi    
+    
+    VDT_DISPLAY_PORT=$(shuf -i 1100-2000 -n 1)
+
     # Set   
     # groups $USER | tr ' ' '\n' | tail -n +3 | grep -v -- - | grep -v $USER
     # Copy template for desktop, if not exist.
@@ -173,11 +179,17 @@ set_env(){
 
     # Bindpaths
     # DONT ADD EXISTING BINDPATH. XALT IS UNWELCOME #$xdg_home:$HOME, /run,/etc,/tmp,/nesi/tmp,/run,
-    export SINGULARITY_BINDPATH="/run,/etc/machine-id,/opt/nesi,/scale_wlg_persistent/filesets/project,/scale_wlg_nobackup/filesets/nobackup"
+    export SINGULARITY_BINDPATH="\
+/run,\
+/etc/machine-id,\
+/opt/nesi,\
+/nesi/project,\
+/nesi/nobackup,\
+/usr/share/lmod/lmod"
+
     vecho "Singularity bindpath is $(echo "${SINGULARITY_BINDPATH}" | tr , '\n')"     
 
     lockfile="${VDT_LOCKFILES}/${VDT_INSTANCE_NAME}.$(hostname):${VDT_SOCKET_PORT}"
-
     touch "${lockfile}"
 
     # If environment setup for desktop flavor.
@@ -200,13 +212,13 @@ create_vnc(){
     # Set instance name
     # If given persist name. Won't be killed on exit.
     img_path=$(readlink -f "$VDT_TEMPLATES/$base/image")
-
+    
     #mkdir -p "/opt/nesi/vdt/logs/$USER"
     if [[ -n $persistent ]];then
         vex "${timeout}" singularity "${verbose}" instance start "${nohome}" "$(readlink -f "$VDT_TEMPLATES/$base/image")" "${VDT_INSTANCE_NAME}" "${VDT_SOCKET_PORT}"
         img_path="instance://${VDT_INSTANCE_NAME}"
     else
-        vex "${timeout}" singularity "${verbose}" run "${nohome}" "$(readlink -f "$VDT_TEMPLATES/$base/image")"
+        vex "${timeout}" singularity "${verbose}" run "${nohome}" "${img_path}"
     fi
     
     #rm -rf /tmp/.x* /tmp/.X* /tmp/.X11-unix/X /tmp/.ICE-unix/*
@@ -244,11 +256,13 @@ main() {
     return 0
 }
 cleanup() {
-    pkill --signal 15 -P $$ > /dev/null 2>&1
+    #vncserver
+    singularity $verbose exec "$img_path" "vncserver -kill ":$VDT_DISPLAY_PORT"" 1> /dev/null 2>&1
+    rm -f $verbose /tmp/.X11-unix/.X*
+    rm -f $verbose "$HOME"/.vnc/*"${VDT_INSTANCE_NAME}".pid
+    rm -f $verbose "${lockfile}"
+    pkill --signal 9 -P $$ > /dev/null 2>&1
     #rm -f "/tmp/.X$display_port-lock"
-    rm -f "/tmp/.X11-unix/.X$display_port"
-    rm -f "$HOME"/.vnc/*"${VDT_INSTANCE_NAME}".pid
-    rm "${lockfile}"
     return 0
     # while [[ "$(fuser $1/tcp 2>/dev/null | wc -w)" -gt 0 ]];do
     #     kill -9 "$(fuser $1/tcp 2>/dev/null | awk '{ print $1 }')"
@@ -294,6 +308,7 @@ cleanup() {
 #         return 1
 #     fi
 # }
-trap cleanup INT
+trap cleanup 0
+
 main "$@"
 

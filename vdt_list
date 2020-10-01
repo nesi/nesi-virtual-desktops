@@ -8,10 +8,8 @@ root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 export VDT_LOCKFILES=${VDT_LOCKFILES:-"$root/lockfiles"}
 
 module purge > /dev/null  2>&1
-module load Python Singularity/3.5.2 -q 
+module load Python Singularity/3.5.2 -q
 module unload XALT/NeSI -q
-
-
 
 # Where files are saved in user home.
 help() {
@@ -47,7 +45,7 @@ parse_input() {
                 shift
             ;;
             *)
-                echo $@
+                echo "$@"
                 echo "Unknown option '${1}', -h for help."  >&2
                 help "$0"
                 exit 1
@@ -57,14 +55,14 @@ parse_input() {
 }
 
 list_vnc(){
-
+    
     #$echo $vnc_pid_root
     #if [["$verbose"]]; then echo "Using "
     _uniq_hosts=()
     _intances=()
     _lockfiles=($(ls $VDT_LOCKFILES))
-
-
+    
+    
     #vnc_list=( $(ls "${vnc_pid_root:="${HOME}/.vnc"}"/*.pid 2> /dev/null || true) )
     #echo "${vnc_list[@]}"
     for session in  ${_lockfiles[@]} ; do
@@ -73,16 +71,16 @@ list_vnc(){
         #_hostname=$(echo "$session" | sed -e 's/.*\/\(.*\):.*/\1/')
         
         _uniq_hosts+=( "$(echo $session | cut -d "." -f2)" )
-        #echo "${_display_port} ${_hostname}"    
-        #echo "${session}"  	
-
+        #echo "${_display_port} ${_hostname}"
+        #echo "${session}"
+        
     done
     _uniq_hosts=($(printf "%s\n" "${_uniq_hosts[@]}" | sort -u | tr '\n' ' '))
     #_intances+=( $(singularity instance list | tail -n +2 | tr -s " " "\|" | tr '\n' '${HOSTNAME} \n' &) )
     if [[ ! "$noheader" ]]; then printf "%12s %12s %12s %20s\n" "Name" "PID" "Host" "Image";fi
-
+    
     singularity instance list | tail -n +2 |awk -v host="$(hostname)" '{printf "%12s %12s %12s %20s\n", $1, $2, host, $3}'
-
+    
     for host in "${_uniq_hosts[@]}" ; do
         if [[ "${host}" == "$(hostname)" ]];then continue; fi
         echo "HOSTNAME='$host'"
@@ -90,9 +88,9 @@ list_vnc(){
     done
     
     #printf "${_intances[@]}"
-
     
-exit 0
+    
+    exit 0
 }
 
 main() {

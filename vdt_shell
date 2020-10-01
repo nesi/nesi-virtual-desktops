@@ -82,6 +82,8 @@ main() {
     connect_vnc
     return 0
 }
-trap cleanup INT
+
+trap cleanup 0
+
 main "$@"
 
