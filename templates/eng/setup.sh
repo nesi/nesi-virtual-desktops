@@ -28,6 +28,9 @@ mk_icn "MATLAB_2019b" \
 "Exec=/opt/nesi/share/MATLAB/R2019b/bin/matlab" \
 "Name=MATLAB 2019b" \
 "Icon=/opt/nesi/share/MATLAB/R2019b/bin/glnxa64/cef_resources/matlab_icon.png"
+export PATH="/opt/nesi/mahuika/MATLAB/R2018b/bin:$PATH"
+export PATH="/opt/nesi/mahuika/MATLAB/R2018b/etc/glnxa64:$PATH"
+export _JAVA_OPTIONS="-Xmx256m"
 fi
 if [[ -n "$MLM_LICENSE_FILE" ]];then
 mk_icn "COMSOL_5.5" \

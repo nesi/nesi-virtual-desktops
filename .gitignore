@@ -1,2 +1,6 @@
 __*
-./*/*.pyc
+*.swp
+*.pyc
+lockfiles/*
+.vscode
+
