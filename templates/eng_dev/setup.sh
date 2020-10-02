@@ -1,11 +1,12 @@
-#!/bin/bash -ea
+#!/bin/bash -a
 
 
 root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$root/../../lic.sh"
 
 mk_icn(){
-    file="${XDG_DESKTOP_DIR:-$HOME/Desktop}/${1}.desktop"
+    file="${XDG_DESKTOP_DIR:=$HOME/Desktop}/${1}.desktop"
+    mkdir -p "$XDG_DESKTOP_DIR"
     shift
     if  [[ -f  $file ]];then return;fi
     echo "[Desktop Entry]" > "${file}"
@@ -17,6 +18,17 @@ mk_icn(){
 }
 
 export BROWSER=firefox
+mkdir -vp ${XDG_DESKTOP_DIR:=$HOME/Desktop}
+
+# Create links to projects. (max 8)
+while read -r proj;do
+    ln -vs $proj "$XDG_DESKTOP_DIR/project_$(basename $proj)"
+done  < <(find "/nesi/project/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" -writable -type d | head -n 8)
+
+# Create links to nobackup. (max 8)
+while read -r proj;do
+    ln -vs $proj "$XDG_DESKTOP_DIR/nobackup_$(basename $proj)"
+done  < <(find "/nesi/nobackup/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" -writable -type d | head -n 8)
 
 mk_icn "Terminal" \
 "Exec=exo-open --launch TerminalEmulator" \
@@ -41,7 +53,6 @@ mk_icn "ANSYSwb" \
 "Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
 "Name=ANSYS Workbench" 
 fi
-
 
 if [[ -n "$ABAQUSLM_LICENSE_FILE" ]];then
 mk_icn "ABAQUScae" \

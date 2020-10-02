@@ -159,7 +159,7 @@ set_env(){
         if ! ls "${VDT_LOCKFILES}"/*"${VDT_INSTANCE_NAME}"* 1> /dev/null 2>&1;then vecho "Instance name: ${VDT_INSTANCE_NAME}";break;fi    
         num=$((num+1))
     done    
-    if ls "${VDT_LOCKFILES}"/*"$(hostname)":"${VDT_SOCKET_PORT}" 1> /dev/null 2>&1;then echo "Socket port: $VDT_SOCKET_PORT is in use on $(hostname), please choose another.";exit 1;fi    
+    if ls "${VDT_LOCKFILES}"/*"$(hostname)":"${VDT_SOCKET_PORT}" 1> /dev/null 2>&1;then echo "Socket port: ${VDT_SOCKET_PORT} is in use on $(hostname), please choose another.";exit 1;fi    
     
     VDT_DISPLAY_PORT=$(shuf -i 1100-2000 -n 1)
 
@@ -189,7 +189,7 @@ set_env(){
 
     vecho "Singularity bindpath is $(echo "${SINGULARITY_BINDPATH}" | tr , '\n')"     
 
-    lockfile="${VDT_LOCKFILES}/${VDT_INSTANCE_NAME}.$(hostname):${VDT_SOCKET_PORT}"
+    lockfile="${VDT_LOCKFILES}/${VDT_INSTANCE_NAME}.$(hostname):${VDT_SOCKET_PORT}" 
     touch "${lockfile}"
 
     # If environment setup for desktop flavor.
@@ -211,6 +211,7 @@ create_vnc(){
     #Randomy generate port number. Add lockfiles later.
     # Set instance name
     # If given persist name. Won't be killed on exit.
+    if [[ ! -x  "$(readlink -f "$VDT_TEMPLATES/$base/image")" ]];then echo "'$VDT_TEMPLATES/$base/image' doesn't exist!";exit 1;fi
     img_path=$(readlink -f "$VDT_TEMPLATES/$base/image")
     
     #mkdir -p "/opt/nesi/vdt/logs/$USER"
@@ -252,16 +253,16 @@ main() {
     parse_input "$@"
     set_env
     create_vnc
-    vecho "'start_vdt' exiting"
+    
     return 0
 }
 cleanup() {
     #vncserver
-    singularity $verbose exec "$img_path" "vncserver -kill ":$VDT_DISPLAY_PORT"" 1> /dev/null 2>&1
+    singularity $verbose exec "$img_path" "vncserver -kill ":$VDT_DISPLAY_PORT"" 1> /dev/null 2>&1 || true
     rm -f $verbose /tmp/.X11-unix/.X*
     rm -f $verbose "$HOME"/.vnc/*"${VDT_INSTANCE_NAME}".pid
-    rm -f $verbose "${lockfile}"
-    pkill --signal 9 -P $$ > /dev/null 2>&1
+    if [[ -n "${lockfile}" ]]; then rm -f $verbose "${lockfile}";fi
+    pkill --signal 9 -P $$ > /dev/null 2>&1 
     #rm -f "/tmp/.X$display_port-lock"
     return 0
     # while [[ "$(fuser $1/tcp 2>/dev/null | wc -w)" -gt 0 ]];do
