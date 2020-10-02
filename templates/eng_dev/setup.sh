@@ -22,13 +22,13 @@ mkdir -vp ${XDG_DESKTOP_DIR:=$HOME/Desktop}
 
 # Create links to projects. (max 8)
 while read -r proj;do
-    ln -vs "$proj" "$XDG_DESKTOP_DIR/project_$(basename $proj)"
+    ln -vs $proj "$XDG_DESKTOP_DIR/project_$(basename $proj)"
 done  < <(find "/nesi/project/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" -writable -type d | head -n 8)
 
 # Create links to nobackup. (max 8)
 while read -r proj;do
-    ln -vs "$proj" "$XDG_DESKTOP_DIR/nobackup_$(basename $proj)"
-done < <(find "/nesi/nobackup/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" -writable -type d | head -n 8)
+    ln -vs $proj "$XDG_DESKTOP_DIR/nobackup_$(basename $proj)"
+done  < <(find "/nesi/nobackup/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" -writable -type d | head -n 8)
 
 mk_icn "Terminal" \
 "Exec=exo-open --launch TerminalEmulator" \
@@ -41,8 +41,8 @@ mk_icn "MATLAB_2019b" \
 "Name=MATLAB 2019b" \
 "Icon=/opt/nesi/share/MATLAB/R2019b/bin/glnxa64/cef_resources/matlab_icon.png"
 
-export PATH="/opt/nesi/mahuika/MATLAB/R2018b/bin:$PATH"
-export PATH="/opt/nesi/mahuika/MATLAB/R2018b/etc/glnxa64:$PATH"
+export PATH="/opt/nesi/mahuika/MATLAB/R2019b/bin:$PATH"
+export PATH="/opt/nesi/mahuika/MATLAB/R2019b/etc/glnxa64:$PATH"
 export _JAVA_OPTIONS="-Xmx256m"
 fi
 if [[ -n "$LMCOMSOL_LICENSE_FILE" ]];then
