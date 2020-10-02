@@ -22,13 +22,22 @@ mkdir -vp ${XDG_DESKTOP_DIR:=$HOME/Desktop}
 
 # Create links to projects. (max 8)
 while read -r proj;do
+<<<<<<< HEAD
     ln -vs "$proj" "$XDG_DESKTOP_DIR/project_$(basename $proj)"
+=======
+    ln -vs $proj "$XDG_DESKTOP_DIR/project_$(basename $proj)"
+>>>>>>> 4040cf336f7f22ea90d8e8c8c7da3e87f4d4984f
 done  < <(find "/nesi/project/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" -writable -type d | head -n 8)
 
 # Create links to nobackup. (max 8)
 while read -r proj;do
+<<<<<<< HEAD
     ln -vs "$proj" "$XDG_DESKTOP_DIR/nobackup_$(basename $proj)"
 done < <(find "/nesi/nobackup/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" -writable -type d | head -n 8)
+=======
+    ln -vs $proj "$XDG_DESKTOP_DIR/nobackup_$(basename $proj)"
+done  < <(find "/nesi/nobackup/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" -writable -type d | head -n 8)
+>>>>>>> 4040cf336f7f22ea90d8e8c8c7da3e87f4d4984f
 
 mk_icn "Terminal" \
 "Exec=exo-open --launch TerminalEmulator" \
