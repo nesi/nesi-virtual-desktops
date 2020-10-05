@@ -41,8 +41,8 @@ mk_icn "MATLAB_2019b" \
 "Name=MATLAB 2019b" \
 "Icon=/opt/nesi/share/MATLAB/R2019b/bin/glnxa64/cef_resources/matlab_icon.png"
 
-export PATH="/opt/nesi/mahuika/MATLAB/R2019b/bin:$PATH"
-export PATH="/opt/nesi/mahuika/MATLAB/R2019b/etc/glnxa64:$PATH"
+export PATH="/opt/nesi/share/MATLAB/R2019b/bin:$PATH"
+export PATH="/opt/nesi/share/MATLAB/R2019b/etc/glnxa64:$PATH"
 export _JAVA_OPTIONS="-Xmx256m"
 fi
 if [[ -n "$LMCOMSOL_LICENSE_FILE" ]];then
