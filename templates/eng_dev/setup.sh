@@ -23,7 +23,7 @@ mkdir -vp ${XDG_DESKTOP_DIR:=$HOME/Desktop}
 # Create links to projects. (max 8)
 while read -r proj;do
     ln -vs "$proj" "$XDG_DESKTOP_DIR/project_$(basename $proj)"
-done  < <(find "/nesi/project/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" -writable -type d | head -n 8)
+done < <(find "/nesi/project/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" -writable -type d | head -n 8)
 
 # Create links to nobackup. (max 8)
 while read -r proj;do
