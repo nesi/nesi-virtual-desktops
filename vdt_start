@@ -185,9 +185,14 @@ set_env(){
 /opt/nesi,\
 /nesi/project,\
 /nesi/nobackup,\
-/usr/share/lmod/lmod"
+/usr/share/lmod/lmod,\
+/etc/opt/slurm,\
+/opt/slurm,\
+/usr/lib64/libmunge.so,\
+/usr/lib64/libmunge.so.2,\
+/usr/lib64/libmunge.so.2.0.0"
 
-    vecho "Singularity bindpath is $(echo "${SINGULARITY_BINDPATH}" | tr , '\n')"     
+    vecho "Singularity bindpath is $(echo "${SINGULARITY_BINDPATH}" | tr , '\n')"
 
     lockfile="${VDT_LOCKFILES}/${VDT_INSTANCE_NAME}.$(hostname):${VDT_SOCKET_PORT}" 
     touch "${lockfile}"
@@ -212,11 +217,12 @@ create_vnc(){
     # Set instance name
     # If given persist name. Won't be killed on exit.
     if [[ ! -x  "$(readlink -f "$VDT_TEMPLATES/$base/image")" ]];then echo "'$VDT_TEMPLATES/$base/image' doesn't exist!";exit 1;fi
+
     img_path=$(readlink -f "$VDT_TEMPLATES/$base/image")
     
     #mkdir -p "/opt/nesi/vdt/logs/$USER"
     if [[ -n $persistent ]];then
-        vex "${timeout}" singularity "${verbose}" instance start "${nohome}" "$(readlink -f "$VDT_TEMPLATES/$base/image")" "${VDT_INSTANCE_NAME}" "${VDT_SOCKET_PORT}"
+        vex "${timeout}" singularity "${verbose}" instance start "${nohome}" "${img_path}" "${VDT_INSTANCE_NAME}" "${VDT_SOCKET_PORT}"
         img_path="instance://${VDT_INSTANCE_NAME}"
     else
         vex "${timeout}" singularity "${verbose}" run "${nohome}" "${img_path}"

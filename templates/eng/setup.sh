@@ -1,6 +1,5 @@
 #!/bin/bash -a
 
-
 root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$root/../../lic.sh"
 
@@ -32,8 +31,8 @@ mk_icn "MATLAB_2019b" \
 "Name=MATLAB 2019b" \
 "Icon=/opt/nesi/share/MATLAB/R2019b/bin/glnxa64/cef_resources/matlab_icon.png"
 
-export PATH="/opt/nesi/mahuika/MATLAB/R2019b/bin:$PATH"
-export PATH="/opt/nesi/mahuika/MATLAB/R2019b/etc/glnxa64:$PATH"
+export PATH="/opt/nesi/share/MATLAB/R2019b/bin:$PATH"
+export PATH="/opt/nesi/share/MATLAB/R2019b/etc/glnxa64:$PATH"
 export _JAVA_OPTIONS="-Xmx256m"
 fi
 if [[ -n "$LMCOMSOL_LICENSE_FILE" ]];then
@@ -55,3 +54,13 @@ mk_icn "ABAQUScae" \
 "Icon=/opt/nesi/share/ABAQUS/2019/SimulationServices/V6R2019x/CAADoc/linux_a64.doc/English/CAAIcons/images/logoabaqus.png" \
 "Name=ABAQUS 2019"
 fi
+ 
+# Create links to projects. (max 8)
+(find "/nesi/project/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" -writable -type d | head -n 8) | while read -r proj;do
+    ln -vs "$proj" "$XDG_DESKTOP_DIR/project_$(basename $proj)" 2>/dev/null
+done
+
+# Create links to nobackup. (max 8)
+(find "/nesi/nobackup/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" -writable -type d | head -n 8) | while read -r proj;do
+    ln -vs "$proj" "$XDG_DESKTOP_DIR/nobackup_$(basename $proj)" 2>/dev/null
+done
