@@ -216,7 +216,7 @@ set_env(){
     
     # Murder any ports that were missed.
     while [[ "$(fuser "$VDT_SOCKET_PORT"/tcp 2>/dev/null | wc -w)" -gt 0 ]];do
-        iprint "Port '$VDT_SOCKET_PORT' in use. Killing $VDT_SOCKET_PORT"
+        echo "Port '$VDT_SOCKET_PORT' in use. Killing $VDT_SOCKET_PORT"
         kill -9 $(fuser "$VDT_SOCKET_PORT"/tcp 2>/dev/null | awk '{ print $1 }')
     done
 }
