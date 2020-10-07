@@ -56,6 +56,8 @@ EndOfHelp
 }
 
 parse_input() {
+    args=( "$@" ) # Save unshifted args for later.
+    
     while true;do
         case $1 in
             -v|--verbose)
@@ -75,6 +77,11 @@ parse_input() {
                 echo "persistant containers currently disabled"
                 exit 1 
                 persistent="true"
+                shift
+            ;;
+            -r|--remote)
+                remote="${2}"
+                shift
                 shift
             ;;
             -t|--timeout)
@@ -138,6 +145,17 @@ parse_input() {
     fi
 }
 
+ssh_forward(){
+    # If remote destination is set, and not self.
+    if [[ -n $remote ]] && [[ ! $remote == $(hostname) ]];then
+        echo "Forwarding to ${remote}..."
+        # Take original arguments
+        vex ssh ${verbose} -A -o ExitOnForwardFailure=yes -L "${VDT_SOCKET_PORT}:127.0.0.1:${VDT_SOCKET_PORT}" "${remote}" "${0}" "${args[@]}"
+        exit $?
+    fi
+  
+}
+
 set_env(){
     # If clean flag exists remove cache.
     if [[ -n $clean ]];then
@@ -154,31 +172,17 @@ set_env(){
         cmd3="$cmd3 --cert=${VDT_HOME}/self.pem"
     fi
 
+    
     while true; do
-        VDT_INSTANCE_NAME="${base}_vdt${num}";
-        if ! ls "${VDT_LOCKFILES}"/*"${VDT_INSTANCE_NAME}"* 1> /dev/null 2>&1;then vecho "Instance name: ${VDT_INSTANCE_NAME}";break;fi    
         num=$((num+1))
+        if ! ls "${VDT_LOCKFILES}"/*"${VDT_INSTANCE_NAME}"* 1> /dev/null 2>&1;then vecho "Instance name: ${VDT_INSTANCE_NAME}";break;fi
+        VDT_INSTANCE_NAME="${VDT_INSTANCE_NAME}_${num}";    
+
     done    
     if ls "${VDT_LOCKFILES}"/*"$(hostname)":"${VDT_SOCKET_PORT}" 1> /dev/null 2>&1;then echo "Socket port: ${VDT_SOCKET_PORT} is in use on $(hostname), please choose another.";exit 1;fi    
     
     VDT_DISPLAY_PORT=$(shuf -i 1100-2000 -n 1)
 
-    # Set   
-    # groups $USER | tr ' ' '\n' | tail -n +3 | grep -v -- - | grep -v $USER
-    # Copy template for desktop, if not exist.
-    #if [[ ! -d "$xdg_home/$desktop" ]]; then
-    #echo "ls -d "$root/$desktop/*/" "$root/default/*/""
-
-    # Black sceen bug. Still dont understand.
-    # mkdir -p "$HOME"/.cache && chmod -R 0700 "$HOME"/.cache
-    # mkdir -p "$HOME"/.config && chmod -R 0700 "$HOME"/.config
-
-    # Possibly redundant.
-    #SINGULARITYENV_XDG_CONFIG_HOME="$HOME/.config"
-    #SINGULARITYENV_XDG_CACHE_HOME="$HOME/.cache"
-
-    # Bindpaths
-    # DONT ADD EXISTING BINDPATH. XALT IS UNWELCOME #$xdg_home:$HOME, /run,/etc,/tmp,/nesi/tmp,/run,
     export SINGULARITY_BINDPATH="\
 /run,\
 /etc/machine-id,\
@@ -202,7 +206,7 @@ set_env(){
         source "${VDT_TEMPLATES}/${base}/pre.sh"
     fi
     if [[ -f "${VDT_TEMPLATES}/${base}/setup.sh" ]];then
-        VDT_SETUP="${VDT_TEMPLATES}/${base}/setup.sh"
+        export VDT_SETUP="${VDT_TEMPLATES}/${base}/setup.sh"
     fi
     
     for ev in $(compgen -A variable | grep ^VDT );do
@@ -210,6 +214,11 @@ set_env(){
         vecho "SINGULARITYENV_$ev=${!ev}"
     done
     
+    # Murder any ports that were missed.
+    while [[ "$(fuser "$VDT_SOCKET_PORT"/tcp 2>/dev/null | wc -w)" -gt 0 ]];do
+        iprint "Port '$VDT_SOCKET_PORT' in use. Killing $VDT_SOCKET_PORT"
+        kill -9 $(fuser "$VDT_SOCKET_PORT"/tcp 2>/dev/null | awk '{ print $1 }')
+    done
 }
 
 create_vnc(){   
@@ -257,6 +266,7 @@ vex () {
 
 main() {
     parse_input "$@"
+    ssh_forward 
     set_env
     create_vnc
     
@@ -315,7 +325,7 @@ cleanup() {
 #         return 1
 #     fi
 # }
-trap cleanup 0
+trap cleanup INT
 
 main "$@"
 
