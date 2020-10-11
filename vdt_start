@@ -75,8 +75,8 @@ parse_input() {
             ;;
             -p|--persistent)
                 echo "persistant containers currently disabled"
-                exit 1 
-                persistent="true"
+                #exit 1 
+                persistent="&"
                 shift
             ;;
             -r|--remote)
@@ -143,21 +143,42 @@ parse_input() {
     else
         echo "Unknown template '${1}', valid options are '$(ls ${VDT_TEMPLATES})'.\n"
     fi
+    # If clean flag exists remove cache.
+
+    if [ -z "$VDT_INSTANCE_NAME" ];then VDT_INSTANCE_NAME="${base}_$(whoami)";fi
+
+    export lockfile="${VDT_LOCKFILES}/${VDT_INSTANCE_NAME}.${remote:-$(hostname)}:${VDT_SOCKET_PORT}"
+     
+    if ls "${VDT_LOCKFILES}/*$(hostname):${VDT_SOCKET_PORT}" 1> /dev/null 2>&1;then echo "Socket port: ${VDT_SOCKET_PORT} is in use on $(hostname), please choose another.";exit 1;fi    
+    #find "$VDT_LOCKFILES" -type f -user "$(whoami)" -name *${1}* -exec rm ${verbose} -f {} \;
+    while true; do
+        num=$((num+1))
+        if ! ls "${VDT_LOCKFILES}"/*"${VDT_INSTANCE_NAME}"* 1> /dev/null 2>&1;then vecho "Instance name: ${VDT_INSTANCE_NAME}";break;fi
+        export VDT_INSTANCE_NAME="${VDT_INSTANCE_NAME}_${num}";    
+    done   
+
+
 }
 
 ssh_forward(){
     # If remote destination is set, and not self.
     if [[ -n $remote ]] && [[ ! $remote == $(hostname) ]];then
         echo "Forwarding to ${remote}..."
+
+        # If ephemeral, local forwarding is good. 
+        if [[ -z $persistent ]];then
+            localforward="-L ${VDT_SOCKET_PORT}:127.0.0.1:${VDT_SOCKET_PORT}"
+        else
+            export VDT_TUNNEL_HOST="$(hostname)"
+            env_fwd="-o SendEnv=VDT_TUNNEL_HOST"
+        fi
+        vex ssh ${verbose} -A -o ExitOnForwardFailure=yes ${env_fwd} ${localforward} "${remote}" "${root}/vdt_start" "${args[@]:0}"
         # Take original arguments
-        vex ssh ${verbose} -A -o ExitOnForwardFailure=yes -L "${VDT_SOCKET_PORT}:127.0.0.1:${VDT_SOCKET_PORT}" "${remote}" "${0}" "${args[@]}"
         exit $?
     fi
   
 }
-
 set_env(){
-    # If clean flag exists remove cache.
     if [[ -n $clean ]];then
         vecho "Clearing cache"
         rm -rf ${verbose} "$HOME"/.cache/sessions "$HOME"/.cache/gpg-agent-info "$HOME"/.config/xfce4 "$HOME"/.xfce4 "$HOME"/.fontconfig "$HOME"/.gnupg  "$HOME"/.ICEauthority "$HOME"/.xfce4 "$HOME"/.singularity 
@@ -171,15 +192,6 @@ set_env(){
         fi    
         cmd3="$cmd3 --cert=${VDT_HOME}/self.pem"
     fi
-
-    
-    while true; do
-        num=$((num+1))
-        if ! ls "${VDT_LOCKFILES}"/*"${VDT_INSTANCE_NAME}"* 1> /dev/null 2>&1;then vecho "Instance name: ${VDT_INSTANCE_NAME}";break;fi
-        VDT_INSTANCE_NAME="${VDT_INSTANCE_NAME}_${num}";    
-
-    done    
-    if ls "${VDT_LOCKFILES}"/*"$(hostname)":"${VDT_SOCKET_PORT}" 1> /dev/null 2>&1;then echo "Socket port: ${VDT_SOCKET_PORT} is in use on $(hostname), please choose another.";exit 1;fi    
     
     VDT_DISPLAY_PORT=$(shuf -i 1100-2000 -n 1)
 
@@ -198,8 +210,8 @@ set_env(){
 
     vecho "Singularity bindpath is $(echo "${SINGULARITY_BINDPATH}" | tr , '\n')"
 
-    lockfile="${VDT_LOCKFILES}/${VDT_INSTANCE_NAME}.$(hostname):${VDT_SOCKET_PORT}" 
-    touch "${lockfile}"
+     
+
 
     # If environment setup for desktop flavor.
     if [[ -f "${VDT_TEMPLATES}/${base}/pre.sh" ]];then
@@ -208,7 +220,7 @@ set_env(){
     if [[ -f "${VDT_TEMPLATES}/${base}/setup.sh" ]];then
         export VDT_SETUP="${VDT_TEMPLATES}/${base}/setup.sh"
     fi
-    
+    # Export all variables starting with 'VDT' to singularity.
     for ev in $(compgen -A variable | grep ^VDT );do
         export "SINGULARITYENV_$ev"="${!ev}"
         vecho "SINGULARITYENV_$ev=${!ev}"
@@ -228,11 +240,14 @@ create_vnc(){
     if [[ ! -x  "$(readlink -f "$VDT_TEMPLATES/$base/image")" ]];then echo "'$VDT_TEMPLATES/$base/image' doesn't exist!";exit 1;fi
 
     img_path=$(readlink -f "$VDT_TEMPLATES/$base/image")
-    
+    vecho "Lockfile is ${lockfile}"
+    touch "${lockfile}"
     #mkdir -p "/opt/nesi/vdt/logs/$USER"
     if [[ -n $persistent ]];then
-        vex "${timeout}" singularity "${verbose}" instance start "${nohome}" "${img_path}" "${VDT_INSTANCE_NAME}" "${VDT_SOCKET_PORT}"
+        vex "${timeout}" singularity "${verbose}" instance start "${nohome}" "${img_path}" "${VDT_INSTANCE_NAME}" 
         img_path="instance://${VDT_INSTANCE_NAME}"
+        echo "Desktop ${VDT_INSTANCE_NAME} started"
+        echo "Connect at http://localhost:${VDT_SOCKET_PORT}, kill with vdt kill ${VDT_INSTANCE_NAME}"
     else
         vex "${timeout}" singularity "${verbose}" run "${nohome}" "${img_path}"
     fi
@@ -252,14 +267,14 @@ create_vnc(){
 vecho () {
     # For verbose print.
     if [[ $verbose ]]; then
-        echo "$@"
+        echo "$LINENO:$*"
     fi
 }
 
 vex () {
     # For verbose print.
     if [[ $verbose ]]; then
-        echo "$@"
+        echo "$LINENO:$*"
     fi
     $@
 }
@@ -277,6 +292,7 @@ cleanup() {
     singularity $verbose exec "$img_path" "vncserver -kill ":$VDT_DISPLAY_PORT"" 1> /dev/null 2>&1 || true
     rm -f $verbose /tmp/.X11-unix/.X*
     rm -f $verbose "$HOME"/.vnc/*"${VDT_INSTANCE_NAME}".pid
+    
     if [[ -n "${lockfile}" ]]; then rm -f $verbose "${lockfile}";fi
     pkill --signal 9 -P $$ > /dev/null 2>&1 
     #rm -f "/tmp/.X$display_port-lock"

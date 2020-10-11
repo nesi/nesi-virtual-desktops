@@ -129,6 +129,8 @@ vex () {
     "$@"
 }
 main() {
+    echo "THIS COMMAND DOES NOTHING"
+    exit 1
     parse_input "$@"
     connect_vnc
     return 0
