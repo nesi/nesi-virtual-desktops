@@ -100,7 +100,6 @@ list_vnc(){
         wait $pid
     done
     #printf "${_intances[@]}"
-    
     exit 0
 }
 
@@ -117,8 +116,10 @@ check_on_host(){
         find "$VDT_LOCKFILES" -type f -user "$(whoami)" -name *${1}* -exec rm ${verbose} -f {} \;
     else
         for instance in "${instances_in_host[@]}";do
-            echo ${instance}
-        done
+            mapfile -t instance_array <<< "$instance"
+            echo "${instance_array[$1]}"
+            #touch ${instance}
+        done 
     fi
 }
 

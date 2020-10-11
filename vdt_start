@@ -147,15 +147,17 @@ parse_input() {
 
     if [ -z "$VDT_INSTANCE_NAME" ];then VDT_INSTANCE_NAME="${base}_$(whoami)";fi
 
-    export lockfile="${VDT_LOCKFILES}/${VDT_INSTANCE_NAME}.${remote:-$(hostname)}:${VDT_SOCKET_PORT}"
-     
-    if ls "${VDT_LOCKFILES}/*$(hostname):${VDT_SOCKET_PORT}" 1> /dev/null 2>&1;then echo "Socket port: ${VDT_SOCKET_PORT} is in use on $(hostname), please choose another.";exit 1;fi    
+    lockfile="${VDT_LOCKFILES}/${VDT_INSTANCE_NAME}.${remote:-$(hostname)}:${VDT_SOCKET_PORT}"
+    vecho "Lockfile is ${lockfile}"
+
+    if ls ${VDT_LOCKFILES}/*${remote:-$(hostname)}:${VDT_SOCKET_PORT} 1> /dev/null 2>&1;then echo "Socket port: ${VDT_SOCKET_PORT} is in use on ${remote:-$(hostname)}, please choose another.";exit 1;fi    
     #find "$VDT_LOCKFILES" -type f -user "$(whoami)" -name *${1}* -exec rm ${verbose} -f {} \;
     while true; do
         num=$((num+1))
         if ! ls "${VDT_LOCKFILES}"/*"${VDT_INSTANCE_NAME}"* 1> /dev/null 2>&1;then vecho "Instance name: ${VDT_INSTANCE_NAME}";break;fi
         export VDT_INSTANCE_NAME="${VDT_INSTANCE_NAME}_${num}";    
     done   
+    vecho "No lockfile conflicts found."
 
 
 }
@@ -167,7 +169,7 @@ ssh_forward(){
 
         # If ephemeral, local forwarding is good. 
         if [[ -z $persistent ]];then
-            localforward="-L ${VDT_SOCKET_PORT}:127.0.0.1:${VDT_SOCKET_PORT}"
+            localforward="-L ${VDT_SOCKET_PORT}:localhost:${VDT_SOCKET_PORT}"
         else
             export VDT_TUNNEL_HOST="$(hostname)"
             env_fwd="-o SendEnv=VDT_TUNNEL_HOST"
@@ -240,7 +242,6 @@ create_vnc(){
     if [[ ! -x  "$(readlink -f "$VDT_TEMPLATES/$base/image")" ]];then echo "'$VDT_TEMPLATES/$base/image' doesn't exist!";exit 1;fi
 
     img_path=$(readlink -f "$VDT_TEMPLATES/$base/image")
-    vecho "Lockfile is ${lockfile}"
     touch "${lockfile}"
     #mkdir -p "/opt/nesi/vdt/logs/$USER"
     if [[ -n $persistent ]];then

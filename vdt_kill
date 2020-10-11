@@ -62,23 +62,23 @@ parse_input() {
 }
 
 kill_vnc(){
-    _lockfiles=($(find $VDT_LOCKFILES  -type f -name ${VDT_INSTANCE_NAME}.*  -user $(whoami)))
+    _lockfiles=($(find $VDT_LOCKFILES -type f -name ${VDT_INSTANCE_NAME}.* -user $(whoami)))
     vecho "Found lockfiles '${_lockfiles[*]}'"
     unset _found
-    for session in  ${_lockfiles[@]}; do
+    for session in "${_lockfiles[@]}"; do
         #echo $session
         #_display_port=$(echo "${session}" | sed -e 's/.*:\([0-9]*\).pid/\1/')
         #_hostname=$(echo "$session" | sed -e 's/.*\/\(.*\):.*/\1/')
         hostname="$(echo $session | cut -d "." -f2 | cut -d ":" -f1)"
+        vecho "Session:'$session' Hostname:'$hostname'"
         if [[ $hostname != $(hostname) ]];then 
             sshcmd="ssh ${verbose} ${hostname} module load Singularity/${EBVERSIONSINGULARITY};"
         else
             sshcmd=""
         fi
-        $sshcmd singularity instance stop ${VDT_INSTANCE_NAME};
+        vex $sshcmd singularity instance stop ${VDT_INSTANCE_NAME};
         #echo "${_display_port} ${_hostname}"
         #echo "${session}"
-        exit $?
         _found="true"
     done
 
