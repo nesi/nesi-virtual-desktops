@@ -30,7 +30,7 @@ fi
 
 #echo $TOP
 
-"${root}/vdt_start" -v "${1}"
+"${root}/vdt_start" -v -s "${1}"
 
 
 #exit

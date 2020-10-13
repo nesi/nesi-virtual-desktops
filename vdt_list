@@ -11,6 +11,8 @@ module purge > /dev/null  2>&1
 module load Python Singularity/3.5.2 -q
 module unload XALT/NeSI -q
 
+_uniq_hosts=()
+
 # Where files are saved in user home.
 help() {
 cat << EndOfHelp
@@ -18,12 +20,14 @@ cat << EndOfHelp
         $(basename "$0") - List virtual desktops.
 
 [1mSYNOPSIS[0m
-        $(basename "$0") [-h -n -v ] < display-port >
+        $(basename "$0") [-h -n -v ] [-r hostname] < display-port >
 
 [1mDESCRIPTION[0m
         Lists VNC sessions
 
 [1mPARAMETERS[0m
+
+    -r --remote             Search specifically on a host.
 
     -n --noheader           Print without header.
 
@@ -39,6 +43,11 @@ parse_input() {
         case $1 in
             -n|--noheader)
                 noheader="true"
+                shift
+            ;;
+            -r|--remote)
+                _uniq_hosts+=("$2")
+                shift
                 shift
             ;;
             -h|--help)
@@ -64,29 +73,32 @@ list_vnc(){
     
     #$echo $vnc_pid_root
     #if [["$verbose"]]; then echo "Using "
-    _uniq_hosts=()
-    _lockfiles=($(find $VDT_LOCKFILES  -type f  -user $(whoami)))
-    vecho "Found lockfiles '${_lockfiles[*]}'"
     
+    read -ra _lockfiles < <(find $VDT_LOCKFILES  -type f  -user "$(whoami)")
+    vecho "Found lockfiles '${_lockfiles[*]}'"
+
     #vnc_list=( $(ls "${vnc_pid_root:="${HOME}/.vnc"}"/*.pid 2> /dev/null || true) )
     #echo "${vnc_list[@]}"
-    for session in  ${_lockfiles[@]} ; do
-        #echo $session
-        #_display_port=$(echo "${session}" | sed -e 's/.*:\([0-9]*\).pid/\1/')
-        #_hostname=$(echo "$session" | sed -e 's/.*\/\(.*\):.*/\1/')
-        
-        _uniq_hosts+=( "$(echo $session | cut -d "." -f2 | cut -d ":" -f1)" )
-        #echo "${_display_port} ${_hostname}"
-        #echo "${session}"
-        
+
+    #_intances+=( $(singularity instance list | tail -n +2 | tr -s " " "\|" | tr '\n' '${HOSTNAME} \n' &) )
+    if [[ ! "$noheader" ]]; then printf "%14s %11s %10s %12s %20s\n\n" "Name" "Host" "Port" "PID" "Image";fi
+    _linecount=1
+    for session in  "${_lockfiles[@]}" ; do
+        _filename="$(basename $session)"
+        _name="$(echo "$_filename" | cut -d "." -f1)"
+        _host="$(echo "$session" | cut -d "." -f2 | cut -d ":" -f1)"
+        _port="$(echo "$session" | cut -d ":" -f2)"
+        _uniq_hosts+=( $_host )
+        #print first, ask questions later.
+        printf "%14s %11s %10s %12s %20s\n"  "$_name" "$_host" "$_port" "****" "****"
+        _linecount=$((i+=_linecount))
+        #printf "%14s %11s %10s %12s %20s\n" "${instance_array[0]}" "${1}" "****" "${instance_array[1]}" "${instance_array[2]}"
     done
+
     # Remove duplicates
     _uniq_hosts=($(printf "%s\n" "${_uniq_hosts[@]}" | sort -u | tr '\n' ' '))
     vecho "Unique hosts '${_uniq_hosts[*]}'"
 
-    #_intances+=( $(singularity instance list | tail -n +2 | tr -s " " "\|" | tr '\n' '${HOSTNAME} \n' &) )
-    if [[ ! "$noheader" ]]; then printf "%12s %12s %12s %20s\n" "Name" "PID" "Host" "Image";fi
-    
     #singularity instance list | tail -n +2 |awk -v host="$(hostname)" '{printf "%12s %12s %12s %20s\n", $1, $2, host, $3}'
     background_pid=()
     # Check in background
@@ -110,14 +122,18 @@ check_on_host(){
         ssh_cmd=""
     fi
     
-    instances_in_host=( $($ssh_cmd singularity instance list | tail -n +2) )  #|awk -v host="$(hostname)" '{printf "%12s %12s %12s %20s\n", $1, $2, host, $3}'" #|| find ${VDT_LOCKFILES}/*.${host}* -user ${USER} -exec rm ${verbose} -f {} \; &2>/dev/null
+    mapfile -t instances_in_host < <($ssh_cmd singularity instance list | tail -n +2)  #|awk -v host="$(hostname)" '{printf "%12s %12s %12s %20s\n", $1, $2, host, $3}'" #|| find ${VDT_LOCKFILES}/*.${host}* -user ${USER} -exec rm ${verbose} -f {} \; &2>/dev/null
+    vecho "${1} instances: ${instances_in_host[$1]}"
+ 
     # Find and remove faulty lockfiles.
     if [[ "${#instances_in_host[@]}" -lt 1 ]];then 
         find "$VDT_LOCKFILES" -type f -user "$(whoami)" -name *${1}* -exec rm ${verbose} -f {} \;
     else
         for instance in "${instances_in_host[@]}";do
-            mapfile -t instance_array <<< "$instance"
-            echo "${instance_array[$1]}"
+        
+            read -ra instance_array <<< "$instance"
+            printf "%14s %11s %10s %12s %20s\n" "${instance_array[0]}" "${1}" "****" "${instance_array[1]}" "${instance_array[2]}"
+
             #touch ${instance}
         done 
     fi

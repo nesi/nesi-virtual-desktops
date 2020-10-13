@@ -62,7 +62,7 @@ parse_input() {
 }
 
 kill_vnc(){
-    _lockfiles=($(find $VDT_LOCKFILES -type f -name ${VDT_INSTANCE_NAME}.* -user $(whoami)))
+    _lockfiles=( $(find $VDT_LOCKFILES -type f -name ${VDT_INSTANCE_NAME}.* -user $(whoami)) )
     vecho "Found lockfiles '${_lockfiles[*]}'"
     unset _found
     for session in "${_lockfiles[@]}"; do
@@ -76,17 +76,22 @@ kill_vnc(){
         else
             sshcmd=""
         fi
-        vex $sshcmd singularity instance stop ${VDT_INSTANCE_NAME};
+        vex $sshcmd singularity instance stop ${VDT_INSTANCE_NAME} > /dev/null 2>&1 || unfound
         #echo "${_display_port} ${_hostname}"
         #echo "${session}"
         _found="true"
+        exit 0
     done
-
+    unfound
+}
+unfound (){
     if [[ -z "${_found}" ]];then
+        rm $verbose -f $VDT_LOCKFILES/${VDT_INSTANCE_NAME}.*
         echo "No instance named ${VDT_INSTANCE_NAME}";exit 1;
     fi
-    exit 0
 }
+
+
 vecho () {
     # For verbose print.
     if [[ $verbose ]]; then

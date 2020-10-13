@@ -48,6 +48,8 @@ cat << EndOfHelp
 
     -t --timeout [s]        Timeout server after [s] seconds.
 
+    -s --secure             Connects though an encrypted websocket.
+
     -C --nohome             Don't mount home directory. Good for debugging.
 
     -v --verbose
@@ -146,18 +148,19 @@ parse_input() {
     # If clean flag exists remove cache.
 
     if [ -z "$VDT_INSTANCE_NAME" ];then VDT_INSTANCE_NAME="${base}_$(whoami)";fi
+    while true; do
+        if ! ls "${VDT_LOCKFILES}"/*"${VDT_INSTANCE_NAME}"* 1> /dev/null 2>&1;then vecho "Instance name: ${VDT_INSTANCE_NAME}";break;fi
+        export VDT_INSTANCE_NAME="${VDT_INSTANCE_NAME}_new";    
+    done   
+
+    if ls ${VDT_LOCKFILES}/*${remote:-$(hostname)}:${VDT_SOCKET_PORT} 1> /dev/null 2>&1;then echo "Socket port: ${VDT_SOCKET_PORT} is in use on ${remote:-$(hostname)}, please choose another.";exit 1;fi    
+
+    vecho "No lockfile conflicts found."
 
     lockfile="${VDT_LOCKFILES}/${VDT_INSTANCE_NAME}.${remote:-$(hostname)}:${VDT_SOCKET_PORT}"
     vecho "Lockfile is ${lockfile}"
 
-    if ls ${VDT_LOCKFILES}/*${remote:-$(hostname)}:${VDT_SOCKET_PORT} 1> /dev/null 2>&1;then echo "Socket port: ${VDT_SOCKET_PORT} is in use on ${remote:-$(hostname)}, please choose another.";exit 1;fi    
     #find "$VDT_LOCKFILES" -type f -user "$(whoami)" -name *${1}* -exec rm ${verbose} -f {} \;
-    while true; do
-        num=$((num+1))
-        if ! ls "${VDT_LOCKFILES}"/*"${VDT_INSTANCE_NAME}"* 1> /dev/null 2>&1;then vecho "Instance name: ${VDT_INSTANCE_NAME}";break;fi
-        export VDT_INSTANCE_NAME="${VDT_INSTANCE_NAME}_${num}";    
-    done   
-    vecho "No lockfile conflicts found."
 
 
 }
@@ -192,7 +195,7 @@ set_env(){
         if [[ ! -f "${VDT_HOME}/self.pem" ]];then
             openssl req -new -x509 -days 365 -nodes -subj "/C=NZ/ST=Wellington/L=Wellington/O=NeSI/CN=$(hostname)" -out "${VDT_HOME}/self.pem" -keyout "${VDT_HOME}/self.pem"
         fi    
-        cmd3="$cmd3 --cert=${VDT_HOME}/self.pem"
+        VDT_WEBSOCKOPTS="$VDT_WEBSOCKOPTS --cert=${VDT_HOME}/self.pem"
     fi
     
     VDT_DISPLAY_PORT=$(shuf -i 1100-2000 -n 1)
@@ -212,9 +215,7 @@ set_env(){
 
     vecho "Singularity bindpath is $(echo "${SINGULARITY_BINDPATH}" | tr , '\n')"
 
-     
-
-
+    
     # If environment setup for desktop flavor.
     if [[ -f "${VDT_TEMPLATES}/${base}/pre.sh" ]];then
         source "${VDT_TEMPLATES}/${base}/pre.sh"
