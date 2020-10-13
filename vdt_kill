@@ -76,21 +76,19 @@ kill_vnc(){
         else
             sshcmd=""
         fi
-        vex $sshcmd singularity instance stop ${VDT_INSTANCE_NAME} > /dev/null 2>&1 || unfound
+        vex $sshcmd singularity instance stop ${VDT_INSTANCE_NAME} && rm $verbose -f $VDT_LOCKFILES/${VDT_INSTANCE_NAME}.* && echo "${VDT_INSTANCE_NAME} killed." && exit 0
         #echo "${_display_port} ${_hostname}"
         #echo "${session}"
         _found="true"
-        exit 0
+        
     done
-    unfound
-}
-unfound (){
     if [[ -z "${_found}" ]];then
-        rm $verbose -f $VDT_LOCKFILES/${VDT_INSTANCE_NAME}.*
-        echo "No instance named ${VDT_INSTANCE_NAME}";exit 1;
+        rm $verbose -f $VDT_LOCKFILES/${VDT_INSTANCE_NAME}.* 
+        echo "No instance named ${VDT_INSTANCE_NAME}";
+        exit 1;
     fi
+    
 }
-
 
 vecho () {
     # For verbose print.

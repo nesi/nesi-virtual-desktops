@@ -160,6 +160,7 @@ parse_input() {
     lockfile="${VDT_LOCKFILES}/${VDT_INSTANCE_NAME}.${remote:-$(hostname)}:${VDT_SOCKET_PORT}"
     vecho "Lockfile is ${lockfile}"
 
+    if [[ -n $VDT_TUNNEL_HOST ]];then export VDT_TUNNEL_HOST;fi
     #find "$VDT_LOCKFILES" -type f -user "$(whoami)" -name *${1}* -exec rm ${verbose} -f {} \;
 
 
@@ -175,9 +176,9 @@ ssh_forward(){
             localforward="-L ${VDT_SOCKET_PORT}:localhost:${VDT_SOCKET_PORT}"
         else
             export VDT_TUNNEL_HOST="$(hostname)"
-            env_fwd="-o SendEnv=VDT_TUNNEL_HOST"
+            env_fwd="export VDT_TUNNEL_HOST=$(hostname) && "
         fi
-        vex ssh ${verbose} -A -o ExitOnForwardFailure=yes ${env_fwd} ${localforward} "${remote}" "${root}/vdt_start" "${args[@]:0}"
+        vex ssh ${verbose} -A -o ExitOnForwardFailure=yes ${localforward} "${remote}" "${env_fwd}${root}/vdt_start" "${args[@]:0}"
         # Take original arguments
         exit $?
     fi

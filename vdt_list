@@ -127,7 +127,7 @@ check_on_host(){
  
     # Find and remove faulty lockfiles.
     if [[ "${#instances_in_host[@]}" -lt 1 ]];then 
-        find "$VDT_LOCKFILES" -type f -user "$(whoami)" -name *${1}* -exec rm ${verbose} -f {} \;
+        vex find "$VDT_LOCKFILES" -type f -user "$(whoami)" -name *${1}* -exec rm ${verbose} -f {} \;
     else
         for instance in "${instances_in_host[@]}";do
         
