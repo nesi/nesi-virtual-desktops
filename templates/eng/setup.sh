@@ -1,7 +1,11 @@
 #!/bin/bash -a
 
 root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
 source "$root/../../lic.sh"
+
+# Dont do this is desktop configs exist already.
+if [[ ! $(ls ${XDG_CONFIG_HOME:-"$HOME/.config"}/xfce4/desktop/* >/dev/null 2>&1) ]]; then return 0; fi
 
 mk_icn(){
     file="${XDG_DESKTOP_DIR:=$HOME/Desktop}/${1}.desktop"
@@ -17,7 +21,7 @@ mk_icn(){
 }
 
 export BROWSER=firefox
-mkdir -vp ${XDG_DESKTOP_DIR:=$HOME/Desktop}
+mkdir -vp "${XDG_DESKTOP_DIR:=$HOME/Desktop}"
 
 
 mk_icn "Terminal" \
@@ -105,7 +109,9 @@ fi
     ln -s "$proj" "$XDG_DESKTOP_DIR/project_$(basename $proj)" 2>/dev/null
 done
 
+
 # Create links to nobackup. (max 8)
 (find "/nesi/nobackup/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" -writable -type d | head -n 8) | while read -r proj;do
     ln -s "$proj" "$XDG_DESKTOP_DIR/nobackup_$(basename $proj)" 2>/dev/null
 done
+return 0
