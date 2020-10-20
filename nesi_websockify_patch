@@ -1,0 +1,14 @@
+--- websockify_orig/websockify/websocketproxy.py	2020-10-20 18:18:01.920926509 +1300
++++ websockify/websockify/websocketproxy.py	2020-10-20 19:32:11.711242000 +1300
+@@ -356,6 +356,11 @@
+         if self.ssl_target:
+             msg += " (using SSL)"
+ 
++        msg += "\n  - Press 'Ctrl + C' to close connection" % (src_string)
++
++        if 'ISPER' not in os.environ:
++            msg+=" ( Note: VDT instance not persistent )"
++
+         self.msg("%s", msg)
+ 
+         if self.wrap_cmd:
