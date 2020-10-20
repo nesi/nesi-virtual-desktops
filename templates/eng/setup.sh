@@ -40,7 +40,7 @@ mk_icn "MATLAB_2019b" \
 mk_icn "MATLAB_2020a" \
 "Exec=bash -c 'module load MATLAB/2020a;matlab'" \
 "Name=MATLAB 2020a" \
-"Icon=/opt/nesi/share/MATLAB/R2020/bin/glnxa64/cef_resources/matlab_icon.png"
+"Icon=/opt/nesi/share/MATLAB/R2020b/bin/glnxa64/cef_resources/matlab_icon.png"
 fi
 if [[ -n "$LMCOMSOL_LICENSE_FILE" ]];then
 mk_icn "COMSOL_5.5" \
@@ -51,44 +51,74 @@ fi
 if [[ -n "$ANSYSLMD_LICENSE_FILE" ]];then
 mk_icn "ANSYSsysc2020R1" \
 "Exec=bash -c 'module load ANSYS/2020R1;systemcoupling -G'" \
-"Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
+"Icon=/opt/nesi/share/ANSYS/v202/Addins/Images/system_coupling.png" \
 "Name=ANSYS System Coupling 2020R1" 
-mk_icn "ANSYSwb2020R1" \
-"Exec=bash -c 'module load ANSYS/2020R1;runwb2'" \
-"Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
-"Name=ANSYS Workbench 2020R1" 
+mk_icn "ANSYScfx192" \
+"Exec=bash -c 'module load ANSYS/19.2;cfx5launch'" \
+"Icon=/opt/nesi/share/ANSYS/v192/Addins/Images/CFX.ico" \
+"Name=CFX 19.2" 
+mk_icn "ANSYScfx2019R3" \
+"Exec=bash -c 'module load ANSYS/2019R3;cfx5launch'" \
+"Icon=/opt/nesi/share/ANSYS/v195/Addins/Images/CFX.ico" \
+"Name=CFX 2019R3" 
 mk_icn "ANSYScfx2020R1" \
 "Exec=bash -c 'module load ANSYS/2020R1;cfx5launch'" \
-"Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
+"Icon=/opt/nesi/share/ANSYS/v201/Addins/Images/CFX.ico" \
 "Name=CFX 2020R1" 
+
+mk_icn "ANSYSflu192" \
+"Exec=bash -c 'module load ANSYS/19.2;fluent'" \
+"Icon=/opt/nesi/share/ANSYS/v192/commonfiles/images/workbench.ico" \
+"Name=ANSYS Fluent 19.2"
+mk_icn "ANSYSflu195" \
+"Exec=bash -c 'module load ANSYS/2019R3;fluent'" \
+"Icon=/opt/nesi/share/ANSYS/v195/commonfiles/images/workbench.ico" \
+"Name=ANSYS Fluent 2019R3"
 mk_icn "ANSYSflu2020R1" \
 "Exec=bash -c 'module load ANSYS/2020R1;fluent'" \
 "Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
 "Name=ANSYS Fluent 2020R1" 
-mk_icn "ANSYSwb2019R3" \
-"Exec=bash -c 'module load ANSYS/2019R3;runwb2'" \
-"Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
-"Name=ANSYS Workbench 2019R3" 
-mk_icn "ANSYScfx2019R3" \
-"Exec=bash -c 'module load ANSYS/2019R3;cfx5launch'" \
-"Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
-"Name=CFX 2019R3" 
-mk_icn "ANSYSflu192" \
-"Exec=bash -c 'module load ANSYS/19.2;fluent'" \
-"Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
-"Name=ANSYS Fluent 19.2"
+
+
 mk_icn "ANSYSwb192" \
 "Exec=bash -c 'module load ANSYS/19.2;runwb2'" \
 "Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
 "Name=ANSYS Workbench 19.2" 
-mk_icn "ANSYScfx192" \
-"Exec=bash -c 'module load ANSYS/19.2;cfx5launch'" \
+mk_icn "ANSYSwb2019R3" \
+"Exec=bash -c 'module load ANSYS/2019R3;runwb2'" \
 "Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
-"Name=CFX 19.2" 
-mk_icn "ANSYSflu192" \
-"Exec=bash -c 'module load ANSYS/19.2;fluent'" \
+"Name=ANSYS Workbench 2019R3" 
+mk_icn "ANSYSwb2020R1" \
+"Exec=bash -c 'module load ANSYS/2020R1;runwb2'" \
 "Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
-"Name=ANSYS Fluent 19.2"
+"Name=ANSYS Workbench 2020R1" 
+
+
+mk_icn "ANSYSwb2020R1" \
+"Exec=/usr/share/code/code --no-sandbox --unity-launch %F" \
+"Icon=com.visualstudio.code" \
+"Name=Visual Studio Code" 
+
+
+# [Desktop Entry]
+# Name=Visual Studio Code
+# Comment=Code Editing. Redefined.
+# GenericName=Text Editor
+# Exec=/usr/share/code/code --no-sandbox --unity-launch %F
+# Icon=com.visualstudio.code
+# Type=Application
+# StartupNotify=false
+# StartupWMClass=Code
+# Categories=Utility;TextEditor;Development;IDE;
+# MimeType=text/plain;inode/directory;application/x-code-workspace;
+# Actions=new-empty-window;
+# Keywords=vscode;
+
+# [Desktop Action new-empty-window]
+# Name=New Empty Window
+# Exec=/usr/share/code/code --no-sandbox --new-window %F
+# Icon=com.visualstudio.code
+
 # mk_icn "ANSYSflu192" \
 # "Exec=bash -c 'module load ANSYS/19.2;fluent'" \
 # "Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \

@@ -1,7 +1,11 @@
 #!/bin/bash -a
 
 root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
 source "$root/../../lic.sh"
+
+# Dont do this is desktop configs exist already.
+if [[ $(ls ${XDG_CONFIG_HOME:-"$HOME/.config"}/xfce4/desktop/* >/dev/null 2>&1) ]]; then echo "hi";return 0; fi
 
 mk_icn(){
     file="${XDG_DESKTOP_DIR:=$HOME/Desktop}/${1}.desktop"
@@ -17,50 +21,133 @@ mk_icn(){
 }
 
 export BROWSER=firefox
-mkdir -vp ${XDG_DESKTOP_DIR:=$HOME/Desktop}
-
+mkdir -vp "${XDG_DESKTOP_DIR:=$HOME/Desktop}"
 
 mk_icn "Terminal" \
-"Exec=exo-open --launch TerminalEmulator" \
+"Exec=bash -c 'exo-open --launch TerminalEmulator'" \
 "Name=Terminal Emulator" \
 "Icon=utilities-terminal"
 
 if [[ -n "$MLM_LICENSE_FILE" ]];then
+mk_icn "MATLAB_2018b" \
+"Exec=bash -c 'module load MATLAB/2018b;matlab'" \
+"Name=MATLAB 2018b" \
+"Icon=/opt/nesi/share/MATLAB/R2018b/bin/glnxa64/cef_resources/matlab_icon.png"
 mk_icn "MATLAB_2019b" \
-"Exec=/opt/nesi/share/MATLAB/R2019b/bin/matlab" \
+"Exec=bash -c 'module load MATLAB/2019b;matlab'" \
 "Name=MATLAB 2019b" \
 "Icon=/opt/nesi/share/MATLAB/R2019b/bin/glnxa64/cef_resources/matlab_icon.png"
-
-export PATH="/opt/nesi/share/MATLAB/R2019b/bin:$PATH"
-export PATH="/opt/nesi/share/MATLAB/R2019b/etc/glnxa64:$PATH"
-export _JAVA_OPTIONS="-Xmx256m"
+mk_icn "MATLAB_2020a" \
+"Exec=bash -c 'module load MATLAB/2020a;matlab'" \
+"Name=MATLAB 2020a" \
+"Icon=/opt/nesi/share/MATLAB/R2020b/bin/glnxa64/cef_resources/matlab_icon.png"
 fi
 if [[ -n "$LMCOMSOL_LICENSE_FILE" ]];then
 mk_icn "COMSOL_5.5" \
-"Exec=/opt/nesi/share/COMSOL/comsol155/multiphysics/bin/comsol" \
+"Exec=bash -c 'module load COMSOL/5.5;comsol'" \
 "Icon=/opt/nesi/share/COMSOL/comsol155/multiphysics/bin/glnxa64/comsol.png" \
 "Name=COMSOL 5.5"
 fi
 if [[ -n "$ANSYSLMD_LICENSE_FILE" ]];then
-mk_icn "ANSYSwb" \
-"Exec=/opt/nesi/share/ANSYS/v201/Framework/bin/Linux64/runwb2" \
+mk_icn "ANSYSsysc2020R1" \
+"Exec=bash -c 'module load ANSYS/2020R1;systemcoupling -G'" \
+"Icon=/opt/nesi/share/ANSYS/v202/Addins/Images/system_coupling.png" \
+"Name=ANSYS System Coupling 2020R1" 
+mk_icn "ANSYScfx192" \
+"Exec=bash -c 'module load ANSYS/19.2;cfx5launch'" \
+"Icon=/opt/nesi/share/ANSYS/v192/Addins/Images/CFX.ico" \
+"Name=CFX 19.2" 
+mk_icn "ANSYScfx2019R3" \
+"Exec=bash -c 'module load ANSYS/2019R3;cfx5launch'" \
+"Icon=/opt/nesi/share/ANSYS/v195/Addins/Images/CFX.ico" \
+"Name=CFX 2019R3" 
+mk_icn "ANSYScfx2020R1" \
+"Exec=bash -c 'module load ANSYS/2020R1;cfx5launch'" \
+"Icon=/opt/nesi/share/ANSYS/v201/Addins/Images/CFX.ico" \
+"Name=CFX 2020R1" 
+
+mk_icn "ANSYSflu192" \
+"Exec=bash -c 'module load ANSYS/19.2;fluent'" \
+"Icon=/opt/nesi/share/ANSYS/v192/commonfiles/images/workbench.ico" \
+"Name=ANSYS Fluent 19.2"
+mk_icn "ANSYSflu195" \
+"Exec=bash -c 'module load ANSYS/2019R3;fluent'" \
+"Icon=/opt/nesi/share/ANSYS/v195/commonfiles/images/workbench.ico" \
+"Name=ANSYS Fluent 2019R3"
+mk_icn "ANSYSflu2020R1" \
+"Exec=bash -c 'module load ANSYS/2020R1;fluent'" \
 "Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
-"Name=ANSYS Workbench" 
+"Name=ANSYS Fluent 2020R1" 
+
+
+mk_icn "ANSYSwb192" \
+"Exec=bash -c 'module load ANSYS/19.2;runwb2'" \
+"Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
+"Name=ANSYS Workbench 19.2" 
+mk_icn "ANSYSwb2019R3" \
+"Exec=bash -c 'module load ANSYS/2019R3;runwb2'" \
+"Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
+"Name=ANSYS Workbench 2019R3" 
+mk_icn "ANSYSwb2020R1" \
+"Exec=bash -c 'module load ANSYS/2020R1;runwb2'" \
+"Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
+"Name=ANSYS Workbench 2020R1" 
+
+
+mk_icn "ANSYSwb2020R1" \
+"Exec=/usr/share/code/code --no-sandbox --unity-launch %F" \
+"Icon=com.visualstudio.code" \
+"Name=Visual Studio Code" 
+
+
+# [Desktop Entry]
+# Name=Visual Studio Code
+# Comment=Code Editing. Redefined.
+# GenericName=Text Editor
+# Exec=/usr/share/code/code --no-sandbox --unity-launch %F
+# Icon=com.visualstudio.code
+# Type=Application
+# StartupNotify=false
+# StartupWMClass=Code
+# Categories=Utility;TextEditor;Development;IDE;
+# MimeType=text/plain;inode/directory;application/x-code-workspace;
+# Actions=new-empty-window;
+# Keywords=vscode;
+
+# [Desktop Action new-empty-window]
+# Name=New Empty Window
+# Exec=/usr/share/code/code --no-sandbox --new-window %F
+# Icon=com.visualstudio.code
+
+# mk_icn "ANSYSflu192" \
+# "Exec=bash -c 'module load ANSYS/19.2;fluent'" \
+# "Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
+# "Name=ANSYS Fluent 19.2"
 fi
 
 if [[ -n "$ABAQUSLM_LICENSE_FILE" ]];then
 mk_icn "ABAQUScae" \
-"Exec=/opt/nesi/share/ABAQUS/2019/SIMULIA/Commands/abaqus cae -mesa" \
+"Exec=bash -c 'module load ABAQUS/2019;abaqus cae -mesa'" \
 "Icon=/opt/nesi/share/ABAQUS/2019/SimulationServices/V6R2019x/CAADoc/linux_a64.doc/English/CAAIcons/images/logoabaqus.png" \
 "Name=ABAQUS 2019"
 fi
  
 # Create links to projects. (max 8)
-(find "/nesi/project/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" -writable -type d | head -n 8) | while read -r proj;do
-    ln -vs "$proj" "$XDG_DESKTOP_DIR/project_$(basename $proj)" 2>/dev/null
-done
+read -ra pj <<<$(find "/nesi/project/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" -writable -type d)
+read -ra nb <<<$(find "/nesi/nobackup/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" -writable -type d)
 
-# Create links to nobackup. (max 8)
-(find "/nesi/nobackup/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" -writable -type d | head -n 8) | while read -r proj;do
-    ln -vs "$proj" "$XDG_DESKTOP_DIR/nobackup_$(basename $proj)" 2>/dev/null
+if [[ $(echo "${pj[@]}" | wc -w) -gt 8 ]];then
+    pjd="/_projects"
+    mkdir "${XDG_DESKTOP_DIR}${pjd}"
+fi
+if [[ $(echo "${nb[@]}" | wc -w) -gt 8 ]];then
+    nbd="/_nobackup"
+    mkdir "${XDG_DESKTOP_DIR}${nbd}"
+fi
+for proj in "${pj[@]}";do
+    ln -sv "$proj" "${XDG_DESKTOP_DIR}${pjd}/project_$(basename $proj)" 2>/dev/null
 done
+for proj in "${nb[@]}";do
+    ln -sv "$proj" "${XDG_DESKTOP_DIR}${nbd}/nobackup_$(basename $proj)" 2>/dev/null
+done
+true
