@@ -136,22 +136,46 @@ parse_input() {
             ;;
         esac
     done
+
+    # Create directory for logs, certificates etc
     mkdir -p "${VDT_HOME:="${HOME}/.vdt"}"
 
+    # Select template.
     if [[ -z "${base}" ]];then base="eng";fi
-    
     if (ls ${VDT_TEMPLATES}/${base} > /dev/null); then
         echo "Using '${base}' as template."
     else
         echo "Unknown template '${1}', valid options are '$(ls ${VDT_TEMPLATES})'.\n"
     fi
-    # If clean flag exists remove cache.
 
+    # Create name.
     if [ -z "$VDT_INSTANCE_NAME" ];then VDT_INSTANCE_NAME="${base}_$(whoami)";fi
+    
+     # Set logfiles dest
+    vecho "${VDT_LOGFILE:="${VDT_HOME}/${VDT_INSTANCE_NAME}.${remote:-$(hostname)}:${VDT_SOCKET_PORT}.log"}"
+    touch "${VDT_LOGFILE}"
+    vecho "logfile is ${VDT_LOGFILE}"
+
+
+    # If clean flag exists remove cache.
     while true; do
-        if ! ls "${VDT_LOCKFILES}"/*"${VDT_INSTANCE_NAME}"* 1> /dev/null 2>&1;then vecho "Instance name: ${VDT_INSTANCE_NAME}";break;fi
+        if ! ls "${VDT_LOCKFILES}"/*"${VDT_INSTANCE_NAME}"* 1> /dev/null 2>&1;then echo "Instance name: ${VDT_INSTANCE_NAME}";break;fi
         export VDT_INSTANCE_NAME="${VDT_INSTANCE_NAME}_new";    
     done   
+
+
+    # Get node from env if slurm id set.
+    if [[ -n "$SLURM_JOB_ID" && -z "$remote" && "${HOSTNAME}" != "$remote" ]]; then
+        remote=$(echo $SLURM_NODELIST | sed -E 's/^([a-z]{3})\[+([0-9]{3}).*/\1\2/')
+        echo "Connection will be forwarded to $remote. Run 'unset SLURM_JOB_ID' if this isn't what you want."
+    #     printf "'SLURM_JOB_ID' set. Connection will be forwarded to job $SLURM_JOB_ID.\n"
+    #     export session_jobid="$SLURM_JOB_ID"
+    # fi               
+    fi
+    # if [[ -z "$session_jobid" && -n "$SLURM_JOB_ID" ]]; then
+    #     printf "'SLURM_JOB_ID' set. Connection will be forwarded to job $SLURM_JOB_ID.\n"
+    #     export session_jobid="$SLURM_JOB_ID"
+    # fi
 
     if ls ${VDT_LOCKFILES}/*${remote:-$(hostname)}:${VDT_SOCKET_PORT} 1> /dev/null 2>&1;then echo "Socket port: ${VDT_SOCKET_PORT} is in use on ${remote:-$(hostname)}, please choose another.";exit 1;fi    
 
@@ -160,10 +184,11 @@ parse_input() {
     lockfile="${VDT_LOCKFILES}/${VDT_INSTANCE_NAME}.${remote:-$(hostname)}:${VDT_SOCKET_PORT}"
     vecho "Lockfile is ${lockfile}"
 
-    if [[ -n $VDT_TUNNEL_HOST ]];then export VDT_TUNNEL_HOST;fi
+
+    
     #find "$VDT_LOCKFILES" -type f -user "$(whoami)" -name *${1}* -exec rm ${verbose} -f {} \;
 
-
+    
 }
 
 ssh_forward(){
@@ -187,7 +212,7 @@ ssh_forward(){
 set_env(){
     if [[ -n $clean ]];then
         vecho "Clearing cache"
-        rm -rf ${verbose} "$HOME"/.cache/sessions "$HOME"/.cache/gpg-agent-info "$HOME"/.config/xfce4 "$HOME"/.xfce4 "$HOME"/.fontconfig "$HOME"/.gnupg  "$HOME"/.ICEauthority "$HOME"/.xfce4 "$HOME"/.singularity 
+        rm -rf ${verbose} "$HOME"/.cache/sessions "$HOME"/.cache/gpg-agent-info "$HOME"/.config/xfce4 "$HOME"/.xfce4 "$HOME"/.fontconfig "$HOME"/.gnupg  "$HOME"/.ICEauthority "$HOME"/.singularity 
         find /tmp/ -user "$USER" -exec rm -rf {} \; > /dev/null  2>&1 || true
     fi
     if [[ -n $secure ]];then
@@ -219,10 +244,10 @@ set_env(){
     
     # If environment setup for desktop flavor.
     if [[ -f "${VDT_TEMPLATES}/${base}/pre.sh" ]];then
-        source "${VDT_TEMPLATES}/${base}/pre.sh"
+        source "${VDT_TEMPLATES}/${base}/pre.sh" 
     fi
     if [[ -f "${VDT_TEMPLATES}/${base}/setup.sh" ]];then
-        export VDT_SETUP="${VDT_TEMPLATES}/${base}/setup.sh"
+        export VDT_SETUP="${VDT_TEMPLATES}/${base}/setup.sh" 
     fi
     # Export all variables starting with 'VDT' to singularity.
     for ev in $(compgen -A variable | grep ^VDT );do
@@ -272,6 +297,7 @@ vecho () {
     if [[ $verbose ]]; then
         echo "$LINENO:$*"
     fi
+    echo "$LINENO:$*" >> "$VDT_LOGFILE"
 }
 
 vex () {
@@ -279,6 +305,7 @@ vex () {
     if [[ $verbose ]]; then
         echo "$LINENO:$*"
     fi
+    echo "$LINENO:$*" >> "$VDT_LOGFILE"
     $@
 }
 
@@ -292,10 +319,10 @@ main() {
 }
 cleanup() {
     #vncserver
-    singularity $verbose exec "$img_path" "vncserver -kill ":$VDT_DISPLAY_PORT"" 1> /dev/null 2>&1 || true
+    singularity $verbose exec "$img_path" "vncserver -kill ":$VDT_DISPLAY_PORT"" 1> ${VDT_LOGFILE} 2>&1 || true
     rm -f $verbose /tmp/.X11-unix/.X*
     rm -f $verbose "$HOME"/.vnc/*"${VDT_INSTANCE_NAME}".pid
-    
+    if [[ -n "${VDT_LOGFILE}" ]]; then rm -f $verbose "${VDT_LOGFILE}";fi
     if [[ -n "${lockfile}" ]]; then rm -f $verbose "${lockfile}";fi
     pkill --signal 9 -P $$ > /dev/null 2>&1 
     #rm -f "/tmp/.X$display_port-lock"

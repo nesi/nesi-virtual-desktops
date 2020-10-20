@@ -3,4 +3,5 @@ __*
 *.pyc
 lockfiles/*
 .vscode
-
+novnc*
+websockify*

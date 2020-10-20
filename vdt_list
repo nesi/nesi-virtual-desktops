@@ -121,7 +121,7 @@ check_on_host(){
     else
         ssh_cmd=""
     fi
-    
+    #\e[<N>A
     mapfile -t instances_in_host < <($ssh_cmd singularity instance list | tail -n +2)  #|awk -v host="$(hostname)" '{printf "%12s %12s %12s %20s\n", $1, $2, host, $3}'" #|| find ${VDT_LOCKFILES}/*.${host}* -user ${USER} -exec rm ${verbose} -f {} \; &2>/dev/null
     vecho "${1} instances: ${instances_in_host[$1]}"
  
