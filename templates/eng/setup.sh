@@ -26,41 +26,86 @@ mk_icn "Terminal" \
 "Icon=utilities-terminal"
 
 if [[ -n "$MLM_LICENSE_FILE" ]];then
+mk_icn "MATLAB_2018b" \
+"Exec=module load MATLAB/2018b;matlab" \
+"Name=MATLAB 2018b" \
+"Icon=/opt/nesi/share/MATLAB/R2018b/bin/glnxa64/cef_resources/matlab_icon.png"
 mk_icn "MATLAB_2019b" \
-"Exec=/opt/nesi/share/MATLAB/R2019b/bin/matlab" \
+"Exec=module load MATLAB/2019b;matlab" \
 "Name=MATLAB 2019b" \
 "Icon=/opt/nesi/share/MATLAB/R2019b/bin/glnxa64/cef_resources/matlab_icon.png"
+mk_icn "MATLAB_2020a" \
+"Exec=module load MATLAB/2020a;matlab" \
+"Name=MATLAB 2020a" \
+"Icon=/opt/nesi/share/MATLAB/R2020/bin/glnxa64/cef_resources/matlab_icon.png"
 
-export PATH="/opt/nesi/share/MATLAB/R2019b/bin:$PATH"
-export PATH="/opt/nesi/share/MATLAB/R2019b/etc/glnxa64:$PATH"
-export _JAVA_OPTIONS="-Xmx256m"
 fi
 if [[ -n "$LMCOMSOL_LICENSE_FILE" ]];then
 mk_icn "COMSOL_5.5" \
-"Exec=/opt/nesi/share/COMSOL/comsol155/multiphysics/bin/comsol" \
+"Exec=module load COMSOL/5.5;comsol" \
 "Icon=/opt/nesi/share/COMSOL/comsol155/multiphysics/bin/glnxa64/comsol.png" \
 "Name=COMSOL 5.5"
 fi
 if [[ -n "$ANSYSLMD_LICENSE_FILE" ]];then
-mk_icn "ANSYSwb" \
-"Exec=/opt/nesi/share/ANSYS/v201/Framework/bin/Linux64/runwb2" \
+mk_icn "ANSYSsysc2020R1" \
+"Exec=module load ANSYS/2020R1;systemcoupling --guiserver" \
 "Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
-"Name=ANSYS Workbench" 
+"Name=ANSYS System Coupling 2020R1" 
+mk_icn "ANSYSwb2020R1" \
+"Exec=module load ANSYS/2020R1;runwb2" \
+"Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
+"Name=ANSYS Workbench 2020R1" 
+mk_icn "ANSYScfx2020R1" \
+"Exec=module load ANSYS/2020R1;cfx5launch" \
+"Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
+"Name=CFX 2020R1" 
+mk_icn "ANSYSflu2020R1" \
+"Exec=module load ANSYS/2020R1;fluent" \
+"Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
+"Name=ANSYS Fluent 2020R1" 
+mk_icn "ANSYSwb2019R3" \
+"Exec=module load ANSYS/2019R3;runwb2" \
+"Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
+"Name=ANSYS Workbench 2019R3" 
+mk_icn "ANSYScfx2019R3" \
+"Exec=module load ANSYS/2019R3;cfx5launch" \
+"Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
+"Name=CFX 2019R3" 
+mk_icn "ANSYSflu192" \
+"Exec=module load ANSYS/19.2;fluent" \
+"Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
+"Name=ANSYS Fluent 19.2"
+mk_icn "ANSYSwb192" \
+"Exec=module load ANSYS/19.2;runwb2" \
+"Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
+"Name=ANSYS Workbench 19.2" 
+mk_icn "ANSYScfx192" \
+"Exec=module load ANSYS/19.2;cfx5launch" \
+"Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
+"Name=CFX 19.2" 
+mk_icn "ANSYSflu192" \
+"Exec=module load ANSYS/19.2;fluent" \
+"Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
+"Name=ANSYS Fluent 19.2"
+mk_icn "ANSYSflu192" \
+"Exec=module load ANSYS/19.2;fluent" \
+"Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
+"Name=ANSYS Fluent 19.2"
 fi
 
 if [[ -n "$ABAQUSLM_LICENSE_FILE" ]];then
 mk_icn "ABAQUScae" \
-"Exec=/opt/nesi/share/ABAQUS/2019/SIMULIA/Commands/abaqus cae -mesa" \
+"Exec=module load ABAQUS/2019;abaqus cae -mesa" \
 "Icon=/opt/nesi/share/ABAQUS/2019/SimulationServices/V6R2019x/CAADoc/linux_a64.doc/English/CAAIcons/images/logoabaqus.png" \
 "Name=ABAQUS 2019"
 fi
  
 # Create links to projects. (max 8)
 (find "/nesi/project/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" -writable -type d | head -n 8) | while read -r proj;do
-    ln -vs "$proj" "$XDG_DESKTOP_DIR/project_$(basename $proj)" 2>/dev/null
+    ln -s "$proj" "$XDG_DESKTOP_DIR/project_$(basename $proj)" 2>/dev/null
 done
 
 # Create links to nobackup. (max 8)
 (find "/nesi/nobackup/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" -writable -type d | head -n 8) | while read -r proj;do
-    ln -vs "$proj" "$XDG_DESKTOP_DIR/nobackup_$(basename $proj)" 2>/dev/null
+    ln -s "$proj" "$XDG_DESKTOP_DIR/nobackup_$(basename $proj)" 2>/dev/null
 done
