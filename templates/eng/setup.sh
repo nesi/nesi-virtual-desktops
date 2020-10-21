@@ -21,7 +21,7 @@ mk_icn(){
 }
 
 export BROWSER=firefox
-mkdir -vp "${XDG_DESKTOP_DIR:=$HOME/Desktop}"
+mkdir -p "${XDG_DESKTOP_DIR:=$HOME/Desktop}"
 
 mk_icn "Terminal" \
 "Exec=bash -c 'exo-open --launch TerminalEmulator'" \
@@ -138,16 +138,16 @@ read -ra nb <<<$(find "/nesi/nobackup/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" 
 
 if [[ $(echo "${pj[@]}" | wc -w) -gt 8 ]];then
     pjd="/_projects"
-    mkdir "${XDG_DESKTOP_DIR}${pjd}"
+    mkdir -p "${XDG_DESKTOP_DIR}${pjd}"
 fi
 if [[ $(echo "${nb[@]}" | wc -w) -gt 8 ]];then
     nbd="/_nobackup"
-    mkdir "${XDG_DESKTOP_DIR}${nbd}"
+    mkdir -p  "${XDG_DESKTOP_DIR}${nbd}"
 fi
 for proj in "${pj[@]}";do
-    ln -sv "$proj" "${XDG_DESKTOP_DIR}${pjd}/project_$(basename $proj)" 2>/dev/null
+    ln -s "$proj" "${XDG_DESKTOP_DIR}${pjd}/project_$(basename $proj)" 2>/dev/null
 done
 for proj in "${nb[@]}";do
-    ln -sv "$proj" "${XDG_DESKTOP_DIR}${nbd}/nobackup_$(basename $proj)" 2>/dev/null
+    ln -s "$proj" "${XDG_DESKTOP_DIR}${nbd}/nobackup_$(basename $proj)" 2>/dev/null
 done
 true
