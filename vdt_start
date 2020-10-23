@@ -211,9 +211,7 @@ ssh_forward(){
 }
 set_env(){
     if [[ -n $clean ]];then
-        vecho "Clearing cache"
-        rm -rf ${verbose} "$HOME"/.cache/sessions "$HOME"/.cache/gpg-agent-info "$HOME"/.config/xfce4 "$HOME"/.xfce4 "$HOME"/.fontconfig "$HOME"/.gnupg  "$HOME"/.ICEauthority "$HOME"/.singularity 
-        find /tmp/ -user "$USER" -exec rm -rf {} \; > /dev/null  2>&1 || true
+        "${root}/clean_env"
     fi
     if [[ -n $secure ]];then
         # If environment setup for desktop flavor.
@@ -274,8 +272,10 @@ create_vnc(){
     if [[ -n $persistent ]];then
         vex "${timeout}" singularity "${verbose}" instance start "${nohome}" "${img_path}" "${VDT_INSTANCE_NAME}" 
         img_path="instance://${VDT_INSTANCE_NAME}"
-        echo "Desktop ${VDT_INSTANCE_NAME} started"
-        echo "Connect at http://localhost:${VDT_SOCKET_PORT}, kill with vdt kill ${VDT_INSTANCE_NAME}"
+        sleep 3
+        #"${root}/assert_vnc.sh"
+        printf "Desktop %s started\n" "${VDT_INSTANCE_NAME}"
+        printf "Connect at: http://localhost:%s  \nKill with: vdt kill %s" "${VDT_SOCKET_PORT}" "${VDT_INSTANCE_NAME}"
     else
         vex "${timeout}" singularity "${verbose}" run "${nohome}" "${img_path}"
     fi

@@ -90,7 +90,7 @@ list_vnc(){
     #echo "${vnc_list[@]}"
 
     #_intances+=( $(singularity instance list | tail -n +2 | tr -s " " "\|" | tr '\n' '${HOSTNAME} \n' &) )
-    if [[ ! "$noheader" ]]; then printf "%14s %11s %10s %12s %20s\n\n" "Name" "Host" "Port" "PID" "Image";fi
+    if [[ ! "$noheader" ]]; then printf "%14s %11s %10s %12s %40s\n\n" "Name" "Host" "Port" "PID" "Image";fi
     _linecount=1
     for session in  "${_lockfiles[@]}" ; do
         _filename="$(basename $session)"
@@ -98,12 +98,8 @@ list_vnc(){
         _host="$(echo "$session" | cut -d "." -f2 | cut -d ":" -f1)"
         _port="$(echo "$session" | cut -d ":" -f2)"
         _uniq_hosts+=( $_host )
-        _nice_list[$_name]="$_name $_host $_port **** ****"
-        #print first, ask questions later.
-        
-        #printf "%14s %11s %10s %12s %40s\n"  "$_name" "$_host" "$_port" "****" "****"
+        _lockfile_list[$_name]="$_name $_host $_port DEAD DEAD"        
         _linecount=$((i+=_linecount))
-        #printf "%14s %11s %10s %12s %20s\n" "${instance_array[0]}" "${1}" "****" "${instance_array[1]}" "${instance_array[2]}"
     done
 
     # Remove duplicates
@@ -127,8 +123,11 @@ list_vnc(){
 }
 
 check_on_host(){
+    if [[ -z "${1// }" ]];then
+        return
+    fi
     if [[ "${1}" != "$(hostname)" ]];then 
-        ssh_cmd="ssh -q ${host} module load Singularity/${EBVERSIONSINGULARITY};"
+        ssh_cmd="ssh -q ${1} module load Singularity/${EBVERSIONSINGULARITY};"
     else
         ssh_cmd=""
     fi
@@ -138,17 +137,21 @@ check_on_host(){
     
     # Find and remove faulty lockfiles.
     if [[ "${#instances_in_host[@]}" -lt 1 ]];then 
-        vex find "$VDT_LOCKFILES" -type f -user "$(whoami)" -name "*${1}*" -exec rm ${verbose} -f {} \;
+        vex find "$VDT_LOCKFILES" -type f -user "$(whoami)" -name "*${1}*" -exec rm ${verbose} -f {} \; 
     else
         for instance in "${instances_in_host[@]}";do    
-            read -ra instance_array <<< "$instance"
-            if [ ! ${_nice_list[instance_array[0]]+_} ]; then 
-                 ${_nice_list[instance_array[0]]+_}=_"$_name $_host NOLOCK ${instance_array[1]} ${instance_array[2]}"     
+            # Compare values of lockfile with actual instance 
+            read -ra _instance_array <<< "$instance"
+            vecho "Instance ${_instance_array[*]}"
+            # If lockfile array DOESN'T contains this instance.
+            if [ ! ${_lockfiles[_instance_array[0]]+_} ]; then 
+                vecho "${_instance_array[0]} has no lockfile."
+                _instance_port="NOLOCK"
+            else
+                read -ra _lockfile_array <<< "${_lockfile_list[${instance_array[0]}]}"
+                _instance_port="${_lockfile_array[4]}"
             fi
-
-            printf "%14s %11s %10s %12s %40s\n" "${instance_array[0]}" "${1}" "****" "${instance_array[1]}" "${instance_array[2]}"
-
-            #touch ${instance}
+            printf "%14s %11s %10s %12s %40s\n" "${_instance_array[0]}" "${1}" "${_instance_port}" "${_instance_array[1]}" "${_instance_array[2]}"
         done 
     fi
 }
