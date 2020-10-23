@@ -116,6 +116,11 @@ parse_input() {
                 "$root/vdt_list" "$@" 
                 exit 0
                 ;;
+            clean)
+                shift
+                "$root/vdt_clean" "$@" 
+                exit 0
+                ;;
             # ;;
             # -p|--persistent)
             #     export PERSISTENT="true"
