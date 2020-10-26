@@ -149,7 +149,7 @@ check_on_host(){
                 _instance_port="NOLOCK"
             else
                 read -ra _lockfile_array <<< "${_lockfile_list[${instance_array[0]}]}"
-                _instance_port="${_lockfile_array[4]}"
+                _instance_port="http://localhost:${_lockfile_array[3]}"
             fi
             printf "%14s %11s %10s %12s %40s\n" "${_instance_array[0]}" "${1}" "${_instance_port}" "${_instance_array[1]}" "${_instance_array[2]}"
         done 
