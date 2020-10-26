@@ -49,10 +49,10 @@ mk_icn "COMSOL_5.5" \
 "Name=COMSOL 5.5"
 fi
 if [[ -n "$ANSYSLMD_LICENSE_FILE" ]];then
-mk_icn "ANSYSsysc2020R1" \
-"Exec=bash -c 'module load ANSYS/2020R1;systemcoupling -G'" \
+mk_icn "ANSYSsysc2020R2" \
+"Exec=bash -c 'module load ANSYS/2020R2;systemcoupling -G'" \
 "Icon=/opt/nesi/share/ANSYS/v202/Addins/Images/system_coupling.png" \
-"Name=ANSYS System Coupling 2020R1" 
+"Name=ANSYS System Coupling 2020R2" 
 mk_icn "ANSYScfx192" \
 "Exec=bash -c 'module load ANSYS/19.2;cfx5launch'" \
 "Icon=/opt/nesi/share/ANSYS/v192/Addins/Images/CFX.ico" \
@@ -61,10 +61,10 @@ mk_icn "ANSYScfx2019R3" \
 "Exec=bash -c 'module load ANSYS/2019R3;cfx5launch'" \
 "Icon=/opt/nesi/share/ANSYS/v195/Addins/Images/CFX.ico" \
 "Name=CFX 2019R3" 
-mk_icn "ANSYScfx2020R1" \
-"Exec=bash -c 'module load ANSYS/2020R1;cfx5launch'" \
-"Icon=/opt/nesi/share/ANSYS/v201/Addins/Images/CFX.ico" \
-"Name=CFX 2020R1" 
+mk_icn "ANSYScfx2020R2" \
+"Exec=bash -c 'module load ANSYS/2020R2;cfx5launch'" \
+"Icon=/opt/nesi/share/ANSYS/v202/Addins/Images/CFX.ico" \
+"Name=CFX 2020R2" 
 
 mk_icn "ANSYSflu192" \
 "Exec=bash -c 'module load ANSYS/19.2;fluent'" \
@@ -74,10 +74,10 @@ mk_icn "ANSYSflu195" \
 "Exec=bash -c 'module load ANSYS/2019R3;fluent'" \
 "Icon=/opt/nesi/share/ANSYS/v195/commonfiles/images/workbench.ico" \
 "Name=ANSYS Fluent 2019R3"
-mk_icn "ANSYSflu2020R1" \
-"Exec=bash -c 'module load ANSYS/2020R1;fluent'" \
-"Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
-"Name=ANSYS Fluent 2020R1" 
+mk_icn "ANSYSflu2020R2" \
+"Exec=bash -c 'module load ANSYS/2020R2;fluent'" \
+"Icon=/opt/nesi/share/ANSYS/v202/commonfiles/images/workbench.ico" \
+"Name=ANSYS Fluent 2020R2" 
 
 
 mk_icn "ANSYSwb192" \
@@ -88,18 +88,20 @@ mk_icn "ANSYSwb2019R3" \
 "Exec=bash -c 'module load ANSYS/2019R3;runwb2'" \
 "Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
 "Name=ANSYS Workbench 2019R3" 
-mk_icn "ANSYSwb2020R1" \
-"Exec=bash -c 'module load ANSYS/2020R1;runwb2'" \
+mk_icn "ANSYSwb2020R2" \
+"Exec=bash -c 'module load ANSYS/2020R2;runwb2'" \
+"Icon=/opt/nesi/share/ANSYS/v202/commonfiles/images/workbench.ico" \
+"Name=ANSYS Workbench 2020R2" 
+mk_icn "ANSYSflu2020R2" \
+"Exec=bash -c 'module load ANSYS/2020R2;fluent'" \
 "Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
-"Name=ANSYS Workbench 2020R1" 
+"Name=ANSYS Fluent 2020R2" 
 
 
-mk_icn "ANSYSwb2020R1" \
-"Exec=/usr/share/code/code --no-sandbox --unity-launch %F" \
-"Icon=com.visualstudio.code" \
-"Name=Visual Studio Code" 
-
-
+mk_icn "ANSYSedt" \
+"Exec=bash -c 'module load ANSYS/2020R2;ansysedt'" \
+"Icon=/opt/nesi/share/ANSYS/v202commonfiles/images/workbench.ico" \
+"Name=ANSYS EDT 2020R2" 
 # [Desktop Entry]
 # Name=Visual Studio Code
 # Comment=Code Editing. Redefined.
@@ -131,6 +133,14 @@ mk_icn "ABAQUScae" \
 "Icon=/opt/nesi/share/ABAQUS/2019/SimulationServices/V6R2019x/CAADoc/linux_a64.doc/English/CAAIcons/images/logoabaqus.png" \
 "Name=ABAQUS 2019"
 fi
+
+
+mk_icn "VSCode" \
+"Exec=/usr/share/code/code --no-sandbox --unity-launch %F" \
+"Icon=com.visualstudio.code" \
+"Name=Visual Studio Code" 
+
+
  
 # Create links to projects. (max 8)
 read -ra pj <<<$(find "/nesi/project/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" -writable -type d)
