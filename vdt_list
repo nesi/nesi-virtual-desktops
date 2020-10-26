@@ -11,7 +11,7 @@ module purge > /dev/null  2>&1
 module load Python Singularity/3.5.2 -q
 module unload XALT/NeSI -q
 
-_uniq_hosts=()
+_uniq_hosts=( "$(hostname)" )
 
 declare -A _nice_list
 
