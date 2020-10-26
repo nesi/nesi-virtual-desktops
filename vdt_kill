@@ -62,32 +62,22 @@ parse_input() {
 }
 
 kill_vnc(){
+    # See if any lockfiles exist with this name.
     _lockfiles=( $(find $VDT_LOCKFILES -type f -name ${VDT_INSTANCE_NAME}.* -user $(whoami)) )
     vecho "Found lockfiles '${_lockfiles[*]}'"
     unset _found
-    for session in "${_lockfiles[@]}"; do
-        #echo $session
-        #_display_port=$(echo "${session}" | sed -e 's/.*:\([0-9]*\).pid/\1/')
-        #_hostname=$(echo "$session" | sed -e 's/.*\/\(.*\):.*/\1/')
-        hostname="$(echo $session | cut -d "." -f2 | cut -d ":" -f1)"
-        vecho "Session:'$session' Hostname:'$hostname'"
+    sshcmd=""
+    # See if any lockfiles exist with this name.
+    if [[ ${#_lockfiles[@]} -gt 0 ]];then 
+        hostname="$(echo "${_lockfiles[0]}" | cut -d "." -f2 | cut -d ":" -f1)"
+        vecho "Session:'${_lockfiles[0]}' Hostname:'$hostname'"
         if [[ $hostname != $(hostname) ]];then 
             sshcmd="ssh ${verbose} ${hostname} module load Singularity/${EBVERSIONSINGULARITY};"
-        else
-            sshcmd=""
         fi
-        vex $sshcmd singularity instance stop ${VDT_INSTANCE_NAME} && rm $verbose -f $VDT_LOCKFILES/${VDT_INSTANCE_NAME}.* && echo "${VDT_INSTANCE_NAME} killed." && exit 0
-        #echo "${_display_port} ${_hostname}"
-        #echo "${session}"
-        _found="true"
-        
-    done
-    if [[ -z "${_found}" ]];then
-        rm $verbose -f $VDT_LOCKFILES/${VDT_INSTANCE_NAME}.* 
-        echo "No instance named ${VDT_INSTANCE_NAME}";
-        exit 1;
     fi
     
+    vex ${sshcmd} singularity instance stop ${VDT_INSTANCE_NAME} >/dev/null 2>&1 || (rm $verbose "${VDT_LOCKFILES}/${_lockfiles[0]}" >/dev/null 2>&1 & echo "No instance named '$VDT_INSTANCE_NAME'" & return 1)
+    echo "Instance '${VDT_INSTANCE_NAME}' killed." 
 }
 
 vecho () {
@@ -111,4 +101,3 @@ main() {
 }
 
 main "$@"
-

@@ -94,32 +94,32 @@ parse_input() {
             kill)
                 shift
                 "$root/vdt_kill" "$@" 
-                exit 0
+                exit $?
                 ;;
             shell)
                 shift
                 "$root/vdt_shell" "$@" 
-                exit 0
+                exit $?
                 ;;
             connect)
                 shift
                 "$root/vdt_connect" "$@" 
-                exit 0
+                exit $?
                 ;;
             start)
                 shift
                 "$root/vdt_start" "$@" 
-                exit 0
+                exit $?
                 ;;
             list)
                 shift
                 "$root/vdt_list" "$@" 
-                exit 0
+                exit $?
                 ;;
             clean)
                 shift
                 "$root/vdt_clean" "$@" 
-                exit 0
+                exit $?
                 ;;
             # ;;
             # -p|--persistent)
@@ -405,6 +405,6 @@ main() {
     menu
 }
 
-trap "cleanup_graceful" EXIT
+#trap "cleanup_graceful" EXIT
 main "$@"
 

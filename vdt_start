@@ -136,6 +136,7 @@ parse_input() {
             ;;
         esac
     done
+    if ls ${VDT_LOCKFILES}/*${remote:-$(hostname)}:${VDT_SOCKET_PORT} 1> /dev/null 2>&1;then echo "Socket port: ${VDT_SOCKET_PORT} is in use on ${remote:-$(hostname)}, please choose another.";return 1;fi    
 
     # Create directory for logs, certificates etc
     mkdir -p "${VDT_HOME:="${HOME}/.vdt"}"
@@ -177,7 +178,6 @@ parse_input() {
     #     export session_jobid="$SLURM_JOB_ID"
     # fi
 
-    if ls ${VDT_LOCKFILES}/*${remote:-$(hostname)}:${VDT_SOCKET_PORT} 1> /dev/null 2>&1;then echo "Socket port: ${VDT_SOCKET_PORT} is in use on ${remote:-$(hostname)}, please choose another.";exit 1;fi    
 
     vecho "No lockfile conflicts found."
 
