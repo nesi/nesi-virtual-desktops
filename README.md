@@ -155,3 +155,12 @@ Additional options to pass to vnc.
 Location of desktop setup.
 
 `"$HOME/.config"`
+
+## Notes for supporting on Mahuika
+
+This repo is in `/opt/nesi/vdt`
+
+
+Currently storing all `.sif` files in `/opt/nesi/containers/images`, `image` in template should link here.
+
+Run `rebuild.sh` to update. e.g. `rebuild.sh nesi-virtual-desktops_eng.sif`. 
