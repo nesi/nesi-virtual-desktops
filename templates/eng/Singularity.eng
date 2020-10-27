@@ -111,7 +111,7 @@ From: centos:centos7
 	#export LMOD_sys=Linux
 	
 %startscript     
-    source "${VDT_ROOT}/tools/vdt_startscript" 
+    source "${VDT_ROOT}/tools/vdt_startscript.sh" 
 
 %runscript 
-    source "${VDT_ROOT}/tools/vdt_runscript" 
+    source "${VDT_ROOT}/tools/vdt_runscript.sh" 
