@@ -106,7 +106,7 @@ Location of this repo.
 
 ### VDT_HOME 
 
-Location of this repo.
+For lockfiles
 
 `"$HOME/.vdt"`
 

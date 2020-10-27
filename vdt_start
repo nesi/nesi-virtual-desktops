@@ -124,10 +124,10 @@ parse_input() {
                     fi
                 fi
                 if [[ $# -eq 0 ]];then
-                    echo "You must include a valid port number. '$(VDT_BASEname "$0") -h' for help.";exit 1
+                    echo "You must include a valid port number. '$(basename "$0") -h' for help.";exit 1
                 fi
                 echo "$@"
-                echo "Unknown option '${1}', '$(VDT_BASEname "$0") -h' for help."  >&2
+                echo "Unknown option '${1}', '$(basename "$0") -h' for help."  >&2
                 help "$0"
                 exit 1
             ;;
@@ -160,7 +160,7 @@ parse_input() {
     done   
 
     # Get node from env if slurm id set.
-    if [[ -n "$SLURM_JOB_ID" && -z "$remote" && "${HOSTNAME}" != "$remote" ]]; then
+    if [[ -n "$SLURM_JOB_ID" && -z "$remote" && "$(hostname)" != "$remote" ]]; then
         remote=$(echo $SLURM_NODELIST | sed -E 's/^([a-z]{3})\[+([0-9]{3}).*/\1\2/')
         echo "Connection will be forwarded to $remote. Run 'unset SLURM_JOB_ID' if this isn't what you want."
     fi

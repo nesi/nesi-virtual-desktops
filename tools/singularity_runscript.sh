@@ -1,3 +1,3 @@
 #!/bin/bash -e
 
-source singularity_startscript.sh
+source "$VDT_ROOT/tools/singularity_startscript.sh"

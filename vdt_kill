@@ -65,7 +65,6 @@ kill_vnc(){
     # See if any lockfiles exist with this name.
     _lockfiles=( $(find $VDT_LOCKFILES -type f -name ${VDT_INSTANCE_NAME}.* -user $(whoami)) )
     vecho "Found lockfiles '${_lockfiles[*]}'"
-    unset _found
     sshcmd=""
     # See if any lockfiles exist with this name.
     if [[ ${#_lockfiles[@]} -gt 0 ]];then 
@@ -74,10 +73,14 @@ kill_vnc(){
         if [[ $hostname != $(hostname) ]];then 
             sshcmd="ssh ${verbose} ${hostname} module load Singularity/${EBVERSIONSINGULARITY};"
         fi
+        rm -f $verbose "${VDT_LOCKFILES}/${_lockfiles[0]}" #>/dev/null 2>&1
     fi
-    rm $verbose "${VDT_LOCKFILES}/${_lockfiles[0]}" >/dev/null 2>&1
-    vex ${sshcmd} singularity instance stop ${VDT_INSTANCE_NAME} >/dev/null 2>&1 || echo "No instance named '$VDT_INSTANCE_NAME'" & return 1
+    # If no lockfiles, try blind.
+    vex ${sshcmd} singularity instance stop ${VDT_INSTANCE_NAME} >/dev/null 2>&1 || echo "No instance named '$VDT_INSTANCE_NAME' on ${hostname:-$(hostname)}"; return 1
     echo "Instance '${VDT_INSTANCE_NAME}' killed." 
+    #echo "$?"
+    #|| echo "No instance named '$VDT_INSTANCE_NAME'" & return 1
+    #echo "Instance '${VDT_INSTANCE_NAME}' killed." 
 }
 
 vecho () {
