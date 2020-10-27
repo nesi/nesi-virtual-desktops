@@ -111,7 +111,7 @@ From: centos:centos7
 	#export LMOD_sys=Linux
 	
 %startscript     
-    source "${VDT_ROOT}/tools/vdt_startscript.sh" 
+    source "${VDT_ROOT}/tools/singularity_startscript.sh" 
 
 %runscript 
-    source "${VDT_ROOT}/tools/vdt_runscript.sh" 
+    source "${VDT_ROOT}/tools/singularity_runscript.sh" 
