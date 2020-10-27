@@ -1,7 +1,7 @@
 BootStrap: docker
 From: centos:centos7
 %help
- 	see https://github.com/nesi/nesi-virtual-desktops
+    see https://github.com/nesi/nesi-virtual-desktops
 %post
 	export TURBOVNC_VERSION=2.2.4
 	export WEBSOCKIFY_VERSION=0.9.0
