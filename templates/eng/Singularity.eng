@@ -29,6 +29,7 @@ From: centos:centos7
 	yum -y install libXp # For ANSYS EM
         yum -y install numpy
 	yum -y install bzip2
+	yum -y install libX11
 	yum -y install giflib # For ANSYS EM
 	yum -y install python
 	yum -y install polkit
