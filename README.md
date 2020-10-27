@@ -3,8 +3,8 @@
 
 ## Usage
 ### Basic
+  0. If it's the first time, add to your `.bash_profile` e.g. `echo [this repo] >> ~/.bash_profile`
   1. Forward a port through to the cluster e.g. `ssh -L 10699:localhost:10699 mahuika`
-    1a. If it's the first time, add to your `.bash_profile` e.g. `echo [this repo] >> ~/.bash_profile`
   2. Run `vdt start 10699`
   3. Open http://localhost:10699
   4. `Ctrl` + `C` to end.
@@ -52,7 +52,7 @@ Used by the jupyterHub socket proxy.
 
 ### `templates/` 
 Determines the type of desktop launched.
-* '`default`' will be used if no base type specified.
+'default' will be used if no base type specified.
 Currently only templates are:
 * `default` - symlink to 'eng'
 * `eng` - Generic engineering desktop. Creates icons for engineering applciations user has a licence to use, as well as some useful tools and links to all of the users. Currently using image [here](https://github.com/nesi/nesi-singularity-recipes/tree/master/centos/turbo_xfce_centos) directories.
