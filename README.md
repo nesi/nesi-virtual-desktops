@@ -1,13 +1,10 @@
+[![https://www.singularity-hub.org/static/img/hosted-singularity--hub-%23e32929.svg](https://www.singularity-hub.org/static/img/hosted-singularity--hub-%23e32929.svg)](https://singularity-hub.org/collections/4906)
 # nesi-virtual-desktops
 
 
 ## Usage
 ### Basic
-  0. If it's the first time, add to your `.bash_profile` e.g. `echo [this repo] >> ~/.bash_profile`
-  1. Forward a port through to the cluster e.g. `ssh -L 10699:localhost:10699 mahuika`
-  2. Run `vdt start 10699`
-  3. Open http://localhost:10699
-  4. `Ctrl` + `C` to end.
+See [Connecting to a Virtual Desktop](https://support.nesi.org.nz/hc/en-gb/articles/360001600235-Connecting-to-a-Virtual-Desktop).
 ### Through JupyterHub
 ...coming soon
 
@@ -58,7 +55,8 @@ Currently only templates are:
 * `eng` - Generic engineering desktop. Creates icons for engineering applciations user has a licence to use, as well as some useful tools and links to all of the users. Currently using image [here](https://github.com/nesi/nesi-singularity-recipes/tree/master/centos/turbo_xfce_centos) directories.
 * `eng_dev` - Same as above but for testing.
 Template contents.
-*for the desktop named 'example'*
+
+*for the template named 'example'*
 ```
 ..
 ├─ templates/
@@ -86,7 +84,6 @@ Script to be sourced in container on launch.
 #### `setup.sh` (optional)
 Script to be sourced in container on the first launch.
 Currently determined by whether $XDG_CONFIG_HOME/xfce/ exists, but this is bad.
-
 
 -- generate these from help cmd --
 ### `vdt`
@@ -144,7 +141,7 @@ Additional options to pass to websockify.
 ### VDT_VNCOPTS
 Additional options to pass to vnc.
 
-## Other env variables
+## Other Enviroment Variables
 ### XDG_CONFIG_HOME
 Location of desktop setup.
 
