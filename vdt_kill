@@ -75,8 +75,8 @@ kill_vnc(){
             sshcmd="ssh ${verbose} ${hostname} module load Singularity/${EBVERSIONSINGULARITY};"
         fi
     fi
-    
-    vex ${sshcmd} singularity instance stop ${VDT_INSTANCE_NAME} >/dev/null 2>&1 || (rm $verbose "${VDT_LOCKFILES}/${_lockfiles[0]}" >/dev/null 2>&1 & echo "No instance named '$VDT_INSTANCE_NAME'" & return 1)
+    rm $verbose "${VDT_LOCKFILES}/${_lockfiles[0]}" >/dev/null 2>&1
+    vex ${sshcmd} singularity instance stop ${VDT_INSTANCE_NAME} >/dev/null 2>&1 || echo "No instance named '$VDT_INSTANCE_NAME'" & return 1
     echo "Instance '${VDT_INSTANCE_NAME}' killed." 
 }
 

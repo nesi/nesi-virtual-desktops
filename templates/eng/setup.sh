@@ -2,7 +2,7 @@
 
 root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-source "$root/../../lic.sh"
+source "$root/../../tools/lic.sh"
 
 # Dont do this is desktop configs exist already.
 if [[ $(ls ${XDG_CONFIG_HOME:-"$HOME/.config"}/xfce4/desktop/* >/dev/null 2>&1) ]]; then echo "hi";return 0; fi
@@ -21,7 +21,7 @@ mk_icn(){
 }
 
 export BROWSER=firefox
-mkdir -p "${XDG_DESKTOP_DIR:=$HOME/Desktop}"
+mkdir -vp "${XDG_DESKTOP_DIR:=$HOME/Desktop}"
 
 mk_icn "Terminal" \
 "Exec=bash -c 'exo-open --launch TerminalEmulator'" \
@@ -49,10 +49,10 @@ mk_icn "COMSOL_5.5" \
 "Name=COMSOL 5.5"
 fi
 if [[ -n "$ANSYSLMD_LICENSE_FILE" ]];then
-mk_icn "ANSYSsysc2020R2" \
-"Exec=bash -c 'module load ANSYS/2020R2;systemcoupling -G'" \
+mk_icn "ANSYSsysc2020R1" \
+"Exec=bash -c 'module load ANSYS/2020R1;systemcoupling -G'" \
 "Icon=/opt/nesi/share/ANSYS/v202/Addins/Images/system_coupling.png" \
-"Name=ANSYS System Coupling 2020R2" 
+"Name=ANSYS System Coupling 2020R1" 
 mk_icn "ANSYScfx192" \
 "Exec=bash -c 'module load ANSYS/19.2;cfx5launch'" \
 "Icon=/opt/nesi/share/ANSYS/v192/Addins/Images/CFX.ico" \
@@ -61,10 +61,10 @@ mk_icn "ANSYScfx2019R3" \
 "Exec=bash -c 'module load ANSYS/2019R3;cfx5launch'" \
 "Icon=/opt/nesi/share/ANSYS/v195/Addins/Images/CFX.ico" \
 "Name=CFX 2019R3" 
-mk_icn "ANSYScfx2020R2" \
-"Exec=bash -c 'module load ANSYS/2020R2;cfx5launch'" \
-"Icon=/opt/nesi/share/ANSYS/v202/Addins/Images/CFX.ico" \
-"Name=CFX 2020R2" 
+mk_icn "ANSYScfx2020R1" \
+"Exec=bash -c 'module load ANSYS/2020R1;cfx5launch'" \
+"Icon=/opt/nesi/share/ANSYS/v201/Addins/Images/CFX.ico" \
+"Name=CFX 2020R1" 
 
 mk_icn "ANSYSflu192" \
 "Exec=bash -c 'module load ANSYS/19.2;fluent'" \
@@ -74,10 +74,10 @@ mk_icn "ANSYSflu195" \
 "Exec=bash -c 'module load ANSYS/2019R3;fluent'" \
 "Icon=/opt/nesi/share/ANSYS/v195/commonfiles/images/workbench.ico" \
 "Name=ANSYS Fluent 2019R3"
-mk_icn "ANSYSflu2020R2" \
-"Exec=bash -c 'module load ANSYS/2020R2;fluent'" \
-"Icon=/opt/nesi/share/ANSYS/v202/commonfiles/images/workbench.ico" \
-"Name=ANSYS Fluent 2020R2" 
+mk_icn "ANSYSflu2020R1" \
+"Exec=bash -c 'module load ANSYS/2020R1;fluent'" \
+"Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
+"Name=ANSYS Fluent 2020R1" 
 
 
 mk_icn "ANSYSwb192" \
@@ -88,20 +88,18 @@ mk_icn "ANSYSwb2019R3" \
 "Exec=bash -c 'module load ANSYS/2019R3;runwb2'" \
 "Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
 "Name=ANSYS Workbench 2019R3" 
-mk_icn "ANSYSwb2020R2" \
-"Exec=bash -c 'module load ANSYS/2020R2;runwb2'" \
-"Icon=/opt/nesi/share/ANSYS/v202/commonfiles/images/workbench.ico" \
-"Name=ANSYS Workbench 2020R2" 
-mk_icn "ANSYSflu2020R2" \
-"Exec=bash -c 'module load ANSYS/2020R2;fluent'" \
+mk_icn "ANSYSwb2020R1" \
+"Exec=bash -c 'module load ANSYS/2020R1;runwb2'" \
 "Icon=/opt/nesi/share/ANSYS/v201/commonfiles/images/workbench.ico" \
-"Name=ANSYS Fluent 2020R2" 
+"Name=ANSYS Workbench 2020R1" 
 
 
-mk_icn "ANSYSedt" \
-"Exec=bash -c 'module load ANSYS/2020R2;ansysedt'" \
-"Icon=/opt/nesi/share/ANSYS/v202commonfiles/images/workbench.ico" \
-"Name=ANSYS EDT 2020R2" 
+mk_icn "ANSYSwb2020R1" \
+"Exec=/usr/share/code/code --no-sandbox --unity-launch %F" \
+"Icon=com.visualstudio.code" \
+"Name=Visual Studio Code" 
+
+
 # [Desktop Entry]
 # Name=Visual Studio Code
 # Comment=Code Editing. Redefined.
@@ -133,14 +131,6 @@ mk_icn "ABAQUScae" \
 "Icon=/opt/nesi/share/ABAQUS/2019/SimulationServices/V6R2019x/CAADoc/linux_a64.doc/English/CAAIcons/images/logoabaqus.png" \
 "Name=ABAQUS 2019"
 fi
-
-
-mk_icn "VSCode" \
-"Exec=/usr/share/code/code --no-sandbox --unity-launch %F" \
-"Icon=com.visualstudio.code" \
-"Name=Visual Studio Code" 
-
-
  
 # Create links to projects. (max 8)
 read -ra pj <<<$(find "/nesi/project/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" -writable -type d)
@@ -148,16 +138,16 @@ read -ra nb <<<$(find "/nesi/nobackup/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" 
 
 if [[ $(echo "${pj[@]}" | wc -w) -gt 8 ]];then
     pjd="/_projects"
-    mkdir -p "${XDG_DESKTOP_DIR}${pjd}"
+    mkdir "${XDG_DESKTOP_DIR}${pjd}"
 fi
 if [[ $(echo "${nb[@]}" | wc -w) -gt 8 ]];then
     nbd="/_nobackup"
-    mkdir -p  "${XDG_DESKTOP_DIR}${nbd}"
+    mkdir "${XDG_DESKTOP_DIR}${nbd}"
 fi
 for proj in "${pj[@]}";do
-    ln -s "$proj" "${XDG_DESKTOP_DIR}${pjd}/project_$(basename $proj)" 2>/dev/null
+    ln -sv "$proj" "${XDG_DESKTOP_DIR}${pjd}/project_$(basename $proj)" 2>/dev/null
 done
 for proj in "${nb[@]}";do
-    ln -s "$proj" "${XDG_DESKTOP_DIR}${nbd}/nobackup_$(basename $proj)" 2>/dev/null
+    ln -sv "$proj" "${XDG_DESKTOP_DIR}${nbd}/nobackup_$(basename $proj)" 2>/dev/null
 done
 true

@@ -7,11 +7,10 @@
 
 # TODO: Add filesystem shortcuts to desktop.
 
-root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"    # Location of this script 
-
 VDT_HOME=${VDT_HOME:-"$HOME/.vdt"}
-VDT_LOCKFILES=${VDT_LOCKFILES:-"$root/lockfiles"} 
-VDT_TEMPLATES=${VDT_TEMPLATES:-"$root/templates"}
+VDT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+VDT_LOCKFILES=${VDT_LOCKFILES:-"$VDT_ROOT/lockfiles"} 
+VDT_TEMPLATES=${VDT_TEMPLATES:-"$VDT_ROOT/templates"}
 
 max_desktops=3;
 
@@ -19,15 +18,13 @@ module purge > /dev/null  2>&1
 module load Python Singularity/3.5.2 -q 
 module unload XALT/NeSI -q
 
-
-
 help() {
 cat << EndOfHelp
 [1mNAME[0m
-        $(basename "$0") - Start a new virtual desktop
+        $(VDT_BASEname "$0") - Start a new virtual desktop
 
 [1mSYNOPSIS[0m
-        $(basename "$0") [-h -c -v -p -s] [-b template] [-r host] [-N name] [-t seconds] [-d port] <port>
+        $(VDT_BASEname "$0") [-h -c -v -p -s] [-b template] [-r host] [-N name] [-t seconds] [-d port] <port>
 
 [1mDESCRIPTION[0m
         Starts a VGL enabled virtual desktop.
@@ -42,9 +39,9 @@ cat << EndOfHelp
 
     -c --clean              Overwrite User desktop settings.
 
-    -b --base [template]    Template (default=eng)
+    -b --VDT_BASE [template]    Template (default=eng)
 
-    -N --name [name]        Desktop name (default=base).
+    -N --name [name]        Desktop name (default=VDT_BASE).
 
     -t --timeout [s]        Timeout server after [s] seconds.
 
@@ -91,18 +88,18 @@ parse_input() {
                 shift
                 shift
             ;;
-            -b|--base)
-                base="${2}"
+            -b|--VDT_BASE)
+                VDT_BASE="${2}"
                 shift
                 shift
             ;;
             -N|--name)
-                VDT_INSTANCE_NAME="${2}"
+                _instance_name="${2}"
                 shift
                 shift
             ;;
             -d|--display)
-                VDT_DISPLAY_PORT="${2}"
+                _display_port="${2}"
                 #set -x
                 shift
                 shift
@@ -127,36 +124,34 @@ parse_input() {
                     fi
                 fi
                 if [[ $# -eq 0 ]];then
-                    echo "You must include a valid port number. '$(basename "$0") -h' for help.";exit 1
+                    echo "You must include a valid port number. '$(VDT_BASEname "$0") -h' for help.";exit 1
                 fi
                 echo "$@"
-                echo "Unknown option '${1}', '$(basename "$0") -h' for help."  >&2
+                echo "Unknown option '${1}', '$(VDT_BASEname "$0") -h' for help."  >&2
                 help "$0"
                 exit 1
             ;;
         esac
     done
-    if ls ${VDT_LOCKFILES}/*${remote:-$(hostname)}:${VDT_SOCKET_PORT} 1> /dev/null 2>&1;then echo "Socket port: ${VDT_SOCKET_PORT} is in use on ${remote:-$(hostname)}, please choose another.";return 1;fi    
+    if ls ${VDT_LOCKFILES}/*${remote:-$(hostname)}:${VDT_SOCKET_PORT} 1> /dev/null 2>&1;then echo "Socket port '${VDT_SOCKET_PORT}' is in use on ${remote:-$(hostname)}, please choose another.";return 1;fi    
 
     # Create directory for logs, certificates etc
     mkdir -p "${VDT_HOME:="${HOME}/.vdt"}"
 
     # Select template.
-    if [[ -z "${base}" ]];then base="eng";fi
-    if (ls ${VDT_TEMPLATES}/${base} > /dev/null); then
-        echo "Using '${base}' as template."
+    if [[ -z "${VDT_BASE}" ]];then VDT_BASE="default";fi
+    if (ls ${VDT_TEMPLATES}/${VDT_BASE} > /dev/null); then
+        echo "Using '${VDT_BASE}' as template."
     else
         echo "Unknown template '${1}', valid options are '$(ls ${VDT_TEMPLATES})'.\n"
     fi
 
     # Create name.
-    if [ -z "$VDT_INSTANCE_NAME" ];then VDT_INSTANCE_NAME="${base}_$(whoami)";fi
-    
+    VDT_INSTANCE_NAME=${_instance_name:-"${VDT_BASE}_${USER}"}
      # Set logfiles dest
     vecho "${VDT_LOGFILE:="${VDT_HOME}/${VDT_INSTANCE_NAME}.${remote:-$(hostname)}:${VDT_SOCKET_PORT}.log"}"
     touch "${VDT_LOGFILE}"
     vecho "logfile is ${VDT_LOGFILE}"
-
 
     # If clean flag exists remove cache.
     while true; do
@@ -164,31 +159,20 @@ parse_input() {
         export VDT_INSTANCE_NAME="${VDT_INSTANCE_NAME}_new";    
     done   
 
-
     # Get node from env if slurm id set.
     if [[ -n "$SLURM_JOB_ID" && -z "$remote" && "${HOSTNAME}" != "$remote" ]]; then
         remote=$(echo $SLURM_NODELIST | sed -E 's/^([a-z]{3})\[+([0-9]{3}).*/\1\2/')
         echo "Connection will be forwarded to $remote. Run 'unset SLURM_JOB_ID' if this isn't what you want."
-    #     printf "'SLURM_JOB_ID' set. Connection will be forwarded to job $SLURM_JOB_ID.\n"
-    #     export session_jobid="$SLURM_JOB_ID"
-    # fi               
     fi
     # if [[ -z "$session_jobid" && -n "$SLURM_JOB_ID" ]]; then
     #     printf "'SLURM_JOB_ID' set. Connection will be forwarded to job $SLURM_JOB_ID.\n"
     #     export session_jobid="$SLURM_JOB_ID"
     # fi
 
-
-    vecho "No lockfile conflicts found."
-
     lockfile="${VDT_LOCKFILES}/${VDT_INSTANCE_NAME}.${remote:-$(hostname)}:${VDT_SOCKET_PORT}"
     vecho "Lockfile is ${lockfile}"
 
-
-    
     #find "$VDT_LOCKFILES" -type f -user "$(whoami)" -name *${1}* -exec rm ${verbose} -f {} \;
-
-    
 }
 
 ssh_forward(){
@@ -203,7 +187,7 @@ ssh_forward(){
             export VDT_TUNNEL_HOST="$(hostname)"
             env_fwd="export VDT_TUNNEL_HOST=$(hostname) && "
         fi
-        vex ssh ${verbose} -A -o ExitOnForwardFailure=yes ${localforward} "${remote}" "${env_fwd}${root}/vdt_start" "${args[@]:0}"
+        vex ssh ${verbose} -A -o ExitOnForwardFailure=yes ${localforward} "${remote}" "${env_fwd}${VDT_ROOT}/vdt_start" "${args[@]:0}"
         # Take original arguments
         exit $?
     fi
@@ -211,7 +195,7 @@ ssh_forward(){
 }
 set_env(){
     if [[ -n $clean ]];then
-        "${root}/clean_env"
+        "${VDT_ROOT}/clean_env"
     fi
     if [[ -n $secure ]];then
         # If environment setup for desktop flavor.
@@ -221,8 +205,8 @@ set_env(){
         fi    
         VDT_WEBSOCKOPTS="$VDT_WEBSOCKOPTS --cert=${VDT_HOME}/self.pem"
     fi
-    
-    VDT_DISPLAY_PORT=$(shuf -i 1100-2000 -n 1)
+
+    set_display "$_display_port"
 
     export SINGULARITY_BINDPATH="\
 /run,\
@@ -241,12 +225,10 @@ set_env(){
 
     
     # If environment setup for desktop flavor.
-    if [[ -f "${VDT_TEMPLATES}/${base}/pre.sh" ]];then
-        source "${VDT_TEMPLATES}/${base}/pre.sh" 
+    if [[ -f "${VDT_TEMPLATES}/${VDT_BASE}/pre.sh" ]];then
+        source "${VDT_TEMPLATES}/${VDT_BASE}/pre.sh" 
     fi
-    if [[ -f "${VDT_TEMPLATES}/${base}/setup.sh" ]];then
-        export VDT_SETUP="${VDT_TEMPLATES}/${base}/setup.sh" 
-    fi
+
     # Export all variables starting with 'VDT' to singularity.
     for ev in $(compgen -A variable | grep ^VDT );do
         export "SINGULARITYENV_$ev"="${!ev}"
@@ -261,35 +243,31 @@ set_env(){
 }
 
 create_vnc(){   
-    #Randomy generate port number. Add lockfiles later.
     # Set instance name
-    # If given persist name. Won't be killed on exit.
-    if [[ ! -x  "$(readlink -f "$VDT_TEMPLATES/$base/image")" ]];then echo "'$VDT_TEMPLATES/$base/image' doesn't exist!";exit 1;fi
+    if [[ ! -x  "$(readlink -f "$VDT_TEMPLATES/$VDT_BASE/image")" ]];then echo "'$VDT_TEMPLATES/$VDT_BASE/image' doesn't exist!";exit 1;fi
 
-    img_path=$(readlink -f "$VDT_TEMPLATES/$base/image")
+    img_path=$(readlink -f "$VDT_TEMPLATES/$VDT_BASE/image")
     touch "${lockfile}"
-    #mkdir -p "/opt/nesi/vdt/logs/$USER"
     if [[ -n $persistent ]];then
         vex "${timeout}" singularity "${verbose}" instance start "${nohome}" "${img_path}" "${VDT_INSTANCE_NAME}" 
         img_path="instance://${VDT_INSTANCE_NAME}"
         sleep 3
-        #"${root}/assert_vnc.sh"
         printf "Desktop %s started\n" "${VDT_INSTANCE_NAME}"
         printf "Connect at: http://localhost:%s  \nKill with: vdt kill %s" "${VDT_SOCKET_PORT}" "${VDT_INSTANCE_NAME}"
     else
         vex "${timeout}" singularity "${verbose}" run "${nohome}" "${img_path}"
     fi
-    
-    #rm -rf /tmp/.x* /tmp/.X* /tmp/.X11-unix/X /tmp/.ICE-unix/*
-    #rm -f "/tmp/.X11-unix/X${display_port}"
-    #rm  -f "/tmp/.X${display_port}"
-    #rm -f $HOME/.ICEauthority
-    # This way the same singularity container is always used.--pid-file "/opt/nesi/vdt/logs/${USER}/${HOSTNAME}:${display_port}.pids"--pid-file "/opt/nesi/vdt/logs/${USER}/${HOSTNAME}:${display_port}.pid" 
-    #singularity ${V} instance start $nohome --cleanenv "$(readlink -f "$root/$desktop/image")" "${instance_name}" ":$display_port"
-    #singularity ${V} exec "instance://${instance_name}" vncserver -kill ":$display_port"; vncserver -wm startxfce4 -geometry 1920x1080 -securitytypes TLSNone,X509None,None ":$display_port"
-    #singularity ${V} exec "instance://${instance_name}" vncserver -xstartup /opt/nesi/vdt/xstartup_nesi  -securitytypes TLSNone,X509None,None ":$display_port"
-    # -xstartup /opt/nesi/vdt/xstartup_nesi 
-    # -wm xfce4-session
+}
+
+set_display (){
+    #Finds a free display port. If passed an argument, will test that then return.
+    max_i=4;
+    for (( i=0; i<max_i; i++ )); do
+        VDT_DISPLAY_PORT=${1:-$(shuf -i 1100-2000 -n 1)}
+        if [[ ! -e "/tmp/.X11-unix/X{$VDT_DISPLAY_PORT}" ]];then return 0;fi
+        if [[ $# -gt 0 ]];then echo "Selected display port ${1} not suitable."; return 2;fi
+    done
+    echo "Could not find a suitable display port after $max_i attempts."; return 1
 }
 
 vecho () {
@@ -301,7 +279,7 @@ vecho () {
 }
 
 vex () {
-    # For verbose print.
+    # For verbose execute.
     if [[ $verbose ]]; then
         echo "$LINENO:$*"
     fi

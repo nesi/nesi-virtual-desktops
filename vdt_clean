@@ -13,7 +13,7 @@ export VDT_LOCKFILES=${VDT_LOCKFILES:-"$root/lockfiles"}
 
 
 echo "Clearing cache"
-rm -rf ${verbose} "$HOME"/.cache/sessions "$HOME"/.cache/gpg-agent-info "$HOME"/.config/xfce4 "$HOME"/.xfce4 "$HOME"/.fontconfig "$HOME"/.gnupg  "$HOME"/.ICEauthority "$HOME"/.singularity 
+rm -rf ${verbose} "$HOME"/.cache/sessions "$HOME"/.cache/gpg-agent-info "$HOME"/.config/xfce4 "$HOME"/.xfce4 "$HOME"/.fontconfig "$HOME"/.gnupg  "$HOME"/.ICEauthority "$HOME"/.Xauthority "$HOME"/.singularity 
 find /tmp/ -user "$USER" -exec rm -rf {} \; > /dev/null  2>&1 || true
 find ${VDT_LOCKFILES}/ -user "$USER" -exec rm -f {} \; > /dev/null  2>&1 || true
 
