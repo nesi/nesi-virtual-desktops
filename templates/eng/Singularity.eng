@@ -17,7 +17,7 @@ From: centos:centos7
 	yum -y --enablerepo=epel install VirtualGL
 	
 	yum -y groupinstall "Xfce"
-    yum -y install gnome-terminal
+        yum -y install gnome-terminal
 	yum -y groups install "X Window System"
  	#yum -y install -y xfce-polkit # Needed to stop annoying policykit message.
 
@@ -27,7 +27,7 @@ From: centos:centos7
 	yum -y install unzip
 	yum -y install patch
 	yum -y install libXp # For ANSYS EM
-    yum -y install numpy
+        yum -y install numpy
 	yum -y install bzip2
 	yum -y install giflib # For ANSYS EM
 	yum -y install python
@@ -43,7 +43,7 @@ From: centos:centos7
 	yum -y install tcl-8.5.13-8.el7.x86_64 \
 	lua-filesystem-1.6.2-2.el7.x86_64 \
 	lua-devel-5.1.4-15.el7.x86_64 \
-    tcl-devel-8.5.13-8.el7.x86_64 \
+        tcl-devel-8.5.13-8.el7.x86_64 \
 	lua-bitop-1.0.2-3.el7.x86_64 \
 	lua-json-1.3.2-2.el7.noarch \
 	lua-term-0.03-3.el7.x86_64 \
@@ -53,9 +53,9 @@ From: centos:centos7
 
 	# Virtual GL
 	mkdir -p /etc/yum.repos.d
-    cd /etc/yum.repos.d
+        cd /etc/yum.repos.d
 	wget https://virtualgl.org/pmwiki/uploads/Downloads/VirtualGL.repo
-    yum -y install VirtualGL
+        yum -y install VirtualGL
 	
 	# TurboVNC
 	wget https://sourceforge.net/projects/turbovnc/files/${TURBOVNC_VERSION}/turbovnc-${TURBOVNC_VERSION}.x86_64.rpm -q
@@ -64,7 +64,7 @@ From: centos:centos7
 	#echo "\$wm=\"startxfce4\";" >> /etc/turbovncserver.conf
 	
 	# Websockify
-    mkdir -p /opt/websockify
+        mkdir -p /opt/websockify
   	wget https://github.com/novnc/websockify/archive/master.tar.gz -q -O - | tar xzf - -C /opt/websockify --strip-components=1
 	# This just changes print statements. Can be safely commented out if needed.
 	wget https://raw.githubusercontent.com/nesi/nesi-virtual-desktops/master/tools/nesi_websockify.diff  	
@@ -89,8 +89,8 @@ From: centos:centos7
 %environment
 	export LC_ALL=C
   	export PATH=${PATH}:/opt/TurboVNC/bin:/opt/slurm/bin
-    export LANG="en_US.UTF-8"
-    export LANGUAGE="en_US"
+        export LANG="en_US.UTF-8"
+        export LANGUAGE="en_US"
 	export VGL_VERBOSE=1
 	export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/websockify
 	export TZ="Pacific/Auckland"
