@@ -17,17 +17,17 @@ vdt/
 │  ├─ singularity_startscript
 │  ├─ lic.sh
 │  ├─ nesi_websockify_patch
-│  ├─ start_from_jupyter
+│  └─ start_from_jupyter
 ├─ templates/
 │  ├─ default
 │  ├─ eng/
-|  ├─ eng_dev/
+|  └─ eng_dev/
 ├─ vdt
 ├─ vdt_start
 ├─ vdt_list
 ├─ vdt_shell
 ├─ vdt_kill
-├─ vdt_clean
+└─ vdt_clean
 ```
 ### `lockfiles/`
 Where lockfiles are currently being put. Should be empty in this repo.
@@ -66,7 +66,7 @@ Template contents.
 |  |  ├─ Singularity.example
 |  |  ├─ pre.sh
 |  |  ├─ posh.sh
-|  |  ├─ setup.sh
+|  |  └─ setup.sh
 ..
 ```
 #### `image`
