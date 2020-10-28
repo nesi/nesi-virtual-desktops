@@ -26,6 +26,7 @@ From: centos:centos7
 	yum -y install nano
 	yum -y install less
 	yum -y install wget
+	yum -y install file # For ANSYS EM 
 	yum -y install unzip
 	yum -y install patch
 	yum -y install libXp # For ANSYS EM
