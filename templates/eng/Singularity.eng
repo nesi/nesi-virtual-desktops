@@ -22,6 +22,8 @@ From: centos:centos7
  	#yum -y install -y xfce-polkit # Needed to stop annoying policykit message.
 
 	yum -y install git
+	yum -y install vim
+	yum -y install nano
 	yum -y install less
 	yum -y install wget
 	yum -y install unzip
