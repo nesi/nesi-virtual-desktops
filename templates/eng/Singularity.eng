@@ -94,7 +94,7 @@ From: centos:centos7
         export LANG="en_US.UTF-8"
         export LANGUAGE="en_US"
 	export VGL_VERBOSE=1
-	export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/websockify
+	# export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/websockify
 	export TZ="Pacific/Auckland"
 	
 	#SLURM
