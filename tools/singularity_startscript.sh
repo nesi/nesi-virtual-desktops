@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 main (){
     # Check for required env variables.
@@ -33,10 +33,10 @@ main (){
 assert_vnc() {
     i=0; max_i=4
     for (( i=0; i<max_i; i++ )); do
-        vncserver ${VDT_VNCOPTS} -log "${VDT_LOGFILE}" -wm xfce4-session -autokill -securitytypes TLSNone,X509None,None :${VDT_DISPLAY_PORT} >${VDT_LOGFILE} 2>&1
-        case $? in
+        case $(vncserver ${VDT_VNCOPTS} -log "${VDT_LOGFILE}" -wm xfce4-session -autokill -securitytypes TLSNone,X509None,None :${VDT_DISPLAY_PORT} >${VDT_LOGFILE} 2>&1) in
             98) return 0;; # Server exists and is readable.
-            29) echo "Port ${VDT_DISPLAY_PORT} is in use."; return 1;; 
+            29) echo "Port ${VDT_DISPLAY_PORT} is in use by someone else."; return 1;; 
+            *) echo "Server couldn't start, error code $?"
         esac
         i=$((i+=1)); sleep 3
     done

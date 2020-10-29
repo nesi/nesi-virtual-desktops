@@ -188,7 +188,7 @@ ssh_forward(){
             export VDT_TUNNEL_HOST="$(hostname)"
             env_fwd="export VDT_TUNNEL_HOST=$(hostname) && "
         fi
-        vex ssh ${verbose} -A -o ExitOnForwardFailure=yes ${localforward} "${remote}" "${env_fwd}${VDT_ROOT}/vdt_start" "${args[@]:0}"
+        vex ssh ${verbose} -A -o StrictHostKeyChecking=no -o ExitOnForwardFailure=yes ${localforward} "${remote}" "${env_fwd}${VDT_ROOT}/vdt_start" "${args[@]:0}"
         # Take original arguments
         exit $?
     fi
@@ -301,9 +301,15 @@ cleanup() {
     singularity $verbose exec "$img_path" "vncserver -kill ":$VDT_DISPLAY_PORT"" 1> ${VDT_LOGFILE} 2>&1 || true
     rm -f $verbose /tmp/.X11-unix/.X*
     rm -f $verbose "$HOME"/.vnc/*"${VDT_INSTANCE_NAME}".pid
+
     if [[ -n "${VDT_LOGFILE}" ]]; then rm -f $verbose "${VDT_LOGFILE}";fi
     if [[ -n "${lockfile}" ]]; then rm -f $verbose "${lockfile}";fi
+    # Unset all VDT variables.
+    for ev in $(compgen -A variable | grep ^VDT );do
+        unset "$ev"
+    done
     pkill --signal 9 -P $$ > /dev/null 2>&1 
+    
     #rm -f "/tmp/.X$display_port-lock"
     return 0
     # while [[ "$(fuser $1/tcp 2>/dev/null | wc -w)" -gt 0 ]];do
