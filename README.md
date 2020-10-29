@@ -50,10 +50,9 @@ Used by the jupyterHub socket proxy.
 ### `templates/` 
 Determines the type of desktop launched.
 'default' will be used if no base type specified.
-Currently only templates are:
-* `default` - symlink to 'eng'
-* `eng` - Generic engineering desktop. Creates icons for engineering applciations user has a licence to use, as well as some useful tools and links to all of the users. Currently using image [here](https://github.com/nesi/nesi-singularity-recipes/tree/master/centos/turbo_xfce_centos) directories.
-* `eng_dev` - Same as above but for testing.
+
+For a description of existing templates [see](#enviroment-variables).
+
 Template contents.
 
 *for the template named 'example'*
@@ -93,6 +92,16 @@ Currently determined by whether $XDG_CONFIG_HOME/xfce/ exists, but this is bad.
 ### `vdt_shell`
 ### `vdt_kill`
 ### `vdt_clean`
+
+## Templates
+
+
+### `default`
+symlink to 'eng'
+### `eng`
+Generic engineering desktop. Creates icons for engineering applciations user has a licence to use, as well as some useful tools and links to all of the users.
+### `eng_dev` 
+Same as `eng` but for testing.
 
 ## Enviroment Variables
 All of these variables are passed to the container during start.
@@ -146,3 +155,12 @@ Additional options to pass to vnc.
 Location of desktop setup.
 
 `"$HOME/.config"`
+
+## Notes for supporting on Mahuika
+
+This repo is in `/opt/nesi/vdt`
+
+
+Currently storing all `.sif` files in `/opt/nesi/containers/images`, `image` in template should link here.
+
+Run `rebuild.sh` to update. e.g. `rebuild.sh nesi-virtual-desktops_eng.sif`. 
