@@ -160,6 +160,7 @@ parse_input() {
     done   
 
     # Get node from env if slurm id set.
+    vecho "Destination is '${remote}', Current host '$(hostname)'"
     if [[ -n "$SLURM_JOB_ID" && -z "$remote" && "$(hostname)" != "$remote" ]]; then
         remote=$(echo $SLURM_NODELIST | sed -E 's/^([a-z]{3})\[+([0-9]{3}).*/\1\2/')
         echo "Connection will be forwarded to $remote. Run 'unset SLURM_JOB_ID' if this isn't what you want."
