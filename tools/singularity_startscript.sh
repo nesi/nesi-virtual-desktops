@@ -45,5 +45,4 @@ assert_vnc() {
     done
     echo "Could not start server after $max_i attempts. Try another port."; return 1
 }
-
 main 
