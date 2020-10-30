@@ -77,7 +77,7 @@ From: centos:centos7
 	patch --verbose /opt/websockify/websockify/websocketproxy.py < nesi_websockify.diff
 	#sed  '/.*self.msg("%s", msg)/i\        msg += \"\\n  - Now open a browser to http:\/\/localhost:\" + str(os.getenv(\"VNC_SOCKET_PORT\"))\n        msg += \"\\n  - Press CTRL + C to kill.\"' \
 	# /opt/websockify/websockify/websocketproxy.py
-	cd /opt/websockify && make 
+	cd /opt/websockify && make && cp rebind.so websockify
 	
 	# noVNC
 	mkdir -p /opt/noVNC
@@ -104,7 +104,7 @@ From: centos:centos7
 	#SLURM
 	export CPATH=/opt/slurm/include
 	export PATH="/opt/slurm/sbin:$PATH"
-	export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/opt/slurm/lib64:/opt/slurm/lib64/slurm"
+	export LD_LIBRARY_PATH="/opt/slurm/lib64:/opt/slurm/lib64/slurm"
 	export LIBRARY_PATH="$LIBRARY_PATH:/opt/slurm/lib64:/opt/slurm/lib64/slurm"
 	
 	#LMOD
