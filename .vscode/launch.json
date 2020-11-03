@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "Bash-Debug (simplest configuration)",
             "program": "${file}",
-            "args": [ "-v", "eng_cwal219_1"]
+            "args": [ "-v", "eng_cwal219"]
         }
     ]
 }

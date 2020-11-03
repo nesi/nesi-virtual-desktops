@@ -88,7 +88,7 @@ parse_input() {
                 shift
                 shift
             ;;
-            -b|--VDT_BASE)
+            -b|--base)
                 VDT_BASE="${2}"
                 shift
                 shift
@@ -251,15 +251,34 @@ create_vnc(){
 
     img_path=$(readlink -f "$VDT_TEMPLATES/$VDT_BASE/image")
     touch "${lockfile}"
+    fullcmd="${timeout}" singularity "${verbose}" run "${nohome}" "${img_path}"
     if [[ -n $persistent ]];then
-        vex "${timeout}" singularity "${verbose}" instance start "${nohome}" "${img_path}" "${VDT_INSTANCE_NAME}" 
-        img_path="instance://${VDT_INSTANCE_NAME}"
-        sleep 3
-        printf "Desktop %s started\n" "${VDT_INSTANCE_NAME}"
-        printf "Connect at: http://localhost:%s  \nKill with: vdt kill %s" "${VDT_SOCKET_PORT}" "${VDT_INSTANCE_NAME}"
+        instance 
     else
-        vex "${timeout}" singularity "${verbose}" run "${nohome}" "${img_path}"
+        vex "$fullcmd" 
     fi
+}
+
+daemon(){
+    # chdir("/")                     || die "can't chdir to /: $!";
+    # open(STDIN,  "<", "/dev/null") || die "can't read /dev/null: $!";
+    # open(STDOUT, ">", "/dev/null") || die "can't write /dev/null: $!";
+    # defined(my $pid = fork())      || die "can't fork: $!";
+    # exit if $pid;              # non-zero now means I am the parent
+    # (setsid() != -1)           || die "Can't start a new session: $!";
+    # open(STDERR, ">&", STDOUT) || die "can't dup stdout: $!";
+
+    # setsid myscript.sh >/dev/null 2>&1 < /dev/null &
+
+    sleep 30
+    echo "TESTING"
+    exit 0
+    # vex "$fullcmd"
+    # vex "${timeout}" singularity "${verbose}" instance start "${nohome}" "${img_path}" "${VDT_INSTANCE_NAME}" 
+    # img_path="instance://${VDT_INSTANCE_NAME}"
+    # sleep 3
+    # printf "Desktop %s started\n" "${VDT_INSTANCE_NAME}"
+    # printf "Connect at: http://localhost:%s  \nKill with: vdt kill %s" "${VDT_SOCKET_PORT}" "${VDT_INSTANCE_NAME}"
 }
 
 set_display (){

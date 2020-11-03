@@ -1,5 +1,5 @@
 #!/bin/bash -e
-"/opt/websockify/run ${VDT_WEBSOCKOPTS} --web /opt/noVNC localhost:${VDT_SOCKET_PORT} -- vncserver ${VDT_VNCOPTS} -log "${VDT_LOGFILE}" -wm xfce4-session -autokill -securitytypes TLSNone,X509None,None"
+
 main (){
     # Check for required env variables.
     if [[ -z $VDT_DISPLAY_PORT ]]; then echo "'VDT_DISPLAY_PORT' not set, did you launch this container correctly?";exit 1;fi    
@@ -45,4 +45,4 @@ assert_vnc() {
     done
     echo "Could not start server after $max_i attempts. Try another port."; return 1
 }
-#main 
+main 
