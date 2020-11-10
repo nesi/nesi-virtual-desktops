@@ -115,9 +115,6 @@ From: centos:centos7
 	#export LMOD_SETTARG_CMD=:
 	##export LMOD_PREPEND_BLOCK=normal
 	#export LMOD_sys=Linux
-	
-%startscript     
-    source "${VDT_ROOT}/tools/singularity_startscript.sh" 
 
 %runscript 
-    source "${VDT_ROOT}/tools/singularity_runscript.sh" 
+    source "${VDT_ROOT}/utils/singularity_runscript.sh" 
