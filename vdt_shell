@@ -62,7 +62,7 @@ parse_input() {
                 shift
             ;;
             -v|--verbose)
-                verbose="--verbose"
+                export verbose="--verbose"
                 shift
             ;;
             *)

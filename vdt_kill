@@ -43,7 +43,7 @@ parse_input() {
                 shift
             ;;
         -v|--verbose)
-            verbose="-v"
+            export verbose="-v"
             #set -x
             shift
         ;;
@@ -69,14 +69,18 @@ kill_vnc(){
     # See if any lockfiles exist with this name.
     if [[ ${#_lockfiles[@]} -gt 0 ]];then 
         hostname="$(echo "${_lockfiles[0]}" | cut -d "." -f2 | cut -d ":" -f1)"
+        
+        pkill -p $(cat ${_lockfiles[0]})
         vecho "Session:'${_lockfiles[0]}' Hostname:'$hostname'"
-        if [[ $hostname != $(hostname) ]];then 
-            sshcmd="ssh ${verbose} ${hostname} module load Singularity/${EBVERSIONSINGULARITY};"
-        fi
+        # if [[ $hostname != $(hostname) ]];then 
+        #     sshcmd="ssh ${verbose} ${hostname} module load Singularity/${EBVERSIONSINGULARITY};"
+        # fi
         rm -f $verbose "${VDT_LOCKFILES}/${_lockfiles[0]}" #>/dev/null 2>&1
     fi
+
+    
     # If no lockfiles, try blind.
-    vex ${sshcmd} singularity instance stop ${VDT_INSTANCE_NAME} >/dev/null 2>&1 && (echo "Instance '${VDT_INSTANCE_NAME}' killed.";return 0) ||  (echo "No instance named '$VDT_INSTANCE_NAME' on ${hostname:-$(hostname)}"; return 1)
+    #vex ${sshcmd} singularity instance stop ${VDT_INSTANCE_NAME} >/dev/null 2>&1 && (echo "Instance '${VDT_INSTANCE_NAME}' killed.";return 0) ||  (echo "No instance named '$VDT_INSTANCE_NAME' on ${hostname:-$(hostname)}"; return 1)
      
     #echo "$?"
     #|| echo "No instance named '$VDT_INSTANCE_NAME'" & return 1
