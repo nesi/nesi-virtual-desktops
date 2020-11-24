@@ -39,7 +39,7 @@ $VDT_ROOT,\
 /usr/lib64/libmunge.so.2,\
 /usr/lib64/libmunge.so.2.0.0"
 
-    vecho "Singularity bindpath is $(echo "${SINGULARITY_BINDPATH}" | tr , '\n')"
+    debug "Singularity bindpath is $(echo "${SINGULARITY_BINDPATH}" | tr , '\n')"
 
     
     # If environment setup for desktop flavor.
@@ -58,7 +58,7 @@ $VDT_ROOT,\
     # Export all variables starting with 'VDT' to singularity.
     for ev in $(compgen -A variable | grep ^VDT );do
         export "SINGULARITYENV_$ev"="${!ev}"
-        vecho "SINGULARITYENV_$ev=${!ev}"
+        debug "SINGULARITYENV_$ev=${!ev}"
     done
     
     # Murder any ports that were missed.
@@ -66,6 +66,9 @@ $VDT_ROOT,\
         echo "Port '$VDT_SOCKET_PORT' in use. Killing $VDT_SOCKET_PORT"
         kill -9 $(fuser "$VDT_SOCKET_PORT"/tcp 2>/dev/null | awk '{ print $1 }')
     done
+    
+    lockfile="${VDT_LOCKFILES}/${VDT_INSTANCE_NAME}.${remote:-$(hostname)}:${VDT_SOCKET_PORT}"
+
 }
 
 create_vnc(){   
@@ -78,7 +81,13 @@ create_vnc(){
         lennut
     fi
     #"${timeout}" s
-    vex singularity "${verbose}" run "${nohome}" "${img_path}" #> vecho #2>&1
+    echo $$ > ${lockfile}
+    cmd="singularity ${verbose} run ${nohome} ${img_path}"
+    # (
+    #     flock 200
+    # ) 200>$lockfile
+    ${cmd} # 2> /dev/null #debug #2>&1
+    #cleanup_nice
 }
 
 set_display (){
@@ -97,14 +106,16 @@ cleanup() {
     #rm -f $verbose /tmp/.X11-unix/.X*
     #rm -f $verbose "$HOME"/.vnc/*"${VDT_INSTANCE_NAME}".pid
     echo "Trapped $?"
+    unsert_pid $lockfile
+    rm -f ${verbose} ${lockfile} 
     #if [[ -n "${VDT_LOGFILE}" ]]; then rm -f $verbose "${VDT_LOGFILE}";fi
-    if [[ -n "${lockfile}" ]]; then rm -f $verbose "${lockfile}";fi
+    #if [[ -n "${lockfile}" ]]; then rm -f $verbose "${lockfile}";fi
     # Unset all VDT variables.
     for ev in $(compgen -A variable | grep ^VDT );do
         unset "$ev"
     done
     
-    pkill --signal 9 -P $$ > /dev/null 2>&1 
+    
     
     rm -fvr "/tmp/.X$display_port-lock"
     rm -fvr "/tmp/.ICE$display_port-lock"
@@ -112,7 +123,8 @@ cleanup() {
     while [[ "$(fuser $VDT_SOCKET_PORT/tcp 2>/dev/null | wc -w)" -gt 0 ]];do
         kill -9 "$(fuser $VDT_SOCKET_PORT/tcp 2>/dev/null | awk '{ print $1 }')"
     done
-    return 0
+    pkill --signal 9 -P $$ > /dev/null 2>&1 
+    exit 0
 
 }
 cleanup_nice() {

@@ -20,10 +20,10 @@ main(){
 
 testfor(){
     if pgrep -f "$@";then #> /dev/null; then 
-        echo "Found '$*'" 
+        echo "Found '$*'" >> $VDT_LOGFILE
         return 0
     else
-        echo "Couldn't find '$*', will try again in ${sleep_for}s"
+        echo "Couldn't find '$*', will try again in ${sleep_for}s" >> $VDT_LOGFILE
         return 1
     fi
 }

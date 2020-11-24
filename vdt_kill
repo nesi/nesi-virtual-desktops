@@ -3,15 +3,10 @@
 # Kills named singularity instance.
 # Author: Callum
 # https://github.com/nesi/nesi-virtual-desktops
-
-module purge > /dev/null  2>&1
-module load Python Singularity/3.5.2 -q 
-module unload XALT/NeSI -q
-
-root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"    # Location of this script 
-VDT_LOCKFILES=${VDT_LOCKFILES:-"$root/lockfiles"} 
-
-
+initialize(){
+    export VDT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+    source "${VDT_ROOT}/utils/common.sh"
+}
 # Where files are saved in user home.
 help() {
 cat << EndOfHelp
@@ -48,36 +43,42 @@ parse_input() {
             shift
         ;;
         *)
-                echo "Unknown option '${1}', -h for help."  >&2
+                echo "Unknown option '${1}', $0 -h for help."  >&2
                 exit 1
             ;;
         esac
     done
-    # # Parse flags + port
-    # if [[ $# -gt 1 ]];then
-    #     echo "Too many arguments '${1}', -h for help."  >&2
-    # fi
+    # Parse flags + port
+    if [[ $# -lt 1 ]];then
+        echo "Not enough arguments, $0 -h for help."  >&2 && exit 1
+    fi
     
     export VDT_INSTANCE_NAME="$1"
 }
 
 kill_vnc(){
-    # See if any lockfiles exist with this name.
+
+    # See if any lockfiles exist with this name, failing that port number, or host.
     _lockfiles=( $(find $VDT_LOCKFILES -type f -name ${VDT_INSTANCE_NAME}.* -user $(whoami)) )
-    vecho "Found lockfiles '${_lockfiles[*]}'"
-    sshcmd=""
     # See if any lockfiles exist with this name.
     if [[ ${#_lockfiles[@]} -gt 0 ]];then 
-        hostname="$(echo "${_lockfiles[0]}" | cut -d "." -f2 | cut -d ":" -f1)"
-        
-        pkill -p $(cat ${_lockfiles[0]})
-        vecho "Session:'${_lockfiles[0]}' Hostname:'$hostname'"
+        cmd=""
+        _hostname="$(echo "${_lockfiles[0]}" | cut -d "." -f2 | cut -d ":" -f1)"
+        vecho "Session:'${_lockfiles[0]}' Hostname:'$_hostname'"
+        read_lockfile "${_lockfiles[0]}"
+        if [[ ! "${_host}" == "${HOSTNAME}" ]];then
+            cmd="ssh ${verbose} ${_host} "
+        fi
+        cmd=$cmd source ${VDT_ROOT}/utils/common.sh && verbose="$verbose" && unsert_pid ${_lockfiles[0]}
+         
         # if [[ $hostname != $(hostname) ]];then 
         #     sshcmd="ssh ${verbose} ${hostname} module load Singularity/${EBVERSIONSINGULARITY};"
         # fi
-        rm -f $verbose "${VDT_LOCKFILES}/${_lockfiles[0]}" #>/dev/null 2>&1
+        rm $verbose "${_lockfiles[0]}" #>/dev/null 2>&1
+    else
+        echo "No instance ${VDT_INSTANCE_NAME} found" 
+        exit 1
     fi
-
     
     # If no lockfiles, try blind.
     #vex ${sshcmd} singularity instance stop ${VDT_INSTANCE_NAME} >/dev/null 2>&1 && (echo "Instance '${VDT_INSTANCE_NAME}' killed.";return 0) ||  (echo "No instance named '$VDT_INSTANCE_NAME' on ${hostname:-$(hostname)}"; return 1)
@@ -87,24 +88,10 @@ kill_vnc(){
     #echo "Instance '${VDT_INSTANCE_NAME}' killed." 
 }
 
-vecho () {
-    # For verbose print.
-    if [[ $verbose ]]; then
-        echo "$LINENO:$*"
-    fi
-}
-
-vex () {
-    # For verbose exectute.
-    if [[ $verbose ]]; then
-        echo "$LINENO:$*"
-    fi
-    $@
-}
-
-main() {
+main(){
+    initialize
     parse_input "$@"
-    kill_vnc
+    kill_vnc && echo "$VDT_INSTANCE_NAME killed successfully"
 }
 
 main "$@"

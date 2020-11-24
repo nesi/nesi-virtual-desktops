@@ -32,8 +32,6 @@ cat << EndOfHelp
 
     -r --remote [host]      Start vdt on [host].
 
-    -p --persistent         Container will be run as a service. (e.g. will stay alive after closing your terminal)
-
     -c --clean              Overwrite User desktop settings.
 
     -b --VDT_BASE [template]    Template (default=eng)
@@ -70,9 +68,8 @@ parse_input() {
                 shift
             ;;
             -p|--persistent)
-                echo "Persistent containers are still in development. Use caution"
+                echo "'-p' is depricated. See $support_docs for more details."
                 #exit 1 
-                persistent="&"
                 shift
             ;;
             -r|--remote)
@@ -81,7 +78,7 @@ parse_input() {
                 shift
             ;;
             -t|--timeout)
-                timeout="timeout ${2}"
+                timeout="timeout ${2} "
                 shift
                 shift
             ;;
@@ -130,48 +127,63 @@ parse_input() {
             ;;
         esac
     done
-    if ls ${VDT_LOCKFILES}/*${remote:-$(hostname)}:${VDT_SOCKET_PORT} 1> /dev/null 2>&1;then echo "WARNING: Socket port '${VDT_SOCKET_PORT}' is in use on ${remote:-$(hostname)}, you may have to choose another.";return 0;fi    
+    #if ls ${VDT_LOCKFILES}/*${remote:-$(hostname)}:${VDT_SOCKET_PORT} 1> /dev/null 2>&1;then echo "WARNING: Socket port '${VDT_SOCKET_PORT}' is in use on ${remote:-$(hostname)}, you may have to choose another.";fi    
+    
 
+    # Remove old logs
+    oldlogs
     # Create directory for logs, certificates etc
     mkdir -p "${VDT_HOME:="${HOME}/.vdt"}"
+
+    if [[ -n $(find $VDT_LOCKFILES -type f -name *\.${remote:-$(hostname)}:* -user ${USER}) ]] ;then 
+        warning "You already have a session running on ${remote:-$(hostname)}, attempting to start another may cause issues."
+        #exit 1
+    fi
+    if [[ -n $(find $VDT_LOCKFILES -type f -name *:${VDT_SOCKET_PORT} 2>&1) ]] ;then 
+        warning "The port '${VDT_SOCKET_PORT}' appears to be in use, this may cause issues."
+        #exit 1
+    fi
 
     # Select template.
     if [[ -z "${VDT_BASE}" ]];then VDT_BASE="default";fi
 
     if (ls ${VDT_TEMPLATES}/${VDT_BASE} > /dev/null); then
-        echo "Using '${VDT_BASE}' as template."       
+        debug "Using '${VDT_BASE}' as template."       
     else
         echo "Unknown template '${1}', valid options are '$(ls ${VDT_TEMPLATES})'.\n"
     fi
     
     # Get node from env if slurm id set.
-    #vecho "Destination is '${remote}', Current host '$(hostname)'"
     if [[ -n "$SLURM_JOB_ID" && -z "${remote}" ]]; then
         remote=$(echo $SLURM_NODELIST | sed -E 's/^([a-z]{3})\[+([0-9]{3}).*/\1\2/') 
-        #echo "Remote: '${remote}', Hostname: '$(hostname)'"
-        if [[ "$remote" != "$(hostname)" && -z "${remote}" ]];then # Need to test again to avoid printing twice.
-            echo "Connection will be forwarded to $remote. Run 'unset SLURM_JOB_ID' if this isn't what you want."
-        fi
+        echo "Connection will be forwarded to $remote. Run 'unset SLURM_JOB_ID' if this isn't what you want."
+        # Create and submit chaser job.
+        sbatch --time 00:00:10 --dependency afterany:$SLURM_JOB_ID --job-name vdt_chaser_job --wrap "rm -f ${lockfile} >/dev/null 2>&1" >${VDT_LOGFILE} 2>&1
     fi
+    debug "Destination is '${remote:-$(hostname)}', Current host '$(hostname)'"
 
-    # Create name.
-    VDT_INSTANCE_NAME=${_instance_name:-"${VDT_BASE}_${USER}"}
-     # Set logfiles dest
-    touch "${VDT_LOGFILE:="${VDT_HOME}/${VDT_INSTANCE_NAME}.${remote:-$(hostname)}:${VDT_SOCKET_PORT}.log"}"
-    vecho "Logfile is ${VDT_LOGFILE}"
+    if [[ -n "$SLURM_JOB_NAME" ]];then
+        if [[ -n "$_instance_name" ]];then
+            echo "VDT name '$_instance_name' as specified by '-N' was overridden by Slurm job name '$SLURM_JOB_NAME'."
+        fi
+        VDT_INSTANCE_NAME="${SLURM_JOB_NAME}"
+    else
+        # Create name.
+        VDT_INSTANCE_NAME=${_instance_name:-"${VDT_BASE}_${USER}"}
+        VDT_INSTANCE_NAME=${VDT_INSTANCE_NAME//[^a-zA-Z0-9_]/}
+        while true; do
+            if ! ls "${VDT_LOCKFILES}"/*"${VDT_INSTANCE_NAME}"\..* 1> /dev/null 2>&1;then break;fi
+            p2=$(($(echo ${VDT_INSTANCE_NAME} | grep -Eo '[0-9]+$' || echo 0)+1))
+            p1="$(echo ${VDT_INSTANCE_NAME} | grep -Eo '.*_[^0-9]')"
+            VDT_INSTANCE_NAME="${p1}_${p2}"   
+        done  
+    fi
+    echo "starting vdt '$VDT_INSTANCE_NAME'"
 
-    # If clean flag exists remove cache.
-
-    #Sanitise
-    VDT_INSTANCE_NAME=${VDT_INSTANCE_NAME//[^a-zA-Z0-9_]/}
-    while true; do
-        if ! ls "${VDT_LOCKFILES}"/*"${VDT_INSTANCE_NAME}"\..* 1> /dev/null 2>&1;then break;fi
-        p2=$(($(echo ${VDT_INSTANCE_NAME} | grep -Eo '[0-9]+$' || echo 0)+1))
-        p1="$(echo ${VDT_INSTANCE_NAME} | grep -Eo '.*_[^0-9]')"
-        echo "$p2"
-        echo "$p1"
-        export VDT_INSTANCE_NAME="${p1}_${p2}"   
-    done   
+    # Set logfiles dest
+    export VDT_LOGFILE=${VDT_LOGFILE:="${VDT_HOME}/${VDT_INSTANCE_NAME}.${remote:-$(hostname)}:${VDT_SOCKET_PORT}.log"}
+    touch "$VDT_LOGFILE" || echo "Warning: Cannot write to $VDT_LOGFILE." 
+    debug "Logfile is ${VDT_LOGFILE}"
 
     # if [[ -z "$session_jobid" && -n "$SLURM_JOB_ID" ]]; then
     #     printf "'SLURM_JOB_ID' set. Connection will be forwarded to job $SLURM_JOB_ID.\n"
@@ -179,25 +191,16 @@ parse_input() {
     # fi
 
     lockfile="${VDT_LOCKFILES}/${VDT_INSTANCE_NAME}.${remote:-$(hostname)}:${VDT_SOCKET_PORT}"
-    vecho "Lockfile is ${lockfile}"
-
-    #find "$VDT_LOCKFILES" -type f -user "$(whoami)" -name *${1}* -exec rm ${verbose} -f {} \;
+    debug "Lockfile is ${lockfile}"
 }
 
 launch(){
+
     # If remote destination is set, and not self.
     if [[ -n $remote ]];then
-        cmd1="ssh ${verbose} -A -o StrictHostKeyChecking=no -o ExitOnForwardFailure=yes ${remote}"
-        # If ephemeral, local forwarding is good. 
-        if [[ -z $persistent ]];then
-            cmd1="$cmd1 -L ${VDT_SOCKET_PORT}:localhost:${VDT_SOCKET_PORT}"
-        else #add this hostname.
-            VDT_TUNNEL_HOST="$(hostname)"
-        fi
-    
-    else
-        cmd1="bash -c"
+        VDT_TUNNEL_HOST="$(hostname)"
     fi
+
     # Export all variables starting with 'VDT' to singularity.
     startcmd="export"
     for ev in $(compgen -A variable | grep ^VDT );do
@@ -206,31 +209,42 @@ launch(){
     # if [[ -n ${verbose} ]];then
     #     startcmd="$startcmd verbose=-v"
     # fi
-    startcmd="${startcmd} && ${VDT_ROOT}/utils/singularity_wrapper.sh"
-    printf "Launching on %s..." "${remote}"
-    if [[ -z $persistent ]];then
-        #echo "Starting ephemeral desktop on $msg"
-        printf "\r\033[0KLaunch Successful\n" 
-        startcmd=''${cmd1}' "'$startcmd'"'
-        vecho "$startcmd"
+    startcmd="${startcmd} && ${timeout}${VDT_ROOT}/utils/singularity_wrapper.sh"
+    # if [[ -z $persistent ]];then
+    #     #echo "Starting ephemeral desktop on $msg"
+    #     printf "\r\033[0KInitialize Successful\n" 
+    #     startcmd=''${cmd1}' "'$startcmd'"'
+    #     debug "$startcmd"
+    #     eval "$startcmd"
+    # else 
+    debug "PPID is $PPID"
+    #startcmd='nohup '${cmd1}' "'$startcmd'" >> '$VDT_LOGFILE' 2>&1 &'
+    debug "$startcmd"
+    #eval "$startcmd"
+    echo "$!" > "${lockfile}" 
+    #printf "\r\033[0Kinitialize Successful\n" 
+
+    if [[ -n $remote ]];then
+        printf "Looking for tunnel to %s..." "$remote"
+        ssh ${verbose} -A -o StrictHostKeyChecking=no -o ExitOnForwardFailure=yes ${remote} ${startcmd} #2>${VDT_LOGFILE}
+
+        #assert_lennut $VDT_SOCKET_PORT || printf "\r\033[0KError: Could not find tunnel.\n" && printf "\r\033[0KTunnel Live.\n"
+    else
         eval "$startcmd"
-    else 
-        startcmd='nohup '${cmd1}' "'$startcmd'" >> '$VDT_LOGFILE' 2>&1 &'
-        vecho "$startcmd"
-        eval "$startcmd"
-        echo "$!" > "${lockfile}" 
-        printf "\r\033[0KLaunch Successful\n" 
-        if [[ -n $remote ]];then
-            assert_lennut
-        fi
-        assert_pid
-        #echo "PID is '${daemon_pid}'"
-        echo ""
-        echo "Instance name: '${VDT_INSTANCE_NAME}'"
-        echo "Logfile is '${VDT_LOGFILE}'"
-        echo "Connect with 'http://localhost:${VDT_SOCKET_PORT}'"
-        exit 0
     fi
+
+    # if [[ ! "${remote}" == "${HOSTNAME}" ]];then
+    #     cmd="$cmd ssh -T ${verbose} ${remote} "
+    # fi
+    #cmd="$cmd source ${VDT_ROOT}/utils/common.sh && assert_pid"
+    #$cmd
+    #echo "PID is '${daemon_pid}'"
+    # echo ""
+    # echo "Instance name: '${VDT_INSTANCE_NAME}'"
+    # echo "Logfile is '${VDT_LOGFILE}'"
+    # echo "Connect with 'http://localhost:${VDT_SOCKET_PORT}'"
+    exit $?
+    # fi
 }
 
 # assert_per(){
@@ -248,38 +262,25 @@ launch(){
 #     fi
 # }
 
-assert_pid(){
-    printf "Checking proceesses are running on %s..." "${remote:-$(hostname)}"
-    if [[ -n ${remote} ]];then
-        cmd="ssh ${verbose} ${remote} "
-    fi
-    cmd="${cmd}${VDT_ROOT}/utils/check_pid.sh"
-    if $cmd > vecho 2>&1;then 
-        printf "\r\033[0KFound all proceesses.\n"
-    else
-        printf "\r\033[0KError: VDT did not launch properly on node.\n" 
-        exit 1
-    fi
-}
+# assert_pid(){
+#     printf "Checking proceesses are running on %s..." "${remote:-$(hostname)}"
+#     if [[ -n ${remote} ]];then
+#         cmd="ssh ${verbose} ${remote} "
+#     fi
+#     cmd="${cmd}source ${VDT_ROOT}/utils/common.sh && assert_pid"
+#     if $cmd > debug 2>&1;then 
+#         printf "\r\033[0KFound all proceesses.\n"
+#     else
+#         printf "\r\033[0KError: VDT did not launch properly on node.\n" 
+#         exit 1
+#     fi
+# }
 assert_vnc(){
 
     return 0
 
 }
-assert_lennut(){
-    printf "Looking for tunnel to %s..." "${remote}"
-    max_test_lennut=4
-    for (( i=0; i<$max_test_lennut; i++ )); do
-        sleep 4
-        if [ ! $(netstat -tpln 2>vecho | grep -P "^tcp\s*\d*\s*\d*\s*127.0.0.1:${VDT_SOCKET_PORT}.*$" > vecho 2>&1) ];then
-            printf "\r\033[0KTunnel Live.\n"
-            return 0
-        fi
-        vecho "Could not find tunnel. Attempt ($i/$max_test_lennut)"
-    done 
-    printf "\r\033[0KError: Could not find tunnel after %s attempts." "${max_test_lennut}\n"
-    return 1
-}
+
 
 main() {
     initialize
@@ -293,7 +294,7 @@ main() {
 #     if [[ "$session_jobid" ]];then
 #         while true;do
 #             sqout=$(squeue -h -u "$USER" -j "$session_jobid" -O "State,NodeList")
-#             vecho $sqout
+#             debug $sqout
 #             jobstate=$(echo $sqout | awk '{print $1}')
 #             echo $jobstate
 #             session_hostname=$(echo $sqout | awk '{print $2}')
@@ -336,20 +337,22 @@ cleanup() {
     #rm -f $verbose "$HOME"/.vnc/*"${VDT_INSTANCE_NAME}".pid
     echo "Trapped $?"
     #if [[ -n "${VDT_LOGFILE}" ]]; then rm -f $verbose "${VDT_LOGFILE}";fi
-    if [[ -n "${lockfile}" ]]; then rm -f $verbose "${lockfile}";fi
-    # Unset all VDT variables.
-    for ev in $(compgen -A variable | grep ^VDT );do
-        unset "$ev"
-    done
+    #ls "${lockfile}"
+
+    # if [[ -n "${lockfile}" ]]; then rm -f $verbose "${lockfile}";fi
+    # # Unset all VDT variables.
+    # for ev in $(compgen -A variable | grep ^VDT );do
+    #     unset "$ev"
+    # done
     
-    rm -fvr "/tmp/.X$display_port-lock"
-    rm -fvr "/tmp/.ICE$display_port-lock"
+    # rm -fvr "/tmp/.X$display_port-lock"
+    # rm -fvr "/tmp/.ICE$display_port-lock"
 
-    while [[ "$(fuser $VDT_SOCKET_PORT/tcp 2>/dev/null | wc -w)" -gt 0 ]];do
-        kill -9 "$(fuser $VDT_SOCKET_PORT/tcp 2>/dev/null | awk '{ print $1 }')"
-    done
+    # while [[ "$(fuser $VDT_SOCKET_PORT/tcp 2>/dev/null | wc -w)" -gt 0 ]];do
+    #     kill -9 "$(fuser $VDT_SOCKET_PORT/tcp 2>/dev/null | awk '{ print $1 }')"
+    # done
 
-    pkill --signal 9 -P $$ > /dev/null 2>&1 
+    # pkill --signal 9 -P $$ > /dev/null 2>&1 
 
     return 1
 

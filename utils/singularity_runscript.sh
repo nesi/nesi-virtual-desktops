@@ -27,10 +27,12 @@ main (){
 
 assert_vnc() {
     i=0; max_i=4
-    tmplog="$(mktemp)"
-    tail -f $tmplog > vecho &
+    # tmplog="$(mktemp)"
+    # tail -f $tmplog > debug &
     for (( i=0; i<max_i; i++ )); do
-    vncserver ${VDT_VNCOPTS} -log "$tmplog" -wm xfce4-session -autokill -securitytypes TLSNone,X509None,None :${VDT_DISPLAY_PORT} > vecho 2>&1
+    #vncserver ${VDT_VNCOPTS} -log "$tmplog" -wm xfce4-session -autokill -securitytypes TLSNone,X509None,None :${VDT_DISPLAY_PORT} > debug 2>&1
+
+    vncserver ${VDT_VNCOPTS} -log "$tmplog" -wm xfce4-session -autokill -securitytypes TLSNone,X509None,None :${VDT_DISPLAY_PORT} > debug 2>&1
     exc="$?"
     #echo $exc
         case $exc in
@@ -54,7 +56,6 @@ chekenv(){
 cleanup(){
     unset DISPLAY
     xfce4-session-logout --halt > /dev/null 2>&1
-    
 }
 
 trap cleanup INT ERR SIGINT SIGTERM
