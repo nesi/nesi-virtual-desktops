@@ -7,11 +7,6 @@ VDT_LOGFILE=${VDT_LOGFILE:-"/dev/null"}
 
 export support_docs="https://support.nesi.org.nz/hc/en-gb/articles/360001600235-Connecting-to-a-Virtual-Desktop"
 
-#Delete files older than 2 days.
-oldlogs(){
-    find ${VDT_HOME}/* -mtime +2 -exec rm {} \; || return 0
-}
-
 # Log levels.
 # Fix this later.
 
@@ -27,11 +22,11 @@ info(){
 }
 
 warning(){
-    echo "Warning: $(info "$*")"
+    echo "\e[93mWarning: $(info "$*")\e[39m"
 }
 
 error(){
-    echo "Error: ${FUNCNAME[-1]}:${BASH_LINENO[-1]} $*" | tee ${VDT_LOGFILE} >&2
+    echo "\e[91mError: ${FUNCNAME[-1]}:${BASH_LINENO[-1]} $*\e[39m" | tee ${VDT_LOGFILE} >&2
     exit 1
 }
 # GROSS. Fix this plz.
