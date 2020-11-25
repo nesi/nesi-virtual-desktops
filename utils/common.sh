@@ -12,27 +12,27 @@ export support_docs="https://support.nesi.org.nz/hc/en-gb/articles/360001600235-
 
 debug(){
     if [[ -n ${verbose} ]];then
-        echo "${FUNCNAME[-1]}:${BASH_LINENO[-1]} $*"
+        echo "${FUNCNAME[1]}::${BASH_LINENO[-1]} $*"
     fi
     echo "$*" >> "${VDT_LOGFILE}"
 }
 
 info(){
-    echo "$*" | tee "${VDT_LOGFILE}"
+    echo -e "$*" | tee "${VDT_LOGFILE}"
 }
 
 warning(){
-    echo "\e[93mWarning: $(info "$*")\e[39m"
+    echo -e "\e[93mWarning:\e[39m $(info "$*")"
 }
 
 error(){
-    echo "\e[91mError: ${FUNCNAME[-1]}:${BASH_LINENO[-1]} $*\e[39m" | tee ${VDT_LOGFILE} >&2
+    echo -e "\e[91mError:${FUNCNAME[1]}::${BASH_LINENO[-1]}:\e[39m $*" | tee ${VDT_LOGFILE} >&2
     exit 1
 }
 # GROSS. Fix this plz.
 vecho() {
     debug "$*"
-    echo "replaceme '${FUNCNAME[-1]}:${BASH_LINENO[-1]}'"
+    echo "replaceme '${FUNCNAME[*]}::${BASH_LINENO[-1]}'"
     
 }
 

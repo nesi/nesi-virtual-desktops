@@ -12,6 +12,7 @@ initialize(){
     source "${VDT_ROOT}/utils/common.sh"
     minport=1024
     maxport=65536
+    max_active=5
 }
 
 
@@ -68,7 +69,7 @@ parse_input() {
                 shift
             ;;
             -p|--persistent)
-                echo "'-p' is depricated. See $support_docs for more details."
+                warning "'-p' is depricated. See $support_docs for more details."
                 #exit 1 
                 shift
             ;;
@@ -110,9 +111,9 @@ parse_input() {
             *)  
                 if [[ $# -eq 1 ]];then
                     if (($1 < $minport));then
-                        echo "Port number must be larger than $minport.";exit 1
+                        error "Port number must be larger than $minport.";exit 1
                     elif (($1 > $maxport));then
-                        echo "Port number must be less than $maxport.";exit 1
+                        error "Port number must be less than $maxport.";exit 1
                     else
                         VDT_SOCKET_PORT="$1";break
                     fi
@@ -130,8 +131,22 @@ parse_input() {
     #if ls ${VDT_LOCKFILES}/*${remote:-$(hostname)}:${VDT_SOCKET_PORT} 1> /dev/null 2>&1;then echo "WARNING: Socket port '${VDT_SOCKET_PORT}' is in use on ${remote:-$(hostname)}, you may have to choose another.";fi    
     
 
-    # Remove old logs
-    oldlogs
+   
+     # Remove logs older than 2 days
+    find ${VDT_HOME}/* -mtime +2 -exec rm {} \; || return 0
+
+    # Any users of command with logs older than  note_time get message.
+    note_time=160600
+    if (( $(stat -c %X ${VDT_HOME}) < ${note_time} )); then 
+       warning "'vdt' command may have changed significantly since you last used it. Please check ${support_docs} for more information."
+       # error "You may not have more than ${max_active} active sessions. Close some with 'vdt kill' command and try again."
+    fi
+
+    # Throw error if more than max active sessions.
+    if (($(find $VDT_LOCKFILES  -type f  -user "$(whoami)" | wc -w) > max_active)); then 
+        error "You may not have more than ${max_active} active sessions. Close some with 'vdt kill' command and try again."
+    fi
+
     # Create directory for logs, certificates etc
     mkdir -p "${VDT_HOME:="${HOME}/.vdt"}"
 
