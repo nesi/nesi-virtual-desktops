@@ -84,14 +84,7 @@ Script to be sourced in container on launch.
 Script to be sourced in container on the first launch.
 Currently determined by whether $XDG_CONFIG_HOME/xfce/ exists, but this is bad.
 
--- generate these from help cmd --
-### `vdt`
-
-### `vdt_start`
-### `vdt_list`
-### `vdt_shell`
-### `vdt_kill`
-### `vdt_clean`
+${output}
 
 ## Templates
 

@@ -11,7 +11,7 @@ initialize(){
 help() {
 cat << EndOfHelp
 [1mNAME[0m
-        $(basename "$0") - Kill a virtual desktop.
+        $(basename "$0")
 
 [1mSYNOPSIS[0m
         $(basename "$0") [-h ] < display-port >
@@ -25,7 +25,7 @@ cat << EndOfHelp
 
     -v --verbose               This is help.
 
-[1mSEE ALSO[0m
+Full documentation can be found at ${support_docs}
 
 EndOfHelp
 }
@@ -43,14 +43,14 @@ parse_input() {
             shift
         ;;
         *)
-                echo "Unknown option '${1}', $0 -h for help."  >&2
+                info "Unknown option '${1}', $0 -h for help."  >&2
                 exit 1
             ;;
         esac
     done
     # Parse flags + port
     if [[ $# -lt 1 ]];then
-        echo "Not enough arguments, $0 -h for help."  >&2 && exit 1
+        error "Not enough arguments, $0 -h for help."  >&2 && exit 1
     fi
     
     export VDT_INSTANCE_NAME="$1"
@@ -64,7 +64,7 @@ kill_vnc(){
     if [[ ${#_lockfiles[@]} -gt 0 ]];then 
         cmd=""
         _hostname="$(echo "${_lockfiles[0]}" | cut -d "." -f2 | cut -d ":" -f1)"
-        vecho "Session:'${_lockfiles[0]}' Hostname:'$_hostname'"
+        debug "Session:'${_lockfiles[0]}' Hostname:'$_hostname'"
         read_lockfile "${_lockfiles[0]}"
         if [[ ! "${_host}" == "${HOSTNAME}" ]];then
             cmd="ssh ${verbose} ${_host} "
@@ -76,8 +76,8 @@ kill_vnc(){
         # fi
         rm $verbose "${_lockfiles[0]}" #>/dev/null 2>&1
     else
-        echo "No instance ${VDT_INSTANCE_NAME} found" 
-        exit 1
+        error "No instance ${VDT_INSTANCE_NAME} found"
+        return 1
     fi
     
     # If no lockfiles, try blind.
@@ -91,7 +91,7 @@ kill_vnc(){
 main(){
     initialize
     parse_input "$@"
-    kill_vnc && echo "$VDT_INSTANCE_NAME killed successfully"
+    kill_vnc && info "$VDT_INSTANCE_NAME killed successfully"
 }
 
 main "$@"

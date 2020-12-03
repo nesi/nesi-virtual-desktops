@@ -55,6 +55,8 @@ cat << EndOfHelp
 
 [1mCOMMANDS[0m
 $(find . -name 'vdt_*' -type f -executable | sed "s/.\/vdt_/        $(basename "$0") /")
+
+Full documentation can be found at ${support_docs}
 EndOfHelp
 
     #$(find . -name 'vdt_*' -type f -executable -exec sed -n "\:NAME: {n;p;}" {} \; )

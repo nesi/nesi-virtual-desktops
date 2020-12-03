@@ -106,17 +106,14 @@ cleanup() {
     #rm -f $verbose /tmp/.X11-unix/.X*
     #rm -f $verbose "$HOME"/.vnc/*"${VDT_INSTANCE_NAME}".pid
     echo "Trapped $?"
-    unsert_pid $lockfile
-    rm -f ${verbose} ${lockfile} 
+    turbo_kill $lockfile &
     #if [[ -n "${VDT_LOGFILE}" ]]; then rm -f $verbose "${VDT_LOGFILE}";fi
     #if [[ -n "${lockfile}" ]]; then rm -f $verbose "${lockfile}";fi
     # Unset all VDT variables.
     for ev in $(compgen -A variable | grep ^VDT );do
         unset "$ev"
     done
-    
-    
-    
+        
     rm -fvr "/tmp/.X$display_port-lock"
     rm -fvr "/tmp/.ICE$display_port-lock"
 

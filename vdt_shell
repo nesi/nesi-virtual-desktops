@@ -37,6 +37,7 @@ cat << EndOfHelp
 
     -v --verbose
 
+Full documentation can be found at ${support_docs}
 EndOfHelp
 }
 

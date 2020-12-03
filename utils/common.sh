@@ -6,13 +6,12 @@ VDT_TEMPLATES=${VDT_TEMPLATES:-"$VDT_ROOT/templates"}
 VDT_LOGFILE=${VDT_LOGFILE:-"/dev/null"}
 
 export support_docs="https://support.nesi.org.nz/hc/en-gb/articles/360001600235-Connecting-to-a-Virtual-Desktop"
-
 # Log levels.
 # Fix this later.
 
 debug(){
     if [[ -n ${verbose} ]];then
-        echo "${FUNCNAME[1]}::${BASH_LINENO[-1]} $*"
+        echo "DEBUG: ${FUNCNAME[1]}::${BASH_LINENO[-1]} $*"
     fi
     echo "$*" >> "${VDT_LOGFILE}"
 }
@@ -26,14 +25,14 @@ warning(){
 }
 
 error(){
-    echo -e "\e[91mError:${FUNCNAME[1]}::${BASH_LINENO[-1]}:\e[39m $*" | tee ${VDT_LOGFILE} >&2
-    exit 1
+    echo -e "\e[91mError:${FUNCNAME[1]}::${BASH_LINENO[-1]}:\e[39m $*" | tee ${VDT_LOGFILE} >&2 ##
+    return 1
+    ##exit 1
 }
 # GROSS. Fix this plz.
 vecho() {
     debug "$*"
     echo "replaceme '${FUNCNAME[*]}::${BASH_LINENO[-1]}'"
-    
 }
 
 vex () {
@@ -50,7 +49,6 @@ assert_lennut(){
     #$VDT_SOCKET_PORT 
     if [[ $# -lt 1 ]];then echo "Not enough inputs to funtion.";fi
     read_lockfile $1
-    max_test_lennut=4
     
     sleep_for=${2:-"5"}
     max_test=${3:-"3"}
@@ -62,9 +60,9 @@ assert_lennut(){
             debug "PID of tunnel is '$tunnel_pid'"
             return 0
         fi
-        debug "Could not find tunnel. Attempt ($i/$max_test_lennut)"
+        debug "Could not find tunnel on $HOSTNAME:$_port. Attempt ($i/$max_test)"
     done 
-    echerr "Error: Could not find tunnel after $max_test_lennut attempts"
+    error "Error: Could not find tunnel on $HOSTNAME:$_port"
     return 1
 }
 #######################################
@@ -76,91 +74,128 @@ assert_lennut(){
 #   max attempts
 #######################################
 assert_pid(){
-    sleep_for=${1:-"5"}
-    max_test=${2:-"5"}
 
-    for (( i=0; i<$max_test; i++ )); do
-        sleep $sleep_for
-        testfor "Singularity runtime parent" >${VDT_LOGFILE} 2>&1 || continue
-        testfor "opt/TurboVNC/bin/Xvnc" >${VDT_LOGFILE} 2>&1 || continue
-        testfor "/usr/bin/xfce4-session" >${VDT_LOGFILE} 2>&1  || continue
-        testfor "python -m websockify" >${VDT_LOGFILE} 2>&1 || continue
-        return 0
-    done 
-    debug "Could not find all processes after $i attempts."
-    return 1
+    sleep_for=${1:-"5"}
+    max_test=${2:-"3"}
+
+    _test(){
+        for (( i=0; i<${max_test:-"3"}; i++ )); do
+            if pgrep -u "${USER}" "${@:2}" -f "$1" > /dev/null; then
+                debug "Process \`$1' is running"
+                return 0
+            else
+                debug "Process \`$1' is not running"
+            fi
+            sleep "${sleep_for}"
+        done
+        debug "Could not find $1 processes after $i attempts."
+        return 1
+    }        
+    debug "Testing for proccesses:"
+
+    check_process=( \
+    "Singularity runtime parent" \
+    "opt/TurboVNC/bin/Xvnc" \
+    "/usr/bin/xfce4-session" \
+    "python -m websockify" \
+    "/usr/bin/ssh-agent -s" \
+    "/usr/bin/gpg-agent "
+    )
+
+    debug "Testing for proccesses:"
+
+    for p in "${check_process[@]}"; do
+        _test "${p}"  || return 1
+    done
 }
 
 unsert_pid(){
-    # Takes lockfile, tries to kill job.
-    return 0
-    VDT_LOGFILE=${VDT_LOGFILE:-"/dev/null"} 
-
-    sleep_for=2
-    max_test=6
-    echo "PID is $(cat $1)"
-
-    #lastpid="$(cat $1)"
-    for (( i=0; i<$max_test; i++ )); do
-        sleep $sleep_for
-        #pkill -9 -F $1
-        if pids=$(testfor "Singularity runtime parent");then kill -s 9 "$pids"; continue; else true;fi
-        if pids=$(testfor "opt/TurboVNC/bin/Xvnc");then kill -s 9 "$pids"; continue; else true;fi
-        if pids=$(testfor "/usr/bin/xfce4-session");then kill -s 9 "$pids"; continue; else true;fi
-        if pids=$(testfor "python -m websockify");then kill -s 9 "$pids"; continue; else true;fi
-        if pids=$(testfor "tail -f /tmp");then kill -s 9 "$pids"; continue; else true;fi
-
-        # if pids=$(testfor "Singularity runtime parent");then     echo $pids
-        #     kill -s9 $pids && continue       
-        # fi
-        # testfor "Singularity runtime parent" | { xargs kill -s 9 ; continue; } || true
-        # testfor "opt/TurboVNC/bin/Xvnc" || true && { xargs kill -9 ; continue; }
-        # testfor "/usr/bin/xfce4-session" || true && { xargs kill -9 ;  continue; }
-        # testfor "python -m websockify" || true && { xargs kill -9 ; continue; }
-        # testfor "tail -f /tmp" || true && { xargs kill -9 ; continue; }
-        #testfor "Singularity runtime parent" || true && { xargs kill -9 && ((i=i+1)) && continue; }
-        #if pkill -u "${USER}" -f "opt/TurboVNC/bin/Xvnc"  || ! testfor "opt/TurboVNC/bin/Xvnc"; then true; else continue; fi
-        #if pkill -u "${USER}" -f "/usr/bin/xfce4-session" || ! testfor "/usr/bin/xfce4-session"; then true; else continue; fi
-        #if pkill -u "${USER}" -f "python -m websockify"  || ! testfor "python -m websockify" ; then true; else continue; fi
-        debug "No listed proccesses remain"
+    sleep_for=${1:-"5"}
+    max_test=${2:-"3"}
+    _kil(){
+        for (( i=0; i<${max_test:-"3"}; i++ )); do
+            pkill -u "${USER}" --signal 9 -f "$1"
+            case $? in
+                0)
+                    debug "'$1' could not be killed."
+                ;;
+                1)
+                    debug "'$1' not running."
+                    return 0
+                ;;
+                *)
+                    debug "pkill returned $?"
+                ;;
+            esac
+            sleep "${sleep_for}"
+        done
+        debug "Could not kill $1 after $i attempts."
         return 0
-    done 
-    echo "Could not kill all processes after $i attempts."
-    exit 1
-}
+    }  
 
-testfor(){
-    #Return array of PIDs matching name. False if empty.
-    pgrep -u "${USER}" -f "$@" 2>"${VDT_LOGFILE}" | tr -s "\n" " " 
-    return $?
+    debug "Killing proccesses"
+
+    check_process=( \
+        "Singularity runtime parent" \
+        "opt/TurboVNC/bin/Xvnc" \
+        "/usr/bin/xfce4-session" \
+        "python -m websockify" \
+        "/usr/bin/ssh-agent -s" \
+        "tail -f /tmp" \
+        "/usr/bin/gpg-agent "
+    )
+    
+    for p in "${check_process[@]}"; do
+        _kil "${p}" || return 1
+    done  
 }
 
 read_lockfile(){
-    if [[ ! -w "${1}" ]];then echo "Could not read lockfile at $1." && exit 1;fi
+    debug "Reading lockfile $1"
+    if [[ ! -w "${1}" ]];then error "Could not read lockfile at $1.";fi
     _filename="$(basename $1)"
     _name="$(echo "$_filename" | cut -d "." -f1)"
     _pid="$(cat $1)"
     _host="$(echo "$1" | cut -d "." -f2 | cut -d ":" -f1)"
     _port="$(echo "$1" | cut -d ":" -f2)"
 }
-# test_liveness(){
-#     # Returns true if proccess running.
-#     if  assert_lennut $_host $_port && assert_pid ;then
-#         return 0
-#     else
-#         rm $1 && printf "Session '${_name}' not found on '${_host}'. Lockfile removed."
-#     fi
-# }
-# sshd: cwal219@notty
-# bash -c export VDT_BASE=eng_dev VDT_HOME=/
-# /bin/bash -e /scale_wlg_persistent/fileset
-# /bin/bash -e /scale_wlg_persistent/fileset
-# Singularity runtime parent
-# /bin/sh /.singularity.d/runscript
-# /opt/TurboVNC/bin/Xvnc :1806 
-# python -m websockify
-# /usr/bin/xfce4-session
-# check this on any command
-#oldlogs
+
+turbo_kill(){
+
+    read_lockfile $1
+    debug "Testing deadness"
+
+    if [[ ! "${_host}" == "${HOSTNAME}" ]];then
+        ssh ${verbose} ${_host} "source ${VDT_ROOT}/utils/common.sh && unsert_pid 3 2" #>${VDT_LOGFILE} 2>&1 || return 1
+    else
+        unsert_pid 3 3 #>${VDT_LOGFILE} #2>&1 || return 1
+    fi
+    
+    pkill -s $(cat $1)
+    rm -f ${verbose} ${1}
+}
+
+test_liveness(){  
+    _main(){
+        if [[ ! "${_host}" == "${HOSTNAME}" ]];then
+            assert_lennut "${1}" || return 1 
+            ssh ${verbose} ${_host} "source ${VDT_ROOT}/utils/common.sh && assert_pid 3 2" >${VDT_LOGFILE} 2>&1
+        else
+            assert_pid 3 2 >${VDT_LOGFILE}
+        fi
+    }
+
+    read_lockfile $1
+    debug "Testing liveness"
+
+    if _main $1 ;then
+        printf "%27s %-20s %-22s %-18s %-27s\n" "$_name" " $_pid" "$_host" " $_port" "http://localhost:$_port"
+        return 0
+    else
+        rm ${verbose} ${1}
+        return 1
+    fi
+}
+
 debug "Common files sourced."
 debug "${BASH_SOURCE[*]}"

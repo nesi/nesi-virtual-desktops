@@ -47,6 +47,9 @@ cat << EndOfHelp
 
     -v --verbose
 
+
+Full documentation can be found at ${support_docs}
+
 EndOfHelp
 }
 
@@ -130,34 +133,24 @@ parse_input() {
     done
     #if ls ${VDT_LOCKFILES}/*${remote:-$(hostname)}:${VDT_SOCKET_PORT} 1> /dev/null 2>&1;then echo "WARNING: Socket port '${VDT_SOCKET_PORT}' is in use on ${remote:-$(hostname)}, you may have to choose another.";fi    
     
-
-   
-     # Remove logs older than 2 days
-    find ${VDT_HOME}/* -mtime +2 -exec rm {} \; || return 0
+    # Remove logs older than 2 days
+    find ${VDT_HOME}/* -mtime +2 -exec rm {} \; 2>/dev/null || true
 
     # Any users of command with logs older than  note_time get message.
     note_time=160600
     if (( $(stat -c %X ${VDT_HOME}) < ${note_time} )); then 
-       warning "'vdt' command may have changed significantly since you last used it. Please check ${support_docs} for more information."
-       # error "You may not have more than ${max_active} active sessions. Close some with 'vdt kill' command and try again."
+        warning "'vdt' command may have changed significantly since you last used it. Please check ${support_docs} for more information."
+        "$VDT_ROOT/vdt_clean"
+        # error "You may not have more than ${max_active} active sessions. Close some with 'vdt kill' command and try again."
     fi
 
     # Throw error if more than max active sessions.
-    if (($(find $VDT_LOCKFILES  -type f  -user "$(whoami)" | wc -w) > max_active)); then 
+    if (($(find $VDT_LOCKFILES  -type f  -user "$(whoami)" 2>/dev/null | wc -w) > max_active)); then 
         error "You may not have more than ${max_active} active sessions. Close some with 'vdt kill' command and try again."
     fi
 
     # Create directory for logs, certificates etc
     mkdir -p "${VDT_HOME:="${HOME}/.vdt"}"
-
-    if [[ -n $(find $VDT_LOCKFILES -type f -name *\.${remote:-$(hostname)}:* -user ${USER}) ]] ;then 
-        warning "You already have a session running on ${remote:-$(hostname)}, attempting to start another may cause issues."
-        #exit 1
-    fi
-    if [[ -n $(find $VDT_LOCKFILES -type f -name *:${VDT_SOCKET_PORT} 2>&1) ]] ;then 
-        warning "The port '${VDT_SOCKET_PORT}' appears to be in use, this may cause issues."
-        #exit 1
-    fi
 
     # Select template.
     if [[ -z "${VDT_BASE}" ]];then VDT_BASE="default";fi
@@ -175,6 +168,7 @@ parse_input() {
         # Create and submit chaser job.
         sbatch --time 00:00:10 --dependency afterany:$SLURM_JOB_ID --job-name vdt_chaser_job --wrap "rm -f ${lockfile} >/dev/null 2>&1" >${VDT_LOGFILE} 2>&1
     fi
+
     debug "Destination is '${remote:-$(hostname)}', Current host '$(hostname)'"
 
     if [[ -n "$SLURM_JOB_NAME" ]];then
@@ -193,13 +187,33 @@ parse_input() {
             VDT_INSTANCE_NAME="${p1}_${p2}"   
         done  
     fi
-    echo "starting vdt '$VDT_INSTANCE_NAME'"
+
+    t1=$(find $VDT_LOCKFILES -type f -name *\.${remote:-$(hostname)}:* -user ${USER} 2>/dev/null | head -n1)
+    if [[ -n $t1 ]];then
+        warning "You already have a session running on ${remote:-$(hostname)}, attempting to start another may cause issues."
+        if test_liveness "$t1" >/dev/null 2>&1 ;then
+            error "Session exists"
+            exit 1
+        fi
+    fi
+
+    t2="$(find $VDT_LOCKFILES -type f -name *:${VDT_SOCKET_PORT} 2>/dev/null | head -n1)"
+    if [[ -n $t2 ]]; then 
+        warning "The port '${VDT_SOCKET_PORT}' appears to be in use, this may cause issues."
+        if test_liveness "$t2" >/dev/null 2>&1 ;then
+            error "Session exists."
+            exit 1
+        fi
+    fi
+
+    debug "starting vdt '$VDT_INSTANCE_NAME'"
 
     # Set logfiles dest
     export VDT_LOGFILE=${VDT_LOGFILE:="${VDT_HOME}/${VDT_INSTANCE_NAME}.${remote:-$(hostname)}:${VDT_SOCKET_PORT}.log"}
     touch "$VDT_LOGFILE" || echo "Warning: Cannot write to $VDT_LOGFILE." 
-    debug "Logfile is ${VDT_LOGFILE}"
-
+    debug "Logfile r\033[0KError: Could not find tunnel.\n" && printf "\r\033[0KTunnel Live.\n"
+    # else
+    
     # if [[ -z "$session_jobid" && -n "$SLURM_JOB_ID" ]]; then
     #     printf "'SLURM_JOB_ID' set. Connection will be forwarded to job $SLURM_JOB_ID.\n"
     #     export session_jobid="$SLURM_JOB_ID"
@@ -210,7 +224,9 @@ parse_input() {
 }
 
 launch(){
-
+    if [[ -z "$verbose" ]];then
+        env | grep VDT
+    fi
     # If remote destination is set, and not self.
     if [[ -n $remote ]];then
         VDT_TUNNEL_HOST="$(hostname)"
@@ -221,28 +237,17 @@ launch(){
     for ev in $(compgen -A variable | grep ^VDT );do
         startcmd="$startcmd $ev=\"${!ev}\""
     done
-    # if [[ -n ${verbose} ]];then
-    #     startcmd="$startcmd verbose=-v"
-    # fi
+
     startcmd="${startcmd} && ${timeout}${VDT_ROOT}/utils/singularity_wrapper.sh"
-    # if [[ -z $persistent ]];then
-    #     #echo "Starting ephemeral desktop on $msg"
-    #     printf "\r\033[0KInitialize Successful\n" 
-    #     startcmd=''${cmd1}' "'$startcmd'"'
-    #     debug "$startcmd"
-    #     eval "$startcmd"
-    # else 
+
     debug "PPID is $PPID"
-    #startcmd='nohup '${cmd1}' "'$startcmd'" >> '$VDT_LOGFILE' 2>&1 &'
     debug "$startcmd"
-    #eval "$startcmd"
+
     echo "$!" > "${lockfile}" 
-    #printf "\r\033[0Kinitialize Successful\n" 
 
     if [[ -n $remote ]];then
         printf "Looking for tunnel to %s..." "$remote"
         ssh ${verbose} -A -o StrictHostKeyChecking=no -o ExitOnForwardFailure=yes ${remote} ${startcmd} #2>${VDT_LOGFILE}
-
         #assert_lennut $VDT_SOCKET_PORT || printf "\r\033[0KError: Could not find tunnel.\n" && printf "\r\033[0KTunnel Live.\n"
     else
         eval "$startcmd"
@@ -259,43 +264,7 @@ launch(){
     # echo "Logfile is '${VDT_LOGFILE}'"
     # echo "Connect with 'http://localhost:${VDT_SOCKET_PORT}'"
     exit $?
-    # fi
 }
-
-# assert_per(){
-#     # If was -p. This is the end of the script.
-#     if [[ -n $persistent ]];then
-#         assert_lennut
-#         assert_vnc
-#         assert_pid
-#         #echo "PID is '${daemon_pid}'"
-#         echo ""
-#         echo "Instance name: '${VDT_INSTANCE_NAME}'"
-#         echo "Logfile is '${VDT_LOGFILE}'"
-#         echo "Connect with 'http://localhost:${VDT_SOCKET_PORT}'"
-#         exit 0
-#     fi
-# }
-
-# assert_pid(){
-#     printf "Checking proceesses are running on %s..." "${remote:-$(hostname)}"
-#     if [[ -n ${remote} ]];then
-#         cmd="ssh ${verbose} ${remote} "
-#     fi
-#     cmd="${cmd}source ${VDT_ROOT}/utils/common.sh && assert_pid"
-#     if $cmd > debug 2>&1;then 
-#         printf "\r\033[0KFound all proceesses.\n"
-#     else
-#         printf "\r\033[0KError: VDT did not launch properly on node.\n" 
-#         exit 1
-#     fi
-# }
-assert_vnc(){
-
-    return 0
-
-}
-
 
 main() {
     initialize
@@ -304,71 +273,8 @@ main() {
     return $?
 }
 
-# construct_ssh() {
-#     # If jobid is specified, get host of jobid.
-#     if [[ "$session_jobid" ]];then
-#         while true;do
-#             sqout=$(squeue -h -u "$USER" -j "$session_jobid" -O "State,NodeList")
-#             debug $sqout
-#             jobstate=$(echo $sqout | awk '{print $1}')
-#             echo $jobstate
-#             session_hostname=$(echo $sqout | awk '{print $2}')
-#             if [[ $jobstate == "RUNNING" ]]; then
-#                 iprint "Connection will be forwarded to $session_hostname\n"
-#                 break
-#                 elif [[ $jobstate == "PENDING" ]]; then
-#                 iprint "'$session_jobid' is pending. Waiting..."
-#                 sleep 10
-#             else
-#                 iprint "'$session_jobid' is not a valid slurm session to connect to.\n"
-#                 unset session_jobid session_hostname
-#                 exit 1
-#             fi
-#         done
-#     fi
-    
-#     # Case 0 - Already on correct node.
-#     if [[ "$session_hostname" = "$HOSTNAME" ]];then
-#         "$@"
-#         # Case 1 - No node specified. (Do nothing)
-#         elif [[ ! "$session_jobid" ]] && [[ ! "$session_hostname" ]];then
-#         "$@"
-#         # Case 2 - Node specified, forwarding port specified. (Forward port to node)
-#         elif [[ "$INBOUND_PORT" ]]; then
-#             ssh -L "${INBOUND_PORT}:localhost:${INBOUND_PORT}" "${session_hostname}" "$@"
-#         # Case 3 - Node specified, forwarding port not specified. (Run command on node)
-#         elif [[ ! "$INBOUND_PORT" ]]; then
-#             ssh "${session_hostname}" "$@"
-#     else
-#         echo "Something went wrong, couldn't construct SSH tunnel"
-#         return 1
-#     fi
-# }
-
 cleanup() {
-    #vncserver
-    #singularity $verbose exec "$img_path" "vncserver -kill ":$VDT_DISPLAY_PORT"" 1> ${VDT_LOGFILE} 2>&1 || true
-    #rm -f $verbose /tmp/.X11-unix/.X*
-    #rm -f $verbose "$HOME"/.vnc/*"${VDT_INSTANCE_NAME}".pid
-    echo "Trapped $?"
-    #if [[ -n "${VDT_LOGFILE}" ]]; then rm -f $verbose "${VDT_LOGFILE}";fi
-    #ls "${lockfile}"
-
-    # if [[ -n "${lockfile}" ]]; then rm -f $verbose "${lockfile}";fi
-    # # Unset all VDT variables.
-    # for ev in $(compgen -A variable | grep ^VDT );do
-    #     unset "$ev"
-    # done
-    
-    # rm -fvr "/tmp/.X$display_port-lock"
-    # rm -fvr "/tmp/.ICE$display_port-lock"
-
-    # while [[ "$(fuser $VDT_SOCKET_PORT/tcp 2>/dev/null | wc -w)" -gt 0 ]];do
-    #     kill -9 "$(fuser $VDT_SOCKET_PORT/tcp 2>/dev/null | awk '{ print $1 }')"
-    # done
-
-    # pkill --signal 9 -P $$ > /dev/null 2>&1 
-
+    turbo_kill $lockfile &
     return 1
 
 }

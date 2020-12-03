@@ -35,6 +35,8 @@ cat << EndOfHelp
 
     -v --verbose            Display more information.
 
+
+Full documentation can be found at ${support_docs}
 EndOfHelp
 }
 
@@ -78,17 +80,17 @@ list_vnc(){
     
     #$echo $vnc_pid_root
     #if [["$verbose"]]; then echo "Using "
-    readarray -t _lockfiles < <(find $VDT_LOCKFILES  -type f  -user "$(whoami)")
+    readarray -t _lockfiles < <(find $VDT_LOCKFILES  -type f  -user "$(whoami)" 2>/dev/null)
+    debug "${#_lockfiles[@]} lockfiles"
     debug "Found lockfiles: $(echo ${_lockfiles[*]}  | tr " " "\n  ")" #> debug
     #vnc_list=( $(ls "${vnc_pid_root:="${HOME}/.vnc"}"/*.pid 2> /dev/null || true) )
     #echo "${vnc_list[@]}"
 
     if [[ ! "$noheader" ]]; then printf "%27s %-20s %-22s %-18s %-27s\n"  "Name" " PID" "    Host" " Port" " Link" ;fi
     _linecount=0
-    debug "${#_lockfiles[@]} lockfiles"
     printf "Searching...\r" 
-    for lockfile in  "${_lockfiles[@]}" ; do
-        async_bit &
+    for _lockfile in  "${_lockfiles[@]}" ; do
+        test_liveness ${_lockfile} 2>/dev/null || true  &
         background_pid+=( $! )   
         _linecount+=1
     done
@@ -100,25 +102,7 @@ list_vnc(){
 
     if [[ $_linecount -lt 1 ]]; then echo "No sessions found";exit 1;fi
 }
-async_bit(){
-    read_lockfile "${lockfile}"
-        #cmd="assert_lennut $_port &&"
 
-        #printf "%27s %-20s %-22s %-18s %-27s\n" "$_name" " $_pid" "$_host" " $_port" "http://localhost:$_port" ; } 
-        
-        #rm ${verbose} ${lockfile}
-        _test(){
-            set -e
-            if [[ ! "${_host}" == "${HOSTNAME}" ]];then
-                assert_lennut "${lockfile}"
-                ssh ${verbose} ${_host} "source ${VDT_ROOT}/utils/common.sh && assert_pid 3 2" >${VDT_LOGFILE} 2>&1
-            else
-                assert_pid  3 2 >${VDT_LOGFILE} 2>&1
-            fi
-        }
-    _test || rm ${verbose} ${lockfile} && printf "%27s %-20s %-22s %-18s %-27s\n" "$_name" " $_pid" "$_host" " $_port" "http://localhost:$_port"
-    return $?
-}
 
 main() {
     parse_input "$@"
