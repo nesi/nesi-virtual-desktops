@@ -245,6 +245,11 @@ launch(){
 
     echo "$!" > "${lockfile}" 
 
+    case $(ps -o stat= -p $$) in
+        *+*) debug "Running in foreground" ;;
+        *) debug "Running in background" ;;
+    esac
+
     if [[ -n $remote ]];then
         printf "Looking for tunnel to %s..." "$remote"
         ssh ${verbose} -A -o StrictHostKeyChecking=no -o ExitOnForwardFailure=yes ${remote} ${startcmd} #2>${VDT_LOGFILE}

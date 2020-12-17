@@ -33,6 +33,7 @@ $VDT_ROOT,\
 /usr/bin/ssh-agent,\
 /usr/bin/gpg-agent,\
 /usr/share/lmod/lmod,\
+/usr/include,\
 /etc/opt/slurm,\
 /opt/slurm,\
 /usr/lib64/libmunge.so,\

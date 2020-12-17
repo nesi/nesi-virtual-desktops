@@ -127,7 +127,8 @@ unsert_pid(){
                     debug "pkill returned $?"
                 ;;
             esac
-            sleep "${sleep_for}"
+            #echo "${BASH_SOURCE[*]}"
+            sleep "1"
         done
         debug "Could not kill $1 after $i attempts."
         return 0
