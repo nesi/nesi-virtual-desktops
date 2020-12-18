@@ -79,7 +79,7 @@ From: centos:centos7
         mkdir -p /opt/websockify
   	wget https://github.com/novnc/websockify/archive/master.tar.gz -q -O - | tar xzf - -C /opt/websockify --strip-components=1
 	# This just changes print statements. Can be safely commented out if needed.
-	wget https://raw.githubusercontent.com/nesi/nesi-virtual-desktops/master/tools/nesi_websockify.diff  	
+	wget https://raw.githubusercontent.com/nesi/nesi-virtual-desktops/main/tools/nesi_websockify.diff  	
 	patch --verbose /opt/websockify/websockify/websocketproxy.py < nesi_websockify.diff
 	#sed  '/.*self.msg("%s", msg)/i\        msg += \"\\n  - Now open a browser to http:\/\/localhost:\" + str(os.getenv(\"VNC_SOCKET_PORT\"))\n        msg += \"\\n  - Press CTRL + C to kill.\"' \
 	# /opt/websockify/websockify/websocketproxy.py
