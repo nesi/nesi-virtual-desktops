@@ -35,6 +35,7 @@ From: centos:centos7
 	yum -y install libX11
 	yum -y install giflib # For ANSYS EM
 	yum -y install python
+	yum -y install python3
 	yum -y install polkit
 	yum -y install libXext
 	yum -y install libglvnd-egl
