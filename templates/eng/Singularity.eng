@@ -35,12 +35,19 @@ From: centos:centos7
 	yum -y install libX11
 	yum -y install giflib # For ANSYS EM
 	yum -y install python
+	yum -y install python3
 	yum -y install polkit
 	yum -y install libXext
+	yum -y install cmake3
+	yum -y install cmake3-gui
 	yum -y install libglvnd-egl
+	yum -y install qt-devel
 	yum -y install turbojpeg
 	yum -y install diffutils
+	yum -y install mesa-libGL 
+	yum -y install mesa-libGL-devel
 	yum -y install mesa-libGLU
+	yum -y install mesa-libGLU-devel
 	yum -y install libvncserver
 	yum -y install bash-completion 
 	yum -y install libcanberra-gtk3
@@ -58,6 +65,10 @@ From: centos:centos7
 	lua-lpeg-0.12-1.el7.x86_64 \
 	lua-posix-32-2.el7.x86_64 \
 	lua-5.1.4-15.el7.x86_64 
+	
+	
+	# Generic python
+	python3 -m pip install numpy scipy matplotlib ipython jupyter pandas
 
 	# Virtual GL
 	mkdir -p /etc/yum.repos.d
@@ -75,7 +86,7 @@ From: centos:centos7
         mkdir -p /opt/websockify
   	wget https://github.com/novnc/websockify/archive/master.tar.gz -q -O - | tar xzf - -C /opt/websockify --strip-components=1
 	# This just changes print statements. Can be safely commented out if needed.
-	wget https://raw.githubusercontent.com/nesi/nesi-virtual-desktops/master/tools/nesi_websockify.diff  	
+	wget https://raw.githubusercontent.com/nesi/nesi-virtual-desktops/main/utils/nesi_websockify.diff  	
 	patch --verbose /opt/websockify/websockify/websocketproxy.py < nesi_websockify.diff
 	#sed  '/.*self.msg("%s", msg)/i\        msg += \"\\n  - Now open a browser to http:\/\/localhost:\" + str(os.getenv(\"VNC_SOCKET_PORT\"))\n        msg += \"\\n  - Press CTRL + C to kill.\"' \
 	# /opt/websockify/websockify/websocketproxy.py
