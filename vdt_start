@@ -43,6 +43,8 @@ cat << EndOfHelp
 
     -s --secure             Connects though an encrypted websocket.
 
+    -S --shell              Starts in command line.
+
     -C --nohome             Don't mount home directory. Good for debugging.
 
     -v --verbose
@@ -103,7 +105,11 @@ parse_input() {
                 shift
             ;;
             -s|--secure)
-                secure="true"
+                export secure="true"
+                shift
+            ;;
+            -S|--shell)
+                export shell="true"
                 shift
             ;;
             -h|--help)

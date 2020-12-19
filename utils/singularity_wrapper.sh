@@ -11,6 +11,7 @@ set_env(){
     if [[ -n $clean ]];then
         "${VDT_ROOT}/vdt_clean"
     fi
+
     if [[ -n $secure ]];then
         # If environment setup for desktop flavor.
         echo "Generating security certificate."
@@ -83,7 +84,16 @@ create_vnc(){
     fi
     #"${timeout}" s
     echo $$ > ${lockfile}
-    cmd="singularity ${verbose} run ${nohome} ${img_path}"
+
+    if [[ -n $shell ]];then
+
+        cmd="singularity ${verbose} shell ${nohome} ${img_path}"
+
+    else 
+
+        cmd="singularity ${verbose} run ${nohome} ${img_path}"
+        
+    fi
     # (
     #     flock 200
     # ) 200>$lockfile
