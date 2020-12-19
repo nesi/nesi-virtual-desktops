@@ -38,6 +38,8 @@ From: centos:centos7
 	yum -y install python3
 	yum -y install polkit
 	yum -y install libXext
+	yum -y install cmake
+	yum -y install cmake-gui
 	yum -y install libglvnd-egl
 	yum -y install qt-devel
 	yum -y install turbojpeg
