@@ -42,6 +42,7 @@ From: centos:centos7
 	yum -y install cmake3-gui
 	yum -y install libglvnd-egl
 	yum -y install qt-devel
+	yum -y install qt5-qtbase-devel
 	yum -y install turbojpeg
 	yum -y install diffutils
 	yum -y install mesa-libGL 
