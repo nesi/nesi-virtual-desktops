@@ -1,5 +1,5 @@
-BootStrap: docker
-From: centos:centos7
+Bootstrap: docker
+From: nvidia/cuda:11.0-cudnn8-devel-centos7
 %help
     see https://github.com/nesi/nesi-virtual-desktops
 %post
@@ -66,7 +66,10 @@ From: centos:centos7
 	lua-lpeg-0.12-1.el7.x86_64 \
 	lua-posix-32-2.el7.x86_64 \
 	lua-5.1.4-15.el7.x86_64 
-	
+
+	#GPU stuff 
+	#distribution=$(. /etc/os-release;echo $ID$VERSION_ID) && curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.repo | sudo tee /etc/yum.repos.d/nvidia-docker.repo
+yum clean expire-cache
 	
 	# Generic python
 	python3 -m pip install numpy scipy matplotlib ipython jupyter pandas
