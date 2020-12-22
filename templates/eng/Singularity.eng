@@ -110,28 +110,29 @@ yum clean expire-cache
 	yum -y install code
 	
 %environment
-	export LC_ALL=C
-  	export PATH=${PATH}:/opt/TurboVNC/bin:/opt/slurm/bin
+	
+	# General
         export LANG="en_US.UTF-8"
         export LANGUAGE="en_US"
-	export VGL_VERBOSE=1
-	# export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/websockify
 	export TZ="Pacific/Auckland"
+	export LC_ALL=C
+	export VGL_VERBOSE=1
+	export TERM="xterm-256color"
+	export SHELL=/bin/bash
 	
-	#SLURM
+	export PATH=${PATH}:/opt/TurboVNC/bin:/opt/slurm/bin
+	
+	# SLURM
 	export CPATH=/opt/slurm/include
 	export PATH="/opt/slurm/sbin:$PATH"
 	export LD_LIBRARY_PATH="/opt/slurm/lib64:/opt/slurm/lib64/slurm"
 	export LIBRARY_PATH="$LIBRARY_PATH:/opt/slurm/lib64:/opt/slurm/lib64/slurm"
-	
-	#LMOD
-	#export LMOD_DIR=/usr/share/lmod/lmod/libexec
-	#export LMOD_arch=x86_64
-	#export LMOD_CMD=/usr/share/lmod/lmod/libexec/lmod
-	#export ENABLE_LMOD=1
-	#export LMOD_SETTARG_CMD=:
-	##export LMOD_PREPEND_BLOCK=normal
-	#export LMOD_sys=Linux
+	  	
+	# CUDA
+	export CPATH="/usr/local/cuda/include:$CPATH"
+	export PATH="/usr/local/cuda/bin:$PATH"
+	export LD_LIBRARY_PATH="/usr/local/cuda/lib64:$LD_LIBRARY_PATH"
+	export CUDA_HOME="/usr/local/cuda"
 
 %runscript 
     source "${VDT_ROOT}/utils/singularity_runscript.sh" 
