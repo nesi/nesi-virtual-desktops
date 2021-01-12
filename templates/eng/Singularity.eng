@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: nvidia/cuda:11.0-cudnn8-devel-centos7
+From: centos/centos:centos7.4.1708
 %help
     see https://github.com/nesi/nesi-virtual-desktops
 %post
