@@ -73,38 +73,48 @@ assert_lennut(){
 #   sleep time
 #   max attempts
 #######################################
-assert_pid(){
-
-    sleep_for=${1:-"5"}
-    max_test=${2:-"3"}
-
+check(){
+    # General purpose function for checking state of multiple proccesses.
+    # Inputs
+    check_type=$1 
+    onPass="$2"
+    onFail="$3"
+    shift; shift; shift
+    list=( "$@" )
+    # "AND" # All tests must pass.
+    # "NAND" # All tests must fail.
+    # ""
     _test(){
+        p_name="$1"
         for (( i=0; i<${max_test:-"3"}; i++ )); do
-            if pgrep -u "${USER}" "${@:2}" -f "$1" > /dev/null; then
-                debug "Process \`$1' is running"
-                return 0
+            if pgrep -u "${USER}" -f "$p_name" > /dev/null; then
+                debug "Process \"$p_name\" is running"
+                $onPass
+                pass=0
             else
-                debug "Process \`$1' is not running"
+                debug "Process \"$p_name\" is not running"
+                $onFail
+                pass=1
             fi
-            sleep "${sleep_for}"
+            case $check_type in
+                "AND")
+                    if ((pass==0));then 
+                        return 0
+                    fi
+                    ;;
+                "NAND")
+                    if ((pass==1));then 
+                        return 0;                           
+                    fi
+                    ;;
+            esac
+
+            sleep "${sleep_for:-"5"}"
         done
-        debug "Could not find $1 processes after $i attempts."
         return 1
-    }        
-    debug "Testing for proccesses:"
+    }
 
-    check_process=( \
-    "Singularity runtime parent" \
-    "opt/TurboVNC/bin/Xvnc" \
-    "/usr/bin/xfce4-session" \
-    "python -m websockify" \
-    "/usr/bin/ssh-agent -s" \
-    "/usr/bin/gpg-agent "
-    )
-
-    debug "Testing for proccesses:"
-
-    for p in "${check_process[@]}"; do
+    for p in "${list[@]}"; do
         _test "${p}"  || return 1
     done
 }
@@ -151,6 +161,8 @@ unsert_pid(){
     done  
 }
 
+
+
 read_lockfile(){
     debug "Reading lockfile $1"
     if [[ ! -w "${1}" ]];then error "Could not read lockfile at $1.";fi
@@ -162,9 +174,33 @@ read_lockfile(){
 }
 
 turbo_kill(){
+    _main(){
+        if [[ ! "${_host}" == "${HOSTNAME}" ]];then
+            debug "Testing deadness of remote node"
+            assert_lennut "${1}" || return 1 
+            ssh ${verbose} ${_host} "source ${VDT_ROOT}/utils/common.sh && check "NAND" "pkill -u "${USER}" --signal 9 -f \"$p_name\"" ":" \
+                "Singularity runtime parent" \
+                "opt/TurboVNC/bin/Xvnc" \
+                "/usr/bin/xfce4-session" \
+                "python3 -m websockify" \
+                "/usr/bin/ssh-agent -s" \
+                "tail -f /tmp" \
+                "/usr/bin/gpg-agent ""
+            #ssh ${verbose} ${_host} "source ${VDT_ROOT}/utils/common.sh && assert_pid 3 2" >${VDT_LOGFILE} 2>&1
+        else
+            debug "Testing deadness of local node"
+            check "NAND" "pkill -u "${USER}" --signal 9 -f \"$p_name\"" ":" \
+                "Singularity runtime parent" \
+                "opt/TurboVNC/bin/Xvnc" \
+                "/usr/bin/xfce4-session" \
+                "python3 -m websockify" \
+                "/usr/bin/ssh-agent -s" \
+                "tail -f /tmp" \
+                "/usr/bin/gpg-agent "
+        fi
+    }
 
     read_lockfile $1
-    debug "Testing deadness"
 
     if [[ ! "${_host}" == "${HOSTNAME}" ]];then
         ssh ${verbose} ${_host} "source ${VDT_ROOT}/utils/common.sh && unsert_pid 3 2" #>${VDT_LOGFILE} 2>&1 || return 1
@@ -179,15 +215,29 @@ turbo_kill(){
 test_liveness(){  
     _main(){
         if [[ ! "${_host}" == "${HOSTNAME}" ]];then
+            debug "Testing liveness of remote node"
             assert_lennut "${1}" || return 1 
-            ssh ${verbose} ${_host} "source ${VDT_ROOT}/utils/common.sh && assert_pid 3 2" >${VDT_LOGFILE} 2>&1
+            ssh ${verbose} ${_host} "source ${VDT_ROOT}/utils/common.sh && check "AND" ":" ":" \
+                "Singularity runtime parent" \
+                "opt/TurboVNC/bin/Xvnc" \
+                "/usr/bin/xfce4-session" \
+                "python3 -m websockify" \
+                "/usr/bin/ssh-agent -s" \
+                "/usr/bin/gpg-agent ""
+            #ssh ${verbose} ${_host} "source ${VDT_ROOT}/utils/common.sh && assert_pid 3 2" >${VDT_LOGFILE} 2>&1
         else
-            assert_pid 3 2 >${VDT_LOGFILE}
+            debug "Testing liveness of local node"
+            check "AND" ":" ":" \
+                "Singularity runtime parent" \
+                "opt/TurboVNC/bin/Xvnc" \
+                "/usr/bin/xfce4-session" \
+                "python3 -m websockify" \
+                "/usr/bin/ssh-agent -s" \
+                "/usr/bin/gpg-agent "
         fi
     }
 
     read_lockfile $1
-    debug "Testing liveness"
 
     if _main $1 ;then
         printf "%27s %-20s %-22s %-18s %-27s\n" "$_name" " $_pid" "$_host" " $_port" "http://localhost:$_port"

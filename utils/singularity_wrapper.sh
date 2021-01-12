@@ -8,6 +8,7 @@ set_env(){
     module purge > /dev/null  2>&1
     module load Python Singularity/3.6.1 -q 
     module unload XALT/NeSI -q
+    module load CUDA
     if [[ -n $clean ]];then
         "${VDT_ROOT}/vdt_clean"
     fi
@@ -25,6 +26,7 @@ set_env(){
     export SINGULARITY_BINDPATH="\
 $HOME:/home/$USER,\
 $VDT_ROOT,\
+$EB_ROOT_CUDA,\
 /run,\
 /etc/machine-id,\
 /opt/nesi,\
@@ -33,13 +35,15 @@ $VDT_ROOT,\
 /dev/dri/card0,\
 /usr/bin/ssh-agent,\
 /usr/bin/gpg-agent,\
+/usr/bin/lsb_release,\
 /usr/share/lmod/lmod,\
 /usr/include,\
 /etc/opt/slurm,\
 /opt/slurm,\
 /usr/lib64/libmunge.so,\
 /usr/lib64/libmunge.so.2,\
-/usr/lib64/libmunge.so.2.0.0"
+/usr/lib64/libmunge.so.2.0.0,\
+/cm/local/apps/cuda"
 
     debug "Singularity bindpath is $(echo "${SINGULARITY_BINDPATH}" | tr , '\n')"
 
@@ -87,11 +91,11 @@ create_vnc(){
 
     if [[ -n $shell ]];then
 
-        cmd="singularity ${verbose} shell ${nohome} ${img_path}"
+        cmd="singularity ${verbose} shell --nv ${nohome} ${img_path}"
 
     else 
 
-        cmd="singularity ${verbose} run ${nohome} ${img_path}"
+        cmd="singularity ${verbose} run  --nv ${nohome} ${img_path}"
         
     fi
     # (
@@ -109,7 +113,7 @@ set_display (){
         if [[ ! -e "/tmp/.X11-unix/X{$VDT_DISPLAY_PORT}" ]];then return 0;fi
         if [[ $# -gt 0 ]];then echo "Selected display port ${1} not suitable."; return 2;fi
     done
-    echo "Could not find a suitable display port after $max_i attempts."; return 1
+    echo "Could not find a suitable display port after $max_i attempts."; exit 1
 }
 cleanup() {
     #vncserver
