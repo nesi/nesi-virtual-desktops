@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: centos/centos:centos7.4.1708
+From: centos:centos7.4.1708
 %help
     see https://github.com/nesi/nesi-virtual-desktops
 %post
