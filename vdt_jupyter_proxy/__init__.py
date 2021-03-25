@@ -1,0 +1,48 @@
+import os
+import subprocess
+import pkg_resources
+from pathlib import Path
+
+
+# def get_singularity_path():
+#     """find the path for singularity executable on NeSI"""
+#     cmd_result = subprocess.run(
+#         "module load Singularity && which singularity",
+#         capture_output=True,
+#         shell=True,
+#         timeout=10,
+#     )
+#     return cmd_result.stdout.strip().decode()
+
+
+def setup_vdt():
+    home_path = Path(os.environ["HOME"])
+    account = os.environ["SLURM_JOB_ACCOUNT"]
+
+    # See if can find central install.
+    try:
+        rstudio_password = (home_path / ".rstudio_server_password").read_text()
+    except FileNotFoundError:
+        # If no.
+
+
+
+        # Build container.
+
+
+
+
+
+    icon_path = pkg_resources.resource_filename("rstudio_on_nesi", "rstudio_logo.svg")
+
+    return {
+    'command': [jupyter_wrapper, '{port}', 'vnc.html?path={base_url}VirtualDesktop/vnc.html' ],
+    'timeout': 100,
+    'absolute_url': False,
+    'new_browser_tab':True,
+        "launcher_entry": {
+            "icon_path": icon_path,
+            "title": launcher_title,
+            "enabled": rstudio_password is not None,
+        },
+    }
