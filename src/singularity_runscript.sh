@@ -1,4 +1,9 @@
 #!/bin/bash -e
+
+# singularity_runscript.sh
+# Should be called when container is 'run' 
+# e.g. this script needs to be called from inside the container.
+
 initialize(){
     export VDT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
     source "${VDT_ROOT}/common.sh"
