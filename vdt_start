@@ -7,14 +7,15 @@
 
 # TODO: Add filesystem shortcuts to desktop.
 
+
 initialize(){
     export VDT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
     source "${VDT_ROOT}/utils/common.sh"
     minport=1024
     maxport=65536
     max_active=5
+    export VDT_BASE="/opt/nesi/containers/vdt_base"
 }
-
 
 help() {
 cat << EndOfHelp
@@ -35,7 +36,7 @@ cat << EndOfHelp
 
     -c --clean              Overwrite User desktop settings.
 
-    -b --VDT_BASE [template]    Template (default=eng)
+    -b --base [template]    Template (default=eng)
 
     -N --name [name]        Desktop name (default=VDT_BASE).
 
@@ -89,12 +90,12 @@ parse_input() {
                 shift
             ;;
             -b|--base)
-                VDT_BASE="${2}"
+                export VDT_BASE="${2}"
                 shift
                 shift
             ;;
             -N|--name)
-                _instance_name="${2}"
+                VDT_INSTANCE_NAME="${2}"
                 shift
                 shift
             ;;
@@ -158,15 +159,20 @@ parse_input() {
     # Create directory for logs, certificates etc
     mkdir -p "${VDT_HOME:="${HOME}/.vdt"}"
 
-    # Select template.
-    if [[ -z "${VDT_BASE}" ]];then VDT_BASE="default";fi
-
-    if (ls ${VDT_TEMPLATES}/${VDT_BASE} > /dev/null); then
-        debug "Using '${VDT_BASE}' as template."       
+    # If VDT_BASE is path. Use directly. Else, check templates
+    if [[ -d ${VDT_BASE} ]]; then
+        VDT_BASE="$VDT_BASE/wrapper.sh"
+    elif [[ -e ${VDT_TEMPLATES}/${VDT_BASE} ]]; then
+        export VDT_BASE="${VDT_TEMPLATES}/${VDT_BASE}/wrapper.sh"
     else
-        echo "Unknown template '${1}', valid options are '$(ls ${VDT_TEMPLATES})'.\n"
+        error "Unknown template '${1}', valid options are either a full path to the base image directory or '$(ls ${VDT_TEMPLATES})'.\n"
     fi
-    
+
+    if [[ ! -x ${VDT_BASE} ]]; then
+        error "'${VDT_BASE}' is not a valid wrapper script"
+        echo $?
+    fi 
+
     # Get node from env if slurm id set.
     if [[ -n "$SLURM_JOB_ID" && -z "${remote}" ]]; then
         remote=$(echo $SLURM_NODELIST | sed -E 's/^([a-z]{3})\[+([0-9]{3}).*/\1\2/') 
@@ -177,14 +183,15 @@ parse_input() {
 
     debug "Destination is '${remote:-$(hostname)}', Current host '$(hostname)'"
 
+    # If in a slurm job, use this for name.s
     if [[ -n "$SLURM_JOB_NAME" ]];then
-        if [[ -n "$_instance_name" ]];then
-            echo "VDT name '$_instance_name' as specified by '-N' was overridden by Slurm job name '$SLURM_JOB_NAME'."
+        if [[ -n "$VDT_INSTANCE_NAME" ]];then
+            warning "VDT name '$VDT_INSTANCE_NAME' as specified by '-N' was overridden by Slurm job name '$SLURM_JOB_NAME'."
         fi
         VDT_INSTANCE_NAME="${SLURM_JOB_NAME}"
     else
         # Create name.
-        VDT_INSTANCE_NAME=${_instance_name:-"${VDT_BASE}_${USER}"}
+        VDT_INSTANCE_NAME=${_instance_name:-"$(basename "${VDT_BASE}")_${USER}"}
         VDT_INSTANCE_NAME=${VDT_INSTANCE_NAME//[^a-zA-Z0-9_]/}
         while true; do
             if ! ls "${VDT_LOCKFILES}"/*"${VDT_INSTANCE_NAME}"\..* 1> /dev/null 2>&1;then break;fi
@@ -194,19 +201,18 @@ parse_input() {
         done  
     fi
 
-    t1=$(find $VDT_LOCKFILES -type f -name *\.${remote:-$(hostname)}:* -user ${USER} 2>/dev/null | head -n1)
-    if [[ -n $t1 ]];then
+    other_session_on_host=$(find $VDT_LOCKFILES -type f -name *\.${remote:-$(hostname)}:* -user ${USER} 2>/dev/null | head -n1)
+    if [[ -n $other_session_on_host ]];then
         warning "You already have a session running on ${remote:-$(hostname)}, attempting to start another may cause issues."
-        if test_liveness "$t1" >/dev/null 2>&1 ;then
+        if test_liveness "$other_session_on_host" >/dev/null 2>&1 ;then
             error "Session exists"
-            exit 1
         fi
     fi
 
-    t2="$(find $VDT_LOCKFILES -type f -name *:${VDT_SOCKET_PORT} 2>/dev/null | head -n1)"
-    if [[ -n $t2 ]]; then 
+    other_session_on_port="$(find $VDT_LOCKFILES -type f -name *:${VDT_SOCKET_PORT} 2>/dev/null | head -n1)"
+    if [[ -n $other_session_on_port ]]; then 
         warning "The port '${VDT_SOCKET_PORT}' appears to be in use, this may cause issues."
-        if test_liveness "$t2" >/dev/null 2>&1 ;then
+        if test_liveness "$other_session_on_port" >/dev/null 2>&1 ;then
             error "Session exists."
             exit 1
         fi
@@ -215,15 +221,12 @@ parse_input() {
     debug "starting vdt '$VDT_INSTANCE_NAME'"
 
     # Set logfiles dest
-    export VDT_LOGFILE=${VDT_LOGFILE:="${VDT_HOME}/${VDT_INSTANCE_NAME}.${remote:-$(hostname)}:${VDT_SOCKET_PORT}.log"}
-    touch "$VDT_LOGFILE" || echo "Warning: Cannot write to $VDT_LOGFILE." 
+    if [[ ! -f $VDT_LOGFILE ]]  ;then
+        export VDT_LOGFILE=${VDT_LOGFILE:="${VDT_HOME}/${VDT_INSTANCE_NAME}.${remote:-$(hostname)}:${VDT_SOCKET_PORT}.log"}
+        touch "$VDT_LOGFILE" || echo "Warning: Cannot write to $VDT_LOGFILE." 
+    fi
     debug "Logfile r\033[0KError: Could not find tunnel.\n" && printf "\r\033[0KTunnel Live.\n"
-    # else
-    
-    # if [[ -z "$session_jobid" && -n "$SLURM_JOB_ID" ]]; then
-    #     printf "'SLURM_JOB_ID' set. Connection will be forwarded to job $SLURM_JOB_ID.\n"
-    #     export session_jobid="$SLURM_JOB_ID"
-    # fi
+
 
     lockfile="${VDT_LOCKFILES}/${VDT_INSTANCE_NAME}.${remote:-$(hostname)}:${VDT_SOCKET_PORT}"
     debug "Lockfile is ${lockfile}"
@@ -233,6 +236,7 @@ launch(){
     if [[ -z "$verbose" ]];then
         env | grep VDT
     fi
+
     # If remote destination is set, and not self.
     if [[ -n $remote ]];then
         VDT_TUNNEL_HOST="$(hostname)"
@@ -244,8 +248,8 @@ launch(){
         startcmd="$startcmd $ev=\"${!ev}\""
     done
 
-    startcmd="${startcmd} && ${timeout}${VDT_ROOT}/utils/singularity_wrapper.sh"
-
+    startcmd="${startcmd} && ${timeout}${VDT_BASE} run --nv --writable-tmpfs"
+    
     debug "PPID is $PPID"
     debug "$startcmd"
 
@@ -257,23 +261,12 @@ launch(){
     esac
 
     if [[ -n $remote ]];then
-        printf "Looking for tunnel to %s..." "$remote"
+        printf "Opening tunnel to %s..." "$remote"
         ssh ${verbose} -A -o StrictHostKeyChecking=no -o ExitOnForwardFailure=yes ${remote} ${startcmd} #2>${VDT_LOGFILE}
         #assert_lennut $VDT_SOCKET_PORT || printf "\r\033[0KError: Could not find tunnel.\n" && printf "\r\033[0KTunnel Live.\n"
     else
         eval "$startcmd"
     fi
-
-    # if [[ ! "${remote}" == "${HOSTNAME}" ]];then
-    #     cmd="$cmd ssh -T ${verbose} ${remote} "
-    # fi
-    #cmd="$cmd source ${VDT_ROOT}/utils/common.sh && assert_pid"
-    #$cmd
-    #echo "PID is '${daemon_pid}'"
-    # echo ""
-    # echo "Instance name: '${VDT_INSTANCE_NAME}'"
-    # echo "Logfile is '${VDT_LOGFILE}'"
-    # echo "Connect with 'http://localhost:${VDT_SOCKET_PORT}'"
     exit $?
 }
 
@@ -295,4 +288,5 @@ cleanup_nice(){
 
 trap cleanup INT ERR SIGINT SIGTERM
 
-main "$@" || cleanup && cleanup_nice
+main "$@"
+cleanup_nice
