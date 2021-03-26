@@ -16,33 +16,37 @@ from pathlib import Path
 
 
 def setup_vdt():
-    home_path = Path(os.environ["HOME"])
+
+    #def_vdt="/opt/nesi/vdt"
+    def_vdt="/nesi/project/Callum/vdt"
+
+    vdt_root = os.getenv('VDT_ROOT',def_vdt)
     account = os.environ["SLURM_JOB_ACCOUNT"]
 
-    # See if can find central install.
-    try:
-        rstudio_password = (home_path / ".rstudio_server_password").read_text()
-    except FileNotFoundError:
-        # If no.
+    # # See if can find central install.
+    # try:
+    #     jupyter_wrapper
+    #     #rstudio_password = (home_path / ".rstudio_server_password").read_text()
+    # except FileNotFoundError:
+    #     # If no.
 
 
 
         # Build container.
 
 
-
-
-
-    icon_path = pkg_resources.resource_filename("rstudio_on_nesi", "rstudio_logo.svg")
+    jupyter_wrapper = f"{vdt_root}/util/jupyter_proxy_launch.sh"
+    icon_path = pkg_resources.resource_filename("vdt_jupyter_proxy", "icon.svg")
+    launcher_title = "VirtualDesktop"
 
     return {
-    'command': [jupyter_wrapper, '{port}', 'vnc.html?path={base_url}VirtualDesktop/vnc.html' ],
+    'command': [jupyter_wrapper, '{port}', 'vnc.html?path={base_url}{launcher_title}/vnc.html' ],
     'timeout': 100,
     'absolute_url': False,
     'new_browser_tab':True,
         "launcher_entry": {
             "icon_path": icon_path,
             "title": launcher_title,
-            "enabled": rstudio_password is not None,
+            "enabled": True
         },
     }

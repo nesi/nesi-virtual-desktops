@@ -1,4 +1,0 @@
-#!/bin/bash -e
-
-echo "vdt-shell is depreciated, use 'vdt-start -S' instead"
-

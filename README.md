@@ -11,26 +11,31 @@ See [Connecting to a Virtual Desktop](https://support.nesi.org.nz/hc/en-gb/artic
 ## Files
 ```
 vdt/
-├─ lockfiles/
-├─ tools/
-│  ├─ singularity_runscript
-│  ├─ singularity_startscript
-│  ├─ lic.sh
-│  ├─ nesi_websockify_patch
-│  └─ start_from_jupyter
-├─ templates/
-│  ├─ default
-│  ├─ eng/
-|  └─ eng_dev/
-├─ vdt
-├─ vdt_start
-├─ vdt_list
-├─ vdt_shell
-├─ vdt_kill
-└─ vdt_clean
+├── bin
+│   ├── vdt
+│   ├── vdt_clean
+│   ├── vdt_kill
+│   ├── vdt_list
+│   ├── vdt_shell
+│   └── vdt_start
+├── dep
+│   └── nesi_websockify.patch
+├── lockfiles/
+├── sif
+│   ├── rebuild.sh
+│   └── vdt_base.def
+├── tests
+│   └── test.sh
+├── util
+│   ├── common.sh
+│   ├── jupyter_proxy_launch.sh
+│   ├── singularity_runscript.sh
+│   └── singularity_wrapper.sh
+└── README.md
 ```
 ### `lockfiles/`
 Where lockfiles are currently being put. Should be empty in this repo.
+Deprecated
 
 ### `tools/`
 For various scripts that arn't supposed to be user facing.
