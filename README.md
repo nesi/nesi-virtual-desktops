@@ -1,12 +1,15 @@
 [![https://www.singularity-hub.org/static/img/hosted-singularity--hub-%23e32929.svg](https://www.singularity-hub.org/static/img/hosted-singularity--hub-%23e32929.svg)](https://singularity-hub.org/collections/4906)
 # nesi-virtual-desktops
 
-
 ## Usage
 ### Basic
 See [Connecting to a Virtual Desktop](https://support.nesi.org.nz/hc/en-gb/articles/360001600235-Connecting-to-a-Virtual-Desktop).
 ### Through JupyterHub
-...coming soon
+Click the button ya dummy.
+#### Installation
+`pip install --user git+https://github.com/nesi/nesi-virtual-desktops`
+#### Unstallation
+`pip uninstall vdt-jupyter-proxy`
 
 ## Files
 ```
@@ -33,74 +36,41 @@ vdt/
 │   └── singularity_wrapper.sh
 └── README.md
 ```
-### `lockfiles/`
-Where lockfiles are currently being put. Should be empty in this repo.
-Deprecated
 
-### `tools/`
-For various scripts that arn't supposed to be user facing.
+### `bin/`
+For terrible code that should be thrown away.
+User commands. Elaborate here maye.
 
-#### `singularity_runscript.sh`
-Script for singularity %runscript
-Currently just points to singularity_startscript
-#### `singularity_startscript.sh`
-Script for singularity %startscript
-#### `lic.sh`
-Checks for licences on set paths, exports relevent env variables if user can read.
+### `dep/`
+Dependencies. When developing, have copies of them here. 
 #### `nesi_websockify.diff`
 A patchfile used during container build.
-#### `start_from_jupyter.sh`
-Used by the jupyterHub socket proxy.
+### `lockfiles/`
+Where lockfiles are currently being put. Should be empty in this repo.
 
-### `templates/` 
-Determines the type of desktop launched.
-'default' will be used if no base type specified.
+Deprecated
 
-For a description of existing templates [see](#enviroment-variables).
-
-Template contents.
-
-*for the template named 'example'*
-```
-..
-├─ templates/
-|  ├─ default
-|  ├─ example/
-|  |  ├─ image
-|  |  ├─ Singularity.example
-|  |  ├─ pre.sh
-|  |  ├─ posh.sh
-|  |  └─ setup.sh
-..
-```
-#### `image`
-singularity image file (or symlink to image file).
-
-#### `Singularity.example` (optional)
-Recipie file for 'image'
-
-#### `pre.sh` (optional)
-Script to be sourced in base enviroment before launching container.
-
-#### `post.sh` (optional)
-Script to be sourced in container on launch.
-
-#### `setup.sh` (optional)
-Script to be sourced in container on the first launch.
-Currently determined by whether $XDG_CONFIG_HOME/xfce/ exists, but this is bad.
-
-${output}
-
-## Templates
-
-
-### `default`
-symlink to 'eng'
-### `eng`
-Generic engineering desktop. Creates icons for engineering applciations user has a licence to use, as well as some useful tools and links to all of the users.
-### `eng_dev` 
-Same as `eng` but for testing.
-
+### `sif/`
+For singularity stuff. Probably put image here.
+#### `rebuild.sh`
+Run to rebuild
+#### `vdt_base.def` 
+Main definition file
+### `tests/`
+### `util/`
+Stuff thats not supposed to be user facing.
+#### `singularity_runscript.sh`
+Script for singularity %runscript. Launched inside container on startup.
+#### `singularity_wrapper.sh`
+Wraps container launch, sets bind paths etc.
+#### `jupyter_proxy_launch.sh`
+Entry point for jupyter proxy.
+### `vdt_jupyter_proxy/`
+Suff for python setuptools.
+### `README.md`
+Don't
+### `setup.py`
+For setuptools
 ## Enviroment Variables
 All of these variables are passed to the container during start.
 
@@ -159,6 +129,6 @@ Location of desktop setup.
 This repo is in `/opt/nesi/vdt`
 
 
-Currently storing all `.sif` files in `/opt/nesi/containers/images`, `image` in template should link here.
+~~Currently storing all `.sif` files in `/opt/nesi/containers/images`, `image` in template should link here.~~
 
 Run `rebuild.sh` to update. e.g. `rebuild.sh nesi-virtual-desktops_eng.sif`. 
