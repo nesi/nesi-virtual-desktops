@@ -40,7 +40,7 @@ def setup_vdt():
     #launcher_title = "VirtualDesktop"
 
     return {
-    'command': [jupyter_wrapper, '{port}', 'vnc.html?path={base_url}VirtualDesktop/vnc.html' ],
+    'command': [jupyter_wrapper, '{port}', 'vnc.html?path={base_url}vdt/vnc.html' ],
     'timeout': 100,
     'absolute_url': False,
     'new_browser_tab':True,
