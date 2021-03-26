@@ -1,0 +1,412 @@
+#!/bin/bash -e
+
+# Provides simple inteface for setting up VNC sessions, connecting, hosting noVNC etc etc.
+# Author: Callum
+# https://github.com/nesi/nesi-virtual-desktops
+
+
+# TODO: Add filesystem shortcuts to desktop.
+module purge > /dev/null  2>&1
+module load Python Singularity/3.6.1 -q 
+module unload XALT/NeSI -q
+
+unset LD_PRELOAD
+
+#Location of this script
+export root="$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd -P)")/bin"
+#root="$( dirname "${0}")"
+
+
+max_desktops=3;
+# export XDG_CONFIG_HOME="$xdg_root/.config/"
+# export XDG_CACHE_HOME="$xdg_root/.cache/"
+
+#SIF_DIR="$(dirname $root)/containers/images"
+
+#TEMP_HOME="$(dirname $(dirname $(realpath $0)))/dt_config/eng"
+
+# Where files are saved in user home.
+
+cleanup_graceful() {
+    # Run this when dying.
+    # singularity exec instance://$EPHEMERAL_INSTANCE_NAME vncserver -kill :${display_port}
+    # singularity instance stop $EPHEMERAL_INSTANCE_NAME #> /dev/null 2>&1
+    #iprint "${VARIABLE:=default} active desktops will persist in "
+    if [[ $NUM_INST -gt 0 ]]; then
+        printf "$NUM_INST desktops will persist in the background. Run '$(basename $0)' again to manage connections.\n"
+    fi
+    exit 0
+}
+
+help() {
+cat << EndOfHelp
+[1mNAME[0m
+        $(basename "$0") - virtual desktop
+
+[1mSYNOPSIS[0m
+        $(basename "$0") [-v -h] [command] [<args>]
+
+[1mDESCRIPTION[0m
+        Virtual DeskTop - A VGL enabled virtual desktop and sets up noVNC server. Main command for starting and managing sessions on NeSI.
+
+[1mOPTIONS[0m
+        -h --help               This is help.
+        -v --verbose        
+
+[1mCOMMANDS[0m
+$(find . -name 'vdt_*' -type f -executable | sed "s/.\/vdt_/        $(basename "$0") /")
+
+Full documentation can be found at ${support_docs}
+EndOfHelp
+
+    #$(find . -name 'vdt_*' -type f -executable -exec sed -n "\:NAME: {n;p;}" {} \; )
+
+    # -b --base [template]    Template (default=eng)
+
+    # -s --socketless         Start the virtual desktop without the websocket.
+
+    # -c --clean              Overwrite User desktop settings.
+
+    # -C --nohome             Don't mount home directory. Good for debugging.
+
+    # -j --jobid [jobid]      Forward connection to host of [jobid]
+
+    # -n --node [hostname]    Forward connection to [hostname]
+}
+
+parse_input() {
+    
+    vecho "$@"
+    # Command line input before being shifted
+    args=( "$@" )
+    
+    # Parse flags + port
+    while [[ $# -gt 0 ]];do
+        case "$1" in
+            -v|--verbose)
+                export VERBOSE="-v"
+                export v="-v"
+                #set -x
+                shift
+            ;;
+            -h|--help)
+                help "$0"
+                exit 0
+            ;;
+            kill)
+                shift
+                "$root/vdt_kill" "$@" 
+                exit $?
+                ;;
+            shell)
+                shift
+                "$root/vdt_shell" "$@" 
+                exit $?
+                ;;
+            connect)
+                shift
+                "$root/vdt_connect" "$@" 
+                exit $?
+                ;;
+            start)
+                shift
+                "$root/vdt_start" "$@" 
+                exit $?
+                ;;
+            list)
+                shift
+                "$root/vdt_list" "$@" 
+                exit $?
+                ;;
+            clean)
+                shift
+                "$root/vdt_clean" "$@" 
+                exit $?
+                ;;
+            # ;;
+            # -p|--persistent)
+            #     export PERSISTENT="true"
+            #     echo "Currently '-p' does nothing. All instances are persistant."
+            #     shift
+            # ;;
+            # -s|--socketless)
+            #     export NOSOCKET="true"
+            #     shift
+            # ;;
+            # -c|--clean)
+            #     clean="--clean"
+            #     shift
+            # ;;
+            # -b|--base)
+            #     base="${2}"
+            #     shift
+            #     shift
+            # ;;
+
+            # -C|--nohome)
+            #     nohome="--nohome"
+            #     shift
+            # ;;
+            # -j|--jobid)
+            #     export session_jobid="$2"
+            #     shift
+            #     shift
+            # ;;
+            # -n|--node)
+            #     export session_hostname="$2"
+            #     shift
+            #     shift
+            # ;;
+            # [0-9]*)
+            #     export VDT_SOCKET_PORT=$1
+            #     shift
+            # ;;
+            *)
+                iprint "Unknown option '${1}', -h for help.\n"
+                shift
+            ;;
+        esac
+    done
+    if [[ -z "${base}" ]];then base="eng";fi
+    # Get 'environmental inputs'.
+    # If no jobid specified, but launched from env with SLURM env set. Go there.
+    if [[ -z "$session_jobid" && -n "$SLURM_JOB_ID" ]]; then
+        printf "'SLURM_JOB_ID' set. Connection will be forwarded to job $SLURM_JOB_ID.\n"
+        export session_jobid="$SLURM_JOB_ID"
+    fi
+}
+# Construct ssh command.
+construct_ssh() {
+    # If jobid is specified, get host of jobid.
+    if [[ "$session_jobid" ]];then
+        while true;do
+            sqout=$(squeue -h -u "$USER" -j "$session_jobid" -O "State,NodeList")
+            vecho $sqout
+            jobstate=$(echo $sqout | awk '{print $1}')
+            echo $jobstate
+            session_hostname=$(echo $sqout | awk '{print $2}')
+            if [[ $jobstate == "RUNNING" ]]; then
+                iprint "Connection will be forwarded to $session_hostname. Run 'unset SLURM_JOB_ID' if this isn't what you want.\n"
+                break
+                elif [[ $jobstate == "PENDING" ]]; then
+                iprint "'$session_jobid' is pending. Waiting..."
+                sleep 10
+            else
+                iprint "'$session_jobid' is not a valid slurm session to connect to.\n"
+                unset session_jobid session_hostname
+                exit 1
+            fi
+        done
+    fi
+    
+    # Case 0 - Already on correct node.
+    if [[ "$session_hostname" = "$HOSTNAME" ]];then
+        "$@"
+        # Case 1 - No node specified. (Do nothing)
+        elif [[ ! "$session_jobid" ]] && [[ ! "$session_hostname" ]];then
+        "$@"
+        # Case 2 - Node specified, forwarding port specified. (Forward port to node)
+        elif [[ "$VDT_SOCKET_PORT" ]]; then
+            ssh -L "${VDT_SOCKET_PORT}:localhost:${VDT_SOCKET_PORT}" "${session_hostname}" "$@"
+        # Case 3 - Node specified, forwarding port not specified. (Run command on node)
+        elif [[ ! "$VDT_SOCKET_PORT" ]]; then
+            ssh "${session_hostname}" "$@"
+    else
+        echo "Something went wrong, couldn't construct SSH tunnel"
+        return 1
+    fi
+}
+
+create_vnc(){
+    vecho "This script is in $root"
+    vecho "Bind path: $SINGULARITY_BINDPATH"
+    vecho "Available SIFs $(ls $SIF_DIR)"
+
+    # Set instance name    
+    test_name ${VDT_INSTANCE_NAME}
+    iprint "Creating new session...";
+
+    #Randomy generate port number. Add lockfiles later.
+    construct_ssh "${root}/vdt_start" -N $VDT_INSTANCE_NAME -b $base $v $clean $nohome    
+    if [[ $NOSOCKET ]]; then
+        iprint "Websocket will not be created. Connect to this desktop using the $(basename $0) command, or using a VNC client to connect to http://localhost:$SOCKET_PORT (through a forwarded port).\n"
+    fi
+}
+
+slurm_adopt(){
+    OPT_COUNT_SQUEUE="0"
+    menu_text="${MENU_HEAD}\nSelect a job\?\n"
+    mapfile -t sq_menu_text < <(squeue -h -u $USER -O "Jobid,Name,State,NodeList" | tr -s ' ' '|' | tr -s '\n' ' ' )
+    #echo "${sq_menu_text[1]}"
+    #echo "${#sq_menu_text[@]}"
+    for sq in "${sq_menu_text[@]}"; do
+        #$(echo $x | awk '{print $2}')
+        menu_text="$menu_text\n\t${OPT_COUNT_SQUEUE}) $(echo ${sq} | awk -F "|" '{print $1 " (" $2 ") - " $3}')"
+        ADOPT_VALID="$ADOPT_VALID $OPT_COUNT_SQUEUE"
+        OPT_COUNT_SQUEUE=$((OPT_COUNT_SQUEUE + 1))
+    done
+    #echo "$OPT_COUNT_SQUEUE"
+    
+    if [[ $OPT_COUNT_SQUEUE -lt 1 ]]; then
+        iprint "You don't have any running slurm jobs."
+        return
+    fi
+    
+    menu_text="$menu_text\n\tq)\n"
+    mprint "$menu_text"
+    # if [[ ${VDT_SOCKET_PORT} ]];then
+    #     iprint "You must set a port before \n\tq)"
+    #     return
+    # fi
+    
+    while true; do
+        PROMPT="[q$(echo "$ADOPT_VALID" | tr " " /)]"
+        read -e -p "$PROMPT: " reply
+        case $reply in
+            ["${ADOPT_VALID[@]}"])
+                session_jobid="$(echo "${sq_menu_text[$reply]}" | awk -F "|" '{print $1}')"
+                session_hostname="$(echo "${sq_menu_text[$reply]}" | awk -F "|" '{print $4}')"
+                echo $session_hostname
+                return
+            ;;
+            q)                      return;;
+            * )                     iprint "Please answer $PROMPT\r";;
+        esac
+    done
+}
+
+quit(){
+    exit 0
+}
+
+kill_vnc(){
+    # Get appropriate display number     
+    vecho "Selected Instance: $session"  
+    construct_ssh "${root}/vdt_kill" "${VDT_INSTANCE_NAME}" && NUM_INST=$((NUM_INST-1))
+    iprint "Desktop closed"
+    #display_port=$(echo $SELECTED_SOCKET | awk -F[:,] '{print $2}')
+    #singularity instance stop $INSTANCE_NAME
+    #singularity exec instance://$INSTANCE_NAME vncserver -kill :${display_port}
+}
+
+connect_vnc(){
+    vecho "Selected instance: ${session}"
+    test_port ${VDT_SOCKET_PORT}
+    construct_ssh ${root}/vdt_connect ${VERBOSE} ${VDT_INSTANCE_NAME} ${VDT_SOCKET_PORT}
+}
+
+menu(){
+    while true; do
+        # Genrate Menu Header
+        menu_text="\nTemplate:      ${DESKTOP}\nDestination:   ${session_hostname:-${session_jobid:-"none. (Next desktop will be started on the login node)"}}"
+        menu_text="${menu_text}\nInbound Port:  ${VDT_SOCKET_PORT:-"false. (Connect with VNC or run this command again with a port number)."}"
+
+        # Get list of open VNC sessions. 
+        # vnc_list=( $(ls "${vnc_pid_root}"/*.pid 2> /dev/null || true) )
+        # vecho "${vnc_list[@]}"
+        #INST_LIST=( $(singularity instance list | tail -n +2 | awk '{print $1}' ) )
+        mapfile -t vdt_list < <( $root/vdt_list -n )
+        opt_count=0
+        # Print options for connecting to desktops.
+        #for session in "${vdt_list[@]}" ; do
+        for session in "${vdt_list[@]}";do 
+            if [[ -z "$session" ]];then continue;fi
+            _hostname=$(echo $session | awk '{print $3}')
+            _name=$(echo $session | awk '{print $1}')
+            menu_text="${menu_text}\n\n     Name: ${_name}"
+            # if [[ $(session_hostname=${_hostname};construct_ssh singularity instance list "*${_display_port}" | wc -l)  -lt 2 ]]; then
+            #     menu_text="${menu_text}  (DEAD!)"
+            # fi
+            menu_text="$menu_text\n     Host: ${_hostname}"
+            menu_text="${menu_text}\n\t${opt_count}) Connect."
+            opt_count=$((opt_count + 1))
+            menu_text="${menu_text}\n\t${opt_count}) Kill."
+            opt_count=$((opt_count + 1))
+        done # < <(echo $vdt_list)
+
+       
+        # Print the damn thing.
+        mprint "${menu_text}\n\n\tn) New desktop.\n\ta) Adopt a SLURM session.\n\tq) Quit\n\n${l_message:-"Select option."}\n"
+        # Main menu loop. Using functions for tidyness.
+        
+        PROMPT="[$(seq 0 $((opt_count - 1)) | tr "\n" /)n/a/q]"
+        read -e -p "$PROMPT: " reply
+        opt_count_m1=$((opt_count - 1))
+        case $reply in
+                n)                      if [[ ${#vdt_list[@]} -ge ${max_desktops} ]];then iprint "You already have the maximum allowed desktops. Please close one and try again.";continue; else create_vnc && connect_vnc;fi ;; 
+                                        #;& # Fallthough.
+                [0-$opt_count_m1])      session="${vdt_list[$((reply / 2))]}"
+                                        #session_display_port=${display_port:-$(echo "${session}" | sed -e 's/.*:\([0-9]*\).pid/\1/')}
+                                        #session_hostname=$(echo "$session" | sed -e 's/.*\/\(.*\):.*/\1/')
+                                        session_hostname=$(echo $session | awk '{print $3}')
+                                        export VDT_INSTANCE_NAME=$(echo "$session" | awk '{print $1}')
+                                        if [ $((reply%2)) -eq 0 ];then 
+                                            connect_vnc
+                                        else
+                                            kill_vnc
+                                        fi;; 
+                a)                      slurm_adopt;;
+                q)                      quit;;
+                * )                     iprint "Please answer ";;
+        esac
+    done
+    
+}
+
+vecho () {
+    # For verbose print.
+    if [[ $VERBOSE ]]; then
+        echo "$@"
+    fi
+}
+
+iprint () {
+    # Inline print
+    printf "\033[K\033[B$*"
+    l_message="$*"
+
+}
+
+mprint () {
+    # Menu Print
+    #printf "$1"
+    printf "\e[2$(( 8+OPT_COUNT ))[\r$1\n\e[K"
+}
+
+test_port () {
+    
+    if [[ ! $VDT_SOCKET_PORT ]];then
+        iprint "Missing a forwarding port. Please enter one now."
+        PROMPT="[port]: "
+        read -r -e -p "$PROMPT" VDT_SOCKET_PORT
+    fi
+    
+    # Tests if port is available. If not KILLS IT. Might need consideration.
+    
+    while [[ "$(fuser "$VDT_SOCKET_PORT"/tcp 2>/dev/null | wc -w)" -gt 0 ]];do
+        #iprint "Port $1 in use. Please find another."
+        iprint "Port '$VDT_SOCKET_PORT' in use. Killing $VDT_SOCKET_PORT"
+        # Kill
+        kill -9 $(fuser "$VDT_SOCKET_PORT"/tcp 2>/dev/null | awk '{ print $1 }')
+    done
+    # Too much kill
+    # kill -9 $(ps -o ppid= $(fuser $VDT_SOCKET_PORT/tcp 2>/dev/null | awk '{ print $1 }'))
+}
+
+test_name () {
+    echo "$VDT_INSTANCE_NAME"
+    if [[ -z $VDT_INSTANCE_NAME ]];then
+        iprint "Enter a name for your desktop."
+        PROMPT="[name]: "
+        read -r -e -i "${base}_vdt" -p "$PROMPT" VDT_INSTANCE_NAME
+    fi
+}
+
+main() {
+    parse_input "$@"
+    menu
+}
+
+#trap "cleanup_graceful" EXIT
+main "$@"
+

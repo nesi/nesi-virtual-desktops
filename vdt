@@ -1,0 +1,3 @@
+#!/bin/bash
+# For backwards compat
+cd bin && ./vdt $@

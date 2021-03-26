@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Lists named singularity instance.
+# Author: Callum
+# https://github.com/nesi/nesi-virtual-desktops
+
+initialize(){
+    VDT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+    source "${VDT_ROOT}/utils/common.sh"
+}
+
+# module purge > /dev/null  2>&1
+# module load Python Singularity/3.5.2 -q
+# module unload XALT/NeSI -q
+
+initialize
+
+info "Clearing cache"
+rm -rf ${verbose} "$VDT_HOME"/ "$HOME"/.cache/sessions "$HOME"/.cache/gpg-agent-info "$HOME"/.config/xfce4 "$HOME"/.xfce4 "$HOME"/.fontconfig "$HOME"/.gnupg  "$HOME"/.ICEauthority "$HOME"/.Xauthority "$HOME"/.singularity 
+find /tmp/ -user "$USER" -exec rm -rf {} \; > /dev/null  2>&1 
+find ${VDT_LOCKFILES}/* -user "$USER" -exec rm -rf {}  \; > /dev/null  2>&1
+true
