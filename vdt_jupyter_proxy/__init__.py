@@ -36,17 +36,17 @@ def setup_vdt():
 
 
     jupyter_wrapper = f"{vdt_root}/util/jupyter_proxy_launch.sh"
-    icon_path = pkg_resources.resource_filename("vdt_jupyter_proxy", "icon.svg")
-    launcher_title = "VirtualDesktop"
+    icon_path = pkg_resources.resource_filename("vdt_jupyter_proxy", "crap_icon.svg")
+    #launcher_title = "VirtualDesktop"
 
     return {
-    'command': [jupyter_wrapper, '{port}', 'vnc.html?path={base_url}{launcher_title}/vnc.html' ],
+    'command': [jupyter_wrapper, '{port}', 'vnc.html?path={base_url}VirtualDesktop/vnc.html' ],
     'timeout': 100,
     'absolute_url': False,
     'new_browser_tab':True,
         "launcher_entry": {
             "icon_path": icon_path,
-            "title": launcher_title,
+            "title": 'VirtualDesktop',
             "enabled": True
         },
     }
