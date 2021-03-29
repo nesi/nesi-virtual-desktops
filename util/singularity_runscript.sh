@@ -38,6 +38,16 @@ modify_env() {
 	export CPATH="$CPATH:/opt/slurm/include"
 	export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/opt/slurm/lib64:/opt/slurm/lib64/slurm"
 
+    
+    if [ -r ${VDT_SETUP:="${VDT_HOME}/vdt_setup.conf"} ]
+
+    file="myfile"
+    while read -r line
+    do
+        [[ $line = \#* ]] && continue
+        "address=\$line\127.0.0.1"
+    done < "${}"
+
         # CUDA specific.
     if [[ -n ${EBROOTCUDA} ]];then
         debug "exporting additional CUDA paths"

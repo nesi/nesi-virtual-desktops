@@ -5,8 +5,8 @@
 # https://github.com/nesi/nesi-virtual-desktops
 
 initialize(){
-    VDT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-    source "${VDT_ROOT}/utils/common.sh"
+    export VDT_ROOT="$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd -P)")"
+    source "${VDT_ROOT}/util/common.sh"
 }
 
 # module purge > /dev/null  2>&1

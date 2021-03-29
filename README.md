@@ -84,6 +84,11 @@ For lockfiles
 
 `"$HOME/.vdt"`
 
+### VDT_SETUP
+Location of setup file.
+
+`$VDT_HOME/vdt_setup.conf`
+
 ### VDT_LOCKFILES
 Location of lockfiles.
 
