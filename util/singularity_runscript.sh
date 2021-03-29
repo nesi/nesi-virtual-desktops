@@ -38,15 +38,17 @@ modify_env() {
 	export CPATH="$CPATH:/opt/slurm/include"
 	export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/opt/slurm/lib64:/opt/slurm/lib64/slurm"
 
-    
-    if [ -r ${VDT_SETUP:="${VDT_HOME}/vdt_setup.conf"} ]
 
-    file="myfile"
+    if [ ! -e ${VDT_SETUP:="${VDT_HOME}/vdt_setup.conf"} ];then
+        cp "${VDT_ROOT}/util/vdt_setup.conf" "${VDT_SETUP}"
+        debug "Copying default setup from '${VDT_ROOT}/util/vdt_setup.conf' to '$VDT_SETUP'"
+    fi
+
     while read -r line
     do
-        [[ $line = \#* ]] && continue
+        [[ "$line" = "\#*" ]] && continue
         "address=\$line\127.0.0.1"
-    done < "${}"
+    done < "${VDT_SETUP}"
 
         # CUDA specific.
     if [[ -n ${EBROOTCUDA} ]];then
