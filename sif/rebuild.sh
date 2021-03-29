@@ -3,9 +3,15 @@
 # Because I am lazy. - Callum
 # Same as other script except different shub repo.
 
-module load Singularity
+
+
 
 if [[ $# -lt 1 ]];then echo "Not enough args"; exit 1;fi
+
+module load Singularity
+wosif=$(basename ${1%.*})
+
+singularity -q build --disable-cache -r ${wosif}.sif $1
 
 #for arg in $@; do 
 
@@ -14,15 +20,15 @@ if [[ $# -lt 1 ]];then echo "Not enough args"; exit 1;fi
 # stat -c "%Y" $arg
 
 
-wosif=$(basename ${1%.*})
+#wosif=$(basename ${1%.*})
 #echo $wosif
 #exit 
-rm -f ".${1}"
-singularity build ".${1}"  "shub://nesi/${wosif/_/:}"
-rm -f "${1}"
-mv ".${1}" "${1}"
-rm -f ".${1}"
-echo "Done!"
+#rm -f ".${1}"
+#singularity build ".${1}"  "shub://nesi/${wosif/_/:}"
+#rm -f "${1}"
+#mv ".${1}" "${1}"
+#rm -f ".${1}"
+#echo "Done!"
 
 #image_path="$(dirname "$0")"
 #for sif in ${image_path}/*.sif; do
