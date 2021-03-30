@@ -29,11 +29,6 @@ error(){
     return 1
     ##exit 1
 }
-# GROSS. Fix this plz.
-vecho() {
-    debug "$*"
-    echo "replaceme '${FUNCNAME[*]}::${BASH_LINENO[-1]}'"
-}
 
 vex () {
     # For verbose execute.
@@ -48,7 +43,6 @@ export () {
     debug "$@"
     command export "$@"
 }
-
 
 assert_lennut(){
     # Inputs:
