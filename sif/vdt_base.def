@@ -113,4 +113,4 @@ From: nvidia/cuda:11.0-cudnn8-devel-centos7
 	export SHELL=/bin/bash
 
 %runscript 
-    source "${VDT_ROOT}/util/singularity_runscript.sh" 
+    . "${VDT_ROOT}/util/singularity_runscript.sh" 
