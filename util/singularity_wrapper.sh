@@ -22,12 +22,14 @@ set_env(){
 
     # Apps that dont need a special install.
     BIND_PATH_APPS="$BIND_PATH_APPS,\
-/usr/bin/htop,\
-/usr/bin/vim,\
-/usr/bin/nano,\
-/usr/bin/less,\
 /usr/bin/file,\
-/usr/bin/unzip"
+/usr/bin/htop,\
+/usr/bin/less,\
+/usr/bin/man,\
+/usr/bin/nano,\
+/usr/bin/unzip,\
+/usr/bin/vim"
+
 
     BIND_PATH_REQUIRED="$BIND_PATH_REQUIRED,\
 /run,\

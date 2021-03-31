@@ -1,4 +1,5 @@
 #!/bin/bash -e
+set +o posix
 
 # singularity_runscript.sh
 # Should be called when container is 'run' 
@@ -38,17 +39,45 @@ modify_env() {
 	export CPATH="$CPATH:/opt/slurm/include"
 	export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/opt/slurm/lib64:/opt/slurm/lib64/slurm"
 
+    # No check for now. Just do.
+    first_time_setup
 
-    if [ ! -e ${VDT_SETUP:="${VDT_HOME}/vdt_setup.conf"} ];then
+    # Check if vdt_setup.conf
+    if [ ! -e "${VDT_SETUP:="${VDT_HOME}/vdt_setup.conf"}" ];then
+        mkdir -p "$(dirname "${VDT_SETUP}")"
         cp "${VDT_ROOT}/util/vdt_setup.conf" "${VDT_SETUP}"
         debug "Copying default setup from '${VDT_ROOT}/util/vdt_setup.conf' to '$VDT_SETUP'"
     fi
+    debug "Using '${VDT_SETUP}'"
+    debug "Using '$SHELL' as SHELL"
+    set +e
 
-    while read -r line
-    do
-        [[ "$line" = "\#*" ]] && continue
-        "address=\$line\127.0.0.1"
-    done < "${VDT_SETUP}"
+    # Read each line of vdt_setup.conf
+    while read -r line;do
+        [[ ${line} =~ ^\#.* ]] && continue
+        mapfile -t linearray < <(xargs -n1 <<<"${line}")
+
+        #Load module if applicable
+        if [ -n "${linearray[0]}" ];then
+            module load ${linearray[0]}
+        fi
+        name=${linearray[1]}
+
+        # Path to desktop entry
+        de_name="$HOME/Desktop/${name//[^a-zA-Z0-9]/}.desktop"
+
+        [ -e "$de_name" ] && continue
+        # If icon doesn't already exist. Write one.
+cat << EOF > ${de_name}
+[Desktop Entry]
+Type=Application
+Exec=${linearray[2]}
+Icon=${linearray[3]}
+Name=${name}
+EOF
+    chmod 760 "${de_name}"
+    done  < ${VDT_SETUP}
+    set -e
 
         # CUDA specific.
     if [[ -n ${EBROOTCUDA} ]];then
@@ -87,6 +116,33 @@ chekenv(){
     for var in "$@"; do
         if [[ -z ${!var} ]]; then error "'\$${var}' not set, did you launch this container correctly?";fi 
     done
+}
+
+create_directory_links(){
+    # Create links to projects. (max 8)
+    read -ra pj <<<$(find "/nesi/project/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" -writable -type d)
+    read -ra nb <<<$(find "/nesi/nobackup/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" -writable -type d)
+
+    if [[ $(echo "${pj[@]}" | wc -w) -gt 8 ]];then
+        pjd="/_projects"
+        mkdir "${XDG_DESKTOP_DIR}${pjd}"
+    fi
+    if [[ $(echo "${nb[@]}" | wc -w) -gt 8 ]];then
+        nbd="/_nobackup"
+        mkdir "${XDG_DESKTOP_DIR}${nbd}"
+    fi
+    for proj in "${pj[@]}";do
+        ln -sv "$proj" "${XDG_DESKTOP_DIR}${pjd}/project_$(basename $proj)" 2>/dev/null
+    done
+    for proj in "${nb[@]}";do
+        ln -sv "$proj" "${XDG_DESKTOP_DIR}${nbd}/nobackup_$(basename $proj)" 2>/dev/null
+    done
+}
+
+first_time_setup(){
+    # Check destop directory exists.
+    mkdir -vp "${XDG_DESKTOP_DIR:=$HOME/Desktop}"
+    create_directory_links
 }
 
 
