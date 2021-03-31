@@ -130,6 +130,17 @@ From: nvidia/cuda:11.0-cudnn8-devel-centos7
 	#distribution=$(. /etc/os-release;echo $ID$VERSION_ID) && curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.repo | sudo tee /etc/yum.repos.d/nvidia-docker.repo
 	#yum clean expire-cache
 
+	# Modify startup apps.
+	rm -f  /etc/xdg/autostart/xfce-polkit.desktop	# Stop polkit nonsense
+
+	cat << EOF > /etc/xdg/autostart/lmod-conf-nesi.desktop
+[Desktop Entry]
+Version=1.0
+Name=conf-notification
+Type=Application
+Exec=bash -c "notify-send \"NeSI Modules\" \"Default loaded software can be set by editing \'\$VDT_SETUP\'\" --icon=preferences-other"
+EOF
+	chmod 0644 /etc/xdg/autostart/lmod-conf-nesi.desktop
 %environment
 	export PATH=${PATH}:/opt/TurboVNC/bin
 	

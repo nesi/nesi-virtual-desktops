@@ -39,6 +39,7 @@ set_env(){
 /usr/bin/ssh-agent,\
 /usr/bin/gpg-agent,\
 /usr/bin/lsb_release,\
+/usr/share/fonts,\
 /usr/share/lmod/lmod,\
 /usr/include,\
 /etc/opt/slurm,\

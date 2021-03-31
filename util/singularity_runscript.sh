@@ -35,7 +35,7 @@ main (){
 }
 modify_env() {
     # Set paths
-	export PATH="$PATH:/opt/slurm/sbin"
+	export PATH="$PATH:/opt/slurm/bin"
 	export CPATH="$CPATH:/opt/slurm/include"
 	export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/opt/slurm/lib64:/opt/slurm/lib64/slurm"
 
@@ -48,6 +48,7 @@ modify_env() {
         cp "${VDT_ROOT}/util/vdt_setup.conf" "${VDT_SETUP}"
         debug "Copying default setup from '${VDT_ROOT}/util/vdt_setup.conf' to '$VDT_SETUP'"
     fi
+    export VDT_SETUP
     debug "Using '${VDT_SETUP}'"
     debug "Using '$SHELL' as SHELL"
     set +e
