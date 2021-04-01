@@ -29,9 +29,12 @@ main (){
     # Method 2: Working but bad.
     #vncserver ${VDT_VNCOPTS} -log ${VDT_LOGFILE} -wm xfce4-session -autokill -securitytypes TLSNone,X509None,None :$VDT_DISPLAY_PORT && /opt/websockify/run ${VDT_WEBSOCKOPTS} --web /opt/noVNC localhost:$VDT_SOCKET_PORT :$((VDT_DISPLAY_PORT+5900)) 
     
-    # Method 3: Currently Working.
-    assert_vnc || exit 1 # Starts a server, then tests its existence.    
-    /opt/websockify/run ${VDT_WEBSOCKOPTS} --web /opt/noVNC localhost:$VDT_SOCKET_PORT :$((VDT_DISPLAY_PORT+5900)) 
+    # Method 3: Currently Working.''
+    /opt/websockify/run ${VDT_WEBSOCKOPTS} --web /opt/noVNC localhost:$VDT_SOCKET_PORT :$((VDT_DISPLAY_PORT+5900)) &
+    assert_vnc # This command will continue running unless server can no longer be found 
+    wait
+    pkill -P $$
+    
 }
 modify_env() {
     # Set paths
@@ -93,20 +96,18 @@ EOF
     fi
 }
 assert_vnc() {
-    i=0; max_i=4
+    max_failures=4; failures=0
+    heartbeat=15
     # tmplog="$(mktemp)"
     # tail -f $tmplog > debug &
-    for (( i=0; i<max_i; i++ )); do
-    #vncserver ${VDT_VNCOPTS} -log "$tmplog" -wm xfce4-session -autokill -securitytypes TLSNone,X509None,None :${VDT_DISPLAY_PORT} > debug 2>&1
-#-vgl
-    vncserver ${VDT_VNCOPTS} -log "$VNC_LOG" -wm xfce4-session -autokill -securitytypes TLSNone,X509None,None :${VDT_DISPLAY_PORT} > debug 2>&1
-    exc="$?"
-    #echo $exc
+    while (( failures < max_failures )); do
+        vncserver ${VDT_VNCOPTS} -log "$VNC_LOG" -wm xfce4-session -autokill -securitytypes TLSNone,X509None,None :${VDT_DISPLAY_PORT} > debug 2>&1
+        exc="$?"
         case $exc in
-            98) debug "Server exists and is readable."; return 0;; # 
+            98) debug "Server exists and is readable."; sleep $heartbeat;; # 
             0) debug "Server started. Testing...";; 
-            29) error "Port ${VDT_DISPLAY_PORT} is in use by someone else."; return 1;; 
-            *) error "Server couldn't start, error code $exc"
+            29) error "Port ${VDT_DISPLAY_PORT} is in use by someone else."; (( failures++ ));; 
+            *) error "Server couldn't start, error code $exc"; (( failures++ ))
         esac
         sleep 5
     done
