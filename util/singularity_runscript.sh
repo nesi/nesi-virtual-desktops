@@ -38,25 +38,25 @@ main (){
 }
 modify_env() {
     # Set paths
-	export PATH="$PATH:/opt/slurm/bin"
+	export PATH="$PATH:/opt/slurm/bin:/opt/nesi/vdt/bin"
 	export CPATH="$CPATH:/opt/slurm/include"
 	export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/opt/slurm/lib64:/opt/slurm/lib64/slurm"
 
     # No check for now. Just do.
     first_time_setup
 
-    # Check if vdt_setup.conf
-    if [ ! -e "${VDT_SETUP:="${VDT_HOME}/vdt_setup.conf"}" ];then
+    # Check if setup.conf
+    if [ ! -e "${VDT_SETUP:="${VDT_HOME}/setup.conf"}" ];then
         mkdir -p "$(dirname "${VDT_SETUP}")"
-        cp "${VDT_ROOT}/util/vdt_setup.conf" "${VDT_SETUP}"
-        debug "Copying default setup from '${VDT_ROOT}/util/vdt_setup.conf' to '$VDT_SETUP'"
+        cp "${VDT_ROOT}/util/setup.conf" "${VDT_SETUP}"
+        debug "Copying default setup from '${VDT_ROOT}/util/setup.conf' to '$VDT_SETUP'"
     fi
     export VDT_SETUP
     debug "Using '${VDT_SETUP}'"
     debug "Using '$SHELL' as SHELL"
     set +e
 
-    # Read each line of vdt_setup.conf
+    # Read each line of setup.conf
     while read -r line;do
         [[ ${line} =~ ^\#.* ]] && continue
         mapfile -t linearray < <(xargs -n1 <<<"${line}")
@@ -78,6 +78,7 @@ Type=Application
 Exec=${linearray[2]}
 Icon=${linearray[3]}
 Name=${name}
+Terminal=true
 EOF
     chmod 760 "${de_name}"
     done  < ${VDT_SETUP}
@@ -101,7 +102,7 @@ assert_vnc() {
     # tmplog="$(mktemp)"
     # tail -f $tmplog > debug &
     while (( failures < max_failures )); do
-        vncserver ${VDT_VNCOPTS} -log "$VNC_LOG" -wm xfce4-session -autokill -securitytypes TLSNone,X509None,None :${VDT_DISPLAY_PORT} > debug 2>&1
+        vncserver ${VDT_VNCOPTS} -log "$VNC_LOG" -wm xfce4-session -autokill -securitytypes TLSNone,X509None,None :${VDT_DISPLAY_PORT}
         exc="$?"
         case $exc in
             98) debug "Server exists and is readable."; sleep $heartbeat;; # 
