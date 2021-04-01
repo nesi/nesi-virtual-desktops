@@ -16,7 +16,8 @@ initialize(){
 initialize
 
 info "Clearing cache"
-rm -rf ${verbose} "$VDT_HOME"/ "$HOME"/.cache/sessions "$HOME"/.cache/gpg-agent-info "$HOME"/.config/xfce4 "$HOME"/.xfce4 "$HOME"/.fontconfig "$HOME"/.gnupg  "$HOME"/.ICEauthority "$HOME"/.Xauthority "$HOME"/.singularity 
+rm -rf ${verbose} "$VDT_HOME"/ "$HOME"/.cache/sessions "$HOME"/.cache/gpg-agent-info "$HOME"/.config/xfce4 "$HOME"/.xfce4 "$HOME"/.fontconfig "$HOME"/.gnupg  "$HOME"/.ICEauthority "$HOME"/.Xauthority
+[[ -n $VDT_HOME && $VDT_HOME != $HOME ]] && rm -rf ${VDT_HOME}
 find /tmp/ -user "$USER" -exec rm -rf {} \; > /dev/null  2>&1 
 find ${VDT_LOCKFILES}/* -user "$USER" -exec rm -rf {}  \; > /dev/null  2>&1
 true
