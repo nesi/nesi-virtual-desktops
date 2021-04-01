@@ -58,6 +58,7 @@ From: nvidia/cuda:11.0-cudnn8-devel-centos7
 	yum -y install libX11
 	yum -y install glibc
 	yum -y install giflib # For ANSYS EM
+	yum -y install yum-utils
 	yum -y install python
 	yum -y install python3
 	yum -y install polkit
@@ -116,6 +117,14 @@ From: nvidia/cuda:11.0-cudnn8-devel-centos7
 	
 	# Non essential stuff below.
 	set +e
+	# Install snap
+	yum -y install snapd
+	systemctl enable --now snapd.socket
+	ln -s /var/lib/snapd/snap /snap
+
+	# Install Firefox
+	snap install firefox
+
 
 	# Patch webs for nicer messages
 	wget https://raw.githubusercontent.com/nesi/nesi-virtual-desktops/main/dep/nesi_websockify.patch
