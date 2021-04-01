@@ -1,9 +1,9 @@
 #!/bin/bash
 export VDT_ROOT="${VDT_ROOT:-"$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd -P)")"}"
 export VDT_SOCKET_PORT=${1}
-export VDT_HOME=${VDT_HOME:-$HOME/.vdt}
+export VDT_HOME=${VDT_HOME:-"$HOME/.vdt"}
 export VDT_BASE_IMAGE="${VDT_BASE_IMAGE:-"${VDT_ROOT}/sif"}"
-
+#export VDT_LOGFILE=${VDT_LOGFILE:-"$(tty)"}
 
 if [ -d ${VDT_BASE_IMAGE} ]; then
     debug "VDT_BASE_IMAGE is directory, looking for .sif"
@@ -19,6 +19,7 @@ mkdir -p "${VDT_HOME}"
 temp_index_html=$(mktemp "$VDT_HOME/XXX")
 echo "<meta http-equiv=\"refresh\" content=\"0; URL='${2}'\"/>" > "$temp_index_html"
 
+export VDT_WEBSOCKOPTS="--verbose --timeout=30"
 export SINGULARITY_BINDPATH="$SINGULARITY_BINDPATH,${temp_index_html}:/opt/noVNC/index.html"
 "$VDT_ROOT/util/singularity_wrapper.sh" run "${VDT_BASE_IMAGE}"
 
