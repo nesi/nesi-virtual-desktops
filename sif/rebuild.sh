@@ -13,6 +13,8 @@ wosif=$(basename ${1%.*})
 export SINGULARITY_TMPDIR=$PWD
 export SINGULARITY_CACHEDIR=$PWD
 
+echo "Go here 'https://cloud.sylabs.io/library' and reset cache"
+
 singularity -q build -r ${wosif}.sif $1
 
 #for arg in $@; do 
