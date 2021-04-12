@@ -163,5 +163,8 @@ EOF
 	export TERM="xterm-256color"
 	export SHELL=/bin/bash
 
+	export EDITOR=gedit
+	export BROWSER=firefox
+
 %runscript 
     . "${VDT_ROOT}/util/singularity_runscript.sh" 
