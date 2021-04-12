@@ -10,8 +10,8 @@ if [[ $# -lt 1 ]];then echo "Not enough args"; exit 1;fi
 
 module load Singularity
 wosif=$(basename ${1%.*})
-export SINGULARITY_TMPDIR=$PWD
-export SINGULARITY_CACHEDIR=$PWD
+export SINGULARITY_TMPDIR=/tmp
+export SINGULARITY_CACHEDIR=/tmp
 
 mv ${wosif}.sif .${wosif}.sif
 

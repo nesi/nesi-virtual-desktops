@@ -137,3 +137,12 @@ This repo is in `/opt/nesi/vdt`
 ~~Currently storing all `.sif` files in `/opt/nesi/containers/images`, `image` in template should link here.~~
 
 Run `rebuild.sh` to update. e.g. `rebuild.sh nesi-virtual-desktops_eng.sif`. 
+
+
+## Testing
+git clone {this}
+cd {this}
+export VDT_ROOT=$PWD
+export VDT_TEST=True
+pip install --user .
+Set to use local directory.

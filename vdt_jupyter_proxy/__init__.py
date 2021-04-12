@@ -34,7 +34,7 @@ def setup_vdt():
 
     jupyter_wrapper = f"{vdt_root}/util/jupyter_proxy_launch.sh"
     icon_path = pkg_resources.resource_filename("vdt_jupyter_proxy", "crap_icon.svg")
-    #launcher_title = "VirtualDesktop"
+    launcher_title = "VirtualDesktop" if "VDT_TEST" in os.environ else "VirtualDesktopTest"
 
     return {
     'command': [jupyter_wrapper, '{port}', 'vnc.html?path={base_url}vdt/vnc.html?resize=remote' ],
@@ -43,7 +43,7 @@ def setup_vdt():
     'new_browser_tab':True,
         "launcher_entry": {
             "icon_path": icon_path,
-            "title": 'VirtualDesktop',
+            "title": launcher_title,
             "enabled": True
         },
     }
