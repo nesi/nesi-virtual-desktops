@@ -30,7 +30,6 @@ set_env(){
 /usr/bin/unzip,\
 /usr/bin/vim"
 
-
     BIND_PATH_REQUIRED="$BIND_PATH_REQUIRED,\
 /run,\
 /dev/tty0,\
@@ -40,6 +39,7 @@ set_env(){
 /usr/bin/gpg-agent,\
 /usr/bin/lsb_release,\
 /usr/share/fonts,\
+/usr/share/X11/fonts,\
 /usr/share/lmod/lmod,\
 /usr/include,\
 /etc/opt/slurm,\
@@ -48,7 +48,8 @@ set_env(){
 /usr/lib64/libGL.so.1.2.0,\
 /usr/lib64/libmunge.so,\
 /usr/lib64/libmunge.so.2,\
-/usr/lib64/libmunge.so.2.0.0"
+/usr/lib64/libmunge.so.2.0.0,\
+/usr/lib64/libgbm.so.1.0.0"
 
     BIND_PATH_CUDA="$BIND_PATH_CUDA,\
 /cm/local/apps/cuda,\
