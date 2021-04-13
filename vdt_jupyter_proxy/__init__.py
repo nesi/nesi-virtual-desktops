@@ -37,7 +37,7 @@ def setup_vdt():
     launcher_title = "VirtualDesktop" if "VDT_TEST" in os.environ else "VirtualDesktopTest"
 
     return {
-    'command': [jupyter_wrapper, '{port}', 'vnc.html?path={base_url}vdt/vnc.html?resize=remote' ],
+    'command': [jupyter_wrapper, '{port}', 'vnc.html?path={base_url}vdt/vnc.html?resize=remote?autoconnect=true' ],
     'timeout': 100,
     'absolute_url': False,
     'new_browser_tab':True,
