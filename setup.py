@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="vdt_jupyter_proxy",
-    version="2.1.2",
+    version="2.1.3",
     description="launch vdt from jupyterproxy",
     url="git-repo-here",
     packages=find_packages(),
