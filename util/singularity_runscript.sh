@@ -11,25 +11,14 @@ initialize(){
 }
 
 main (){
-#     if [[ -z $VDT_DISPLAY_PORT ]]; then echo "'VDT_DISPLAY_PORT' not set, did you launch this container correctly?";exit 1;fi    
-#     if [[ -z $VDT_SOCKET_PORT ]]; then echo "'VDT_SOCKET_PORT' not set, did you launch this container correctly?";exit 1;fi    
-#     if [[ -z $VDT_LOGFILE ]]; then echo "'VDT_LOGFILE' not set, did you launch this container correctly?";exit 1;fi  
-    # Return error if any non optional envs not set.
     initialize
     
-    # Source setup scri
+    # Source setup scripts
     if [[ -x "$VDT_SETUP" ]]; then source "${VDT_SETUP}";fi # Should only be set if 'first time'
     if [[ -x "$VDT_POST" ]]; then source "${VDT_POST}";fi
 
     modify_env
 
-    # Method 1: 
-    #/opt/websockify/run ${VDT_WEBSOCKOPTS} --web /opt/noVNC localhost:${VDT_SOCKET_PORT} -- vncserver ${VDT_VNCOPTS} -log ${VDT_LOGFILE} -wm xfce4-session -autokill -fg -securitytypes TLSNone,X509None,None #:$((VDT_DISPLAY_PORT+5900))
-    
-    # Method 2: Working but bad.
-    #vncserver ${VDT_VNCOPTS} -log ${VDT_LOGFILE} -wm xfce4-session -autokill -securitytypes TLSNone,X509None,None :$VDT_DISPLAY_PORT && /opt/websockify/run ${VDT_WEBSOCKOPTS} --web /opt/noVNC localhost:$VDT_SOCKET_PORT :$((VDT_DISPLAY_PORT+5900)) 
-    
-    # Method 3: Currently Working.''
     /opt/websockify/run ${VDT_WEBSOCKOPTS} --web /opt/noVNC localhost:$VDT_SOCKET_PORT :$((VDT_DISPLAY_PORT+5900)) &
     assert_vnc # This command will continue running unless server can no longer be found 
     wait
@@ -37,54 +26,16 @@ main (){
     
 }
 modify_env() {
+    module purge > /dev/null 2>&1
+    module unload XALT/NeSI -q
     # Set paths
 	export PATH="$PATH:/opt/slurm/bin:/opt/nesi/vdt/bin"
 	export CPATH="$CPATH:/opt/slurm/include"
 	export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/opt/slurm/lib64:/opt/slurm/lib64/slurm"
 
-    # No check for now. Just do.
-    first_time_setup
-
-    # Check if setup.conf
-    if [ ! -e "${VDT_SETUP:="${VDT_HOME}/setup.conf"}" ];then
-        mkdir -p "$(dirname "${VDT_SETUP}")"
-        cp "${VDT_ROOT}/util/setup.conf" "${VDT_SETUP}"
-        debug "Copying default setup from '${VDT_ROOT}/util/setup.conf' to '$VDT_SETUP'"
-    fi
-    export VDT_SETUP
-    debug "Using '${VDT_SETUP}'"
     debug "Using '$SHELL' as SHELL"
-    set +e
-
-    # Read each line of setup.conf
-    while read -r line;do
-        [[ ${line} =~ ^\#.* ]] && continue
-        mapfile -t linearray < <(xargs -n1 <<<"${line}")
-
-        #Load module if applicable
-        if [ -n "${linearray[0]}" ];then
-            module load ${linearray[0]}
-        fi
-        name=${linearray[1]}
-
-        # Path to desktop entry
-        de_name="$HOME/Desktop/${name//[^a-zA-Z0-9]/}.desktop"
-
-        [ -e "$de_name" ] && continue
-        # If icon doesn't already exist. Write one.
-cat << EOF > ${de_name}
-[Desktop Entry]
-Type=Application
-Exec=${linearray[2]}
-Icon=${linearray[3]}
-Name=${name}
-Terminal=true
-EOF
-    chmod 760 "${de_name}"
-    done  < ${VDT_SETUP}
-    set -e
-
-        # CUDA specific.
+    
+    # CUDA specific.
     if [[ -n ${EBROOTCUDA} ]];then
         debug "exporting additional CUDA paths"
         #export CMAKE_LIBRARY_PATH="$CMAKE_LIBRARY_PATH:${EBROOTCUDA}/lib64"
@@ -95,6 +46,11 @@ EOF
         export PATH="$EBROOTCUDA:$EBROOTCUDA/nvvm/bin:$EBROOTCUDA/bin:/cm/local/apps/cuda/libs/current/bin:/cm/local/apps/cuda/libs/current/lib64:$PATH"
         #export XDG_DATA_DIRS="$XDG_DATA_DIRS:$EBROOTCUDA/share"
     fi
+
+    # VDT_POST is a script that is run before starting XFCE.
+    if [ -x "${VDT_POST:=${VDT_HOME}/vdtrc.sh}" ];then
+        source ${VDT_POST}
+    fi    
 }
 assert_vnc() {
     max_failures=4; failures=0
@@ -120,40 +76,10 @@ chekenv(){
         if [[ -z ${!var} ]]; then error "'\$${var}' not set, did you launch this container correctly?";fi 
     done
 }
-
-create_directory_links(){
-    # Create links to projects. (max 8)
-    read -ra pj <<<$(find "/nesi/project/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" -writable -type d)
-    read -ra nb <<<$(find "/nesi/nobackup/" -maxdepth 1 -mindepth 1 -iname "*[0-9]" -writable -type d)
-
-    if [[ $(echo "${pj[@]}" | wc -w) -gt 8 ]];then
-        pjd="/_projects"
-        mkdir "${XDG_DESKTOP_DIR}${pjd}"
-    fi
-    if [[ $(echo "${nb[@]}" | wc -w) -gt 8 ]];then
-        nbd="/_nobackup"
-        mkdir "${XDG_DESKTOP_DIR}${nbd}"
-    fi
-    for proj in "${pj[@]}";do
-        ln -sv "$proj" "${XDG_DESKTOP_DIR}${pjd}/project_$(basename $proj)" 2>/dev/null
-    done
-    for proj in "${nb[@]}";do
-        ln -sv "$proj" "${XDG_DESKTOP_DIR}${nbd}/nobackup_$(basename $proj)" 2>/dev/null
-    done
-}
-
-first_time_setup(){
-    # Check destop directory exists.
-    mkdir -vp "${XDG_DESKTOP_DIR:=$HOME/Desktop}"
-    create_directory_links
-}
-
-
 cleanup(){
     unset DISPLAY
     xfce4-session-logout --halt > /dev/null 2>&1
 }
 
 trap cleanup INT ERR SIGINT SIGTERM
-
 main 

@@ -17,8 +17,8 @@ from pathlib import Path
 
 def setup_vdt():
 
-    def_vdt="/opt/nesi/vdt"
-    #def_vdt="/nesi/project/nesi99999/Callum/vdt"
+    #def_vdt="/opt/nesi/vdt"
+    def_vdt="/nesi/project/nesi99999/Callum/vdt"
 
     vdt_root = os.getenv('VDT_ROOT',def_vdt)
     account = os.environ["SLURM_JOB_ACCOUNT"]
@@ -32,9 +32,10 @@ def setup_vdt():
     #     # If no.
 
 
+
     jupyter_wrapper = f"{vdt_root}/util/jupyter_proxy_launch.sh"
     icon_path = pkg_resources.resource_filename("vdt_jupyter_proxy", "crap_icon.svg")
-    launcher_title = "VirtualDesktop" if "VDT_TEST" in os.environ else "VirtualDesktopTest"
+    launcher_title = "VirtualDesktopTest" if "VDT_TEST" in os.environ else "VirtualDesktop"
 
     return {
     'command': [jupyter_wrapper, '{port}', 'vnc.html?path={base_url}vdt/vnc.html&autoconnect=true&resize=remote' ],

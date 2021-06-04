@@ -16,6 +16,8 @@ set_env(){
     module purge > /dev/null  2>&1
     module load Python Singularity/3.6.1 -q 
     module unload XALT/NeSI -q
+
+    
     module load CUDA
 
     set_display "$_display_port"
@@ -49,7 +51,9 @@ set_env(){
 /usr/lib64/libmunge.so,\
 /usr/lib64/libmunge.so.2,\
 /usr/lib64/libmunge.so.2.0.0,\
-/usr/lib64/libgbm.so.1.0.0"
+/usr/lib64/libgbm.so.1.0.0,\
+/lib/libjpeg.so.62,\
+/lib64/libjpeg.so"
 
     BIND_PATH_CUDA="$BIND_PATH_CUDA,\
 /cm/local/apps/cuda,\

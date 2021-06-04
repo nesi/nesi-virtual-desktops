@@ -6,11 +6,12 @@ export VDT_BASE_IMAGE="${VDT_BASE_IMAGE:-"${VDT_ROOT}/sif"}"
 #export VDT_LOGFILE=${VDT_LOGFILE:-"$(tty)"}
 
 if [ -d ${VDT_BASE_IMAGE} ]; then
-    debug "VDT_BASE_IMAGE is directory, looking for .sif"
+    echo  "VDT_BASE_IMAGE is directory, looking for .sif"
     VDT_BASE_IMAGE="${VDT_BASE_IMAGE}/*.sif"
 fi
 if [ ! -x ${VDT_BASE_IMAGE} ]; then
-    error "'${VDT_BASE_IMAGE}' is not a valid container"
+    echo "'${VDT_BASE_IMAGE}' is not a valid container"
+    exit 1
 fi 
 
 # Create a temporary index.html file, bind over existing one.
