@@ -102,7 +102,7 @@ $VDT_ROOT"
         kill -9 $(fuser "$VDT_SOCKET_PORT"/tcp 2>/dev/null | awk '{ print $1 }')
     done
     
-    lockfile="${VDT_LOCKFILES}/${VDT_INSTANCE_NAME}.${remote:-$(hostname)}:${VDT_SOCKET_PORT}"
+    lockfile="${VDT_HOME}/${remote:-$(hostname)}:${VDT_SOCKET_PORT}@${SLURM_JOB_ID}"
 
 }
 
@@ -115,7 +115,7 @@ create_vnc(){
         lennut
     fi
     #"${timeout}" s
-    echo $$ > ${lockfile}
+    echo $$ > ${lockfile} 
     
     cmd="singularity --debug $*"
     debug "$cmd"
