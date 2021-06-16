@@ -14,42 +14,50 @@ Click the button ya dummy.
 ## Files
 ```
 vdt/
-├── bin
+├── bin/
 │   ├── vdt
 │   ├── vdt_clean
 │   ├── vdt_kill
 │   ├── vdt_list
 │   ├── vdt_shell
 │   └── vdt_start
-├── dep
+├── dep/
 │   └── nesi_websockify.patch
-├── lockfiles/
-├── sif
+├── setup_scripts/
+│   ├── nesi_engineering.sh
+│   └── nesi.sh
+├── sif/
 │   ├── rebuild.sh
 │   └── vdt_base.def
-├── tests
+├── tests/
 │   └── test.sh
-├── util
+├── util/
 │   ├── common.sh
 │   ├── jupyter_proxy_launch.sh
 │   ├── singularity_runscript.sh
 │   └── singularity_wrapper.sh
+├── vdt_jupyter_proxy/
+│   ├── __init__.py
+│   └── crap_icon.svg
+├── setup.py
+├── vdt
 └── README.md
 ```
 
 ### `bin/`
 For terrible code that should be thrown away.
-User commands. Elaborate here maye.
-
+User commands. Elaborate here maybe.
+From mostly dep'd non-jupyter use.
 ### `dep/`
 Dependencies. When developing, have copies of them here. 
 #### `nesi_websockify.diff`
 A patchfile used during container build.
-### `lockfiles/`
-Where lockfiles are currently being put. Should be empty in this repo.
-
-Deprecated
-
+### `setup_scripts/`
+Optional scripts designed to be run at first time setup.
+#### `nesi.sh`
+Adds some applications and symlinks to user projects.
+#### `nesi_engineering.sh`
+Engineering flavour desktop.
 ### `sif/`
 For singularity stuff. Probably put image here.
 #### `rebuild.sh`
@@ -73,6 +81,11 @@ Don't
 For setuptools
 ## Enviroment Variables
 All of these variables are passed to the container during start.
+
+### VDT_LOGFILE
+
+./bin/vdt_start
+`"/dev/null"`
 
 ### VDT_ROOT
 
