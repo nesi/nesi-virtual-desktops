@@ -12,14 +12,6 @@ parse_input(){
 }
 
 set_env(){
-
-    module purge > /dev/null  2>&1
-    module load Python Singularity/3.6.1 -q 
-    module unload XALT/NeSI -q
-
-    
-    module load CUDA
-
     set_display "$_display_port"
 
     # Apps that dont need a special install.
@@ -69,13 +61,10 @@ $VDT_ROOT"
     export SINGULARITY_BINDPATH="$SINGULARITY_BINDPATH,$BIND_PATH_REQUIRED,$BIND_PATH_FS,$BIND_PATH_APPS,$BIND_PATH_CUDA"
     debug "Singularity bindpath is $(echo "${SINGULARITY_BINDPATH}" | tr , '\n')"
    
-
     export SINGULARITYENV_CUDA_HOME="${EBROOTCUDA}"
     export SINGULARITYENV_CUDA_ROOT="${EBROOTCUDA}"
     export SINGULARITYENV_CUDA_PATH="${EBROOTCUDA}"
     export SINGULARITYENV_EBROOTCUDA="${EBROOTCUDA}"
-
-
 
     # If environment setup for desktop flavor.
     if [[ -f "${VDT_TEMPLATES}/${VDT_BASE}/pre.sh" ]];then
@@ -109,17 +98,31 @@ $VDT_ROOT"
 create_vnc(){   
     # Set instance name
     #if [[ ! -x  "$(readlink -f "$VDT_TEMPLATES/$VDT_BASE/image")" ]];then echo "'$VDT_TEMPLATES/$VDT_BASE/image' doesn't exist!";exit 1;fi
+    cmd="singularity --debug $1"
+    shift
 
-    #touch "${lockfile}"
+    VDT_OVERLAY=${VDT_OVERLAY:-"$VDT_HOME/overlay.img"}
+
+    OVERLAY_SIZE=1000
+    OVERLAY="FALSE"
+    
+    if [[ ${OVERLAY} == "TRUE" ]];then
+        if [[ ! -r ${VDT_OVERLAY} ]];then
+            # Create overlay
+            dd if=/dev/zero of=$VDT_OVERLAY bs=1M count=$OVERLAY_SIZE
+            mkfs.ext3 $VDT_OVERLAY
+        fi
+        cmd="$cmd --overlay $VDT_OVERLAY"
+    fi
+
     if [[ -n ${VDT_TUNNEL_HOST} ]];then 
         lennut
     fi
     #"${timeout}" s
-    echo $$ > ${lockfile} 
-    
-    cmd="singularity --debug $*"
+    cmd="$cmd $*"
     debug "$cmd"
     ${cmd}
+    echo $$ > ${lockfile} 
 }
 
 set_display (){
@@ -127,6 +130,7 @@ set_display (){
     max_i=4;
     for (( i=0; i<max_i; i++ )); do
         VDT_DISPLAY_PORT=${1:-$(shuf -i 1100-2000 -n 1)}
+        debug "Testing display port ${VDT_DISPLAY_PORT}"
         if [[ ! -e "/tmp/.X11-unix/X{$VDT_DISPLAY_PORT}" ]];then return 0;fi
         if [[ $# -gt 0 ]];then echo "Selected display port ${1} not suitable."; return 2;fi
     done

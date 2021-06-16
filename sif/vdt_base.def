@@ -81,9 +81,10 @@ From: nvidia/cuda:11.0-cudnn8-devel-centos7
 	yum -y install libvncserver
 	yum -y install bash-completion 
 	yum -y install libcanberra-gtk3
+	yum -y install hwloc-libs #For ANSYS 2019R3
 	yum -y install libXext-devel.x86_64
 	yum -y install bash-completion-extras
-	yum -y install -y gcc-c++ # Needed to compile Websocketify rebind lib.
+	yum -y install gcc-c++ # Needed to compile Websocketify rebind lib.
 	
 	yum -y install tcl-8.5.13-8.el7.x86_64 \
 	lua-filesystem-1.6.2-2.el7.x86_64 \
@@ -116,7 +117,9 @@ From: nvidia/cuda:11.0-cudnn8-devel-centos7
 	
 	# noVNC
 	mkdir -p /opt/noVNC
-  	git clone https://github.com/novnc/noVNC/ /opt/noVNC
+  	#git clone https://github.com/novnc/noVNC/ /opt/noVNC
+	# Optional. Adds better copy paste support
+	git clone https://github.com/juanjoDiaz/noVNC.git /opt/noVNC
 	echo "<meta http-equiv=\"refresh\" content=\"0; URL='vnc.html'\"/>" > /opt/noVNC/index.html
 	
 	# Non essential stuff below.
@@ -162,11 +165,6 @@ EOF
 	export PATH=${PATH}:/opt/TurboVNC/bin
 	
 	# General
-	export LANG="en_US.UTF-8"
-	export LANGUAGE="en_US"
-	export TZ="Pacific/Auckland"
-	export LC_ALL=C
-	export VGL_VERBOSE=1y
 	export TERM="xterm-256color"
 	export SHELL=/bin/bash
 

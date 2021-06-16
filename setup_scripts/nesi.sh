@@ -25,16 +25,11 @@ create_directory_links(){
 }
 
 create_icon(){
-        #[[ ${line} =~ ^\#.* ]] && continue
-        #mapfile -t linearray < <(xargs -n1 <<<"${line}")
-
-        name=$1
-
-        # Path to desktop entry
-        de_name="$HOME/Desktop/${name//[^a-zA-Z0-9]/}.desktop"
-
-        # If icon doesn't already exist. Write one.
-cat << EOF > ${de_name}
+    name=$1
+    # Path to desktop entry
+    de_name="${name//[^a-zA-Z0-9]/}"
+    # Add icon to desktop, and to applications list
+cat << EOF > ${XDG_DESKTOP_DIR}/${de_name}.desktop"
 [Desktop Entry]
 Type=Application
 Exec=${2}
@@ -42,10 +37,26 @@ Icon=${3}
 Name=${name}
 Terminal=false
 EOF
-chmod 760 "${de_name}"
+
+chmod 760 -v "${XDG_DESKTOP_DIR}/${de_name}.desktop" "${XDG_DATA_HOME}/${de_name}.desktop"
+
+IFS=',' read -r -a fileassoc <<< ${5}
+for f in "${fileassoc[@]}";do
+    xdg-mime default "${de_name}.desktop" $f
+done
+
 }
+
+cat << EOF > ${XDG_DESKTOP_DIR}/support.desktop
+[Desktop Entry]
+Encoding=UTF-8
+Name=Support
+Type=Link
+URL=https://support.nesi.org.nz/hc/en-gb
+Icon=text-html
+EOF
+
+chmod 760 -v ${XDG_DESKTOP_DIR}/support.desktop
 
 create_directory_links
 create_icon "Terminal" "bash -c 'exo-open --launch TerminalEmulator'" "utilities-terminal"
-
-

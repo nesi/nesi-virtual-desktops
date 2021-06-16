@@ -29,7 +29,7 @@ done
 
 }
 
-create_icon "MATLAB 2020a" "matlab" "opt/nesi/share/MATLAB/R2020a/bin/glnxa64/cef_resources/matlab_icon.png" "text/m,application/mat"
+create_icon "MATLAB 2019b" "matlab" "/opt/nesi/share/MATLAB/R2019b/bin/glnxa64/cef_resources/matlab_icon.png" "text/m,application/mat"
 create_icon "CFX5" "cfx5launch" "/opt/nesi/share/ANSYS/v202/Addins/Images/CFX.ico"
 create_icon "Fluent" "fluent" "/opt/nesi/share/ANSYS/v202/commonfiles/images/workbench.ico"
 create_icon "ANSYS Workbench 2020R2" "runwb2" "/opt/nesi/share/ANSYS/v202/commonfiles/images/workbench.ico"
@@ -46,7 +46,7 @@ cat << EOF >> ${VDT_HOME}/vdtrc.sh
 module load ANSYS/2020R2
 module load COMSOL/5.5
 module load ABAQUS/2020
-module load MATLAB/2020b
+module load MATLAB/2019b
 module load OpenFOAM
 EOF
 

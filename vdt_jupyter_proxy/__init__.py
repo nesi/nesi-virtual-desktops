@@ -39,7 +39,7 @@ def setup_vdt():
 
     return {
     'command': [jupyter_wrapper, '{port}', 'vnc.html?path={base_url}vdt/vnc.html&autoconnect=true&resize=remote' ],
-    'timeout': 100,
+    'timeout': 300,
     'absolute_url': False,
     'new_browser_tab':True,
         "launcher_entry": {

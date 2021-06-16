@@ -8,10 +8,11 @@ VDT_HOME=${VDT_HOME:-"$HOME/.vdt"}
 VDT_LOCKFILES=${VDT_LOCKFILES:-"$VDT_ROOT/lockfiles"} 
 #VDT_TEMPLATES=${VDT_TEMPLATES:-"$VDT_ROOT/templates"}
 VDT_LOGFILE=${VDT_LOGFILE:-"/dev/null"}
+support_docs="https://support.nesi.org.nz/hc/en-gb/articles/360001600235-Connecting-to-a-Virtual-Desktop"
 
 debug(){
     if [[ -n ${verbose} || $LOGLEVEL = "DEBUG" ]];then
-        echo "DEBUG: ${FUNCNAME[1]}::${BASH_LINENO[-1]} $*"
+        echo "DEBUG: ${FUNCNAME[1]}::${BASH_LINENO[-1]} ${BASH_LINENO[-1]} $*"
     fi
     echo "$*" >> "${VDT_LOGFILE}"
 }
@@ -251,4 +252,3 @@ test_liveness(){
 
 debug "Common files sourced."
 debug "${BASH_SOURCE[*]}"
-export support_docs="https://support.nesi.org.nz/hc/en-gb/articles/360001600235-Connecting-to-a-Virtual-Desktop"

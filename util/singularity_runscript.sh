@@ -6,16 +6,16 @@ set +o posix
 # e.g. this script needs to be called from inside the container.
 
 initialize(){
-    chekenv "VDT_SOCKET_PORT" "VDT_LOGFILE" "VDT_ROOT"
+    chekenv "VDT_SOCKET_PORT" "VDT_DISPLAY_PORT" "VDT_LOGFILE" "VDT_ROOT"
     source "${VDT_ROOT}/util/common.sh"
 }
 
 main (){
     initialize
     
-    # Source setup scripts
-    if [[ -x "$VDT_SETUP" ]]; then source "${VDT_SETUP}";fi # Should only be set if 'first time'
-    if [[ -x "$VDT_POST" ]]; then source "${VDT_POST}";fi
+    # # Source setup scripts
+    # if [[ -x "$VDT_SETUP" ]]; then source "${VDT_SETUP}";fi # Should only be set if 'first time'
+    # if [[ -x "$VDT_POST" ]]; then source "${VDT_POST}";fi
 
     modify_env
 
@@ -26,8 +26,6 @@ main (){
     
 }
 modify_env() {
-    module purge > /dev/null 2>&1
-    module unload XALT/NeSI -q
     # Set paths
 	export PATH="$PATH:/opt/slurm/bin:/opt/nesi/vdt/bin"
 	export CPATH="$CPATH:/opt/slurm/include"
@@ -52,14 +50,19 @@ modify_env() {
         source ${VDT_POST}
     fi    
 }
+
 assert_vnc() {
     max_failures=4; failures=0
     heartbeat=15
     # tmplog="$(mktemp)"
     # tail -f $tmplog > debug &
     while (( failures < max_failures )); do
-        vncserver ${VDT_VNCOPTS} -log "$VNC_LOG" -wm xfce4-session -autokill -securitytypes TLSNone,X509None,None :${VDT_DISPLAY_PORT}
+        #vncserver ${VDT_VNCOPTS} -log "$VNC_LOG" -wm xfce4-session -autokill -securitytypes TLSNone,X509None,None :${VDT_DISPLAY_PORT}
+        cmd="vncserver ${VDT_VNCOPTS} -wm xfce4-session -autokill -securitytypes TLSNone,X509None,None :${VDT_DISPLAY_PORT}"
+        debug "Running command '${cmd}'"
+        ${cmd}
         exc="$?"
+        debug "returned exit code '${exc}"
         case $exc in
             98) debug "Server exists and is readable."; sleep $heartbeat;; # 
             0) debug "Server started. Testing...";; 
