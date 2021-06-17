@@ -7,7 +7,7 @@ See [Connecting to a Virtual Desktop](https://support.nesi.org.nz/hc/en-gb/artic
 ### Through JupyterHub
 Click the button ya dummy.
 #### Installation
-`pip install --user git+https://github.com/nesi/nesi-virtual-desktops --install-option="--setup=engineering"`
+`pip install --user git+https://github.com/nesi/nesi-virtual-desktops --install-option="--setup=nesi,nesi_engineering"`
 
   ##### Setuptools install options
   Setuptools arguments can be invoked when using `pip` with the `--install-option` flag.
