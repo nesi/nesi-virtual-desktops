@@ -7,7 +7,16 @@ See [Connecting to a Virtual Desktop](https://support.nesi.org.nz/hc/en-gb/artic
 ### Through JupyterHub
 Click the button ya dummy.
 #### Installation
-`pip install --user git+https://github.com/nesi/nesi-virtual-desktops`
+`pip install --user git+https://github.com/nesi/nesi-virtual-desktops --install-option="--setup=engineering"`
+
+  ##### Setuptools install options
+  Setuptools arguments can be invoked when using `pip` with the `--install-option` flag.
+  e.g. `pip install --user 
+  * ```--setup=[script1],[script2],...```
+  Scripts can be placed in `setup_scripts` to set up certain 'flavors' of desktop.
+  Takes comma delimited list of scripts. If script exists in `setup_scripts` that script will be run post installation.
+   e.g. `--setup=nesi,nesi_engineering` will run `./setup_scripts/nesi.sh` then `./setup_scripts/nesi.sh` 
+
 #### Unstallation
 `pip uninstall vdt-jupyter-proxy`
 
