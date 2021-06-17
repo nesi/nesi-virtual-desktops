@@ -16,10 +16,12 @@ export SINGULARITY_CACHEDIR=/tmp
 
 rm -rf .${wosif}.sif && mv ${wosif}.sif .${wosif}.sif || true 
 
-
-echo "Go here 'https://cloud.sylabs.io/library' and reset cache"
-singularity -q build -r ${wosif}.sif $1
-
+if $($USER == "nesi-apps-admin");then
+    cp /nesi/project/nesi99999/Callum/vdt/sif/vdt_base.sif .
+else 
+    echo "Go here 'https://cloud.sylabs.io/library' and reset cache"
+    singularity -q build -r ${wosif}.sif $1
+fi
 #for arg in $@; do 
 
 #f [[ -f $arg]]; do
