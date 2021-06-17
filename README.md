@@ -89,67 +89,34 @@ Don't
 ### `setup.py`
 For setuptools
 ## Enviroment Variables
-All of these variables are passed to the container during start.
+Any variable starting with `VDT_` will be passed to the container during start.
+However, unlike with `SINGULARITYENV_` the prefix will be kept. 
+`SINGULARITYENV_ENV`  ->  `ENV` 
 
-### VDT_LOGFILE
+`DT_ENV`  ->  `VDT_ENV`
 
-./bin/vdt_start
-`"/dev/null"`
-
-### VDT_ROOT
-
-Location of this repo.
-
-### VDT_HOME 
-
-For lockfiles
-
-`"$HOME/.vdt"`
-
-### VDT_SETUP
-Location of setup file.
-
-`$VDT_HOME/vdt_setup.conf`
-
-### VDT_LOCKFILES
-Location of lockfiles.
-
-`"$VDT_ROOT/lockfiles"`
-### VDT_TEMPLATES 
-Location of templates. See templates.
-
-`"$VDT_ROOT/templates"`
-### VDT_BASE
-Selected template.
-
-`"default"`
-### VDT_INSTANCE_NAME
-Name used for Singularity instance.
-
-`"${VDT_BASE}_${USER}"`
-### VDT_LOGFILE
-Location of logfile.
-Amalgumation of
-* Messages from these scripts.
-* vncserver -log
-
-`"${VDT_HOME}/${VDT_INSTANCE_NAME}.${remote:-$(hostname)}:${VDT_SOCKET_PORT}.log"}"`
-### VDT_SOCKET_PORT
-Forwarded port used to connect to websockify. 
-Must be input by user.
-### VDT_DISPLAY_PORT
-Display port used by vnc.
-Random nubmer between 1100 and 2000
-### VDT_WEBSOCKOPTS
-Additional options to pass to websockify.
-### VDT_VNCOPTS
-Additional options to pass to vnc.
+| ENV_VAR  | Default | Purpose | Set/Referenced |
+| ------------- | ------------- | ------------- | ------------- |
+| VDT_LOGFILE  | `"/dev/null"` | Location of logfile. | `vncserver -log`
+| VDT_ROOT  |  | Location of this repo. | |
+| VDT_HOME | `"$HOME/.vdt"` | | |
+| VDT_SETUP |`$VDT_HOME/vdt_setup.conf`| Location of setup file. ||
+| VDT_LOCKFILES | `"$VDT_ROOT/lockfiles"` | dep |
+| VDT_LOCKFILE | `"$VDT_LOCKFILES/"` | dep |
+| VDT_TEMPLATES | `"$VDT_ROOT/templates"` | dep|||
+| VDT_BASE | `"default"` | | dep |||
+| VDT_INSTANCE_NAME | `"${VDT_BASE}_${USER}"` | dep |
+| VDT_SOCKET_PORT | | Forwarded port used to connect to websockify. | Set by user |
+| VDT_DISPLAY_PORT | Random nubmer between 1100 and 2000 | Display port used by vnc. |
+| VDT_WEBSOCKOPTS | | Additional options to pass to websockify. |
+| VDT_VNCOPTS | | Additional options to pass to vnc ||
 
 ## Other Enviroment Variables
-### XDG_CONFIG_HOME
-Location of desktop setup.
 
-`"$HOME/.config"`
+| ENV_VAR  | Default | Purpose | Set/Referenced |
+| ------------- | ------------- | ------------- | ------------- |
+| XDG_CONFIG_HOME |`$HOME/.config` | Location of desktop setup. | 
+
 
 ## Notes for supporting on Mahuika
 
