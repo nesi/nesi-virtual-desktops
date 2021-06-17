@@ -97,26 +97,29 @@ However, unlike with `SINGULARITYENV_` the prefix will be kept.
 
 | ENV_VAR  | Default | Purpose | Set/Referenced |
 | ------------- | ------------- | ------------- | ------------- |
-| VDT_LOGFILE  | `"/dev/null"` | Location of logfile. | `vncserver -log`
-| VDT_ROOT  |  | Location of this repo. | |
-| VDT_HOME | `"$HOME/.vdt"` | | |
+| VDT_LOGFILE  | `"/dev/null"` | Location of logfile. | `vncserver -log`/`util/common.sh` 
+| VDT_ROOT  |  | Location of this repo. |  /`sif/vdt_base.def`,`util/common.sh` |
+| VDT_HOME | `"$HOME/.vdt"` | | `util/common.sh` |
 | VDT_SETUP |`$VDT_HOME/vdt_setup.conf`| Location of setup file. ||
-| VDT_LOCKFILES | `"$VDT_ROOT/lockfiles"` | dep |
-| VDT_LOCKFILE | `"$VDT_LOCKFILES/"` | dep |
-| VDT_TEMPLATES | `"$VDT_ROOT/templates"` | dep|||
-| VDT_BASE | `"default"` | | dep |||
+| VDT_LOCKFILES | `"$VDT_ROOT/lockfiles"` | dep | `util/common.sh` 
+| VDT_LOCKFILE | `"$VDT_LOCKFILES/"` | dep | `util/common.sh` 
+| VDT_TEMPLATES | `"$VDT_ROOT/templates"` | dep|`util/common.sh` 
+| VDT_BASE | `"default"` | dep |||
+| VDT_BASE_IMAGE | `"default"` | dep |||
 | VDT_INSTANCE_NAME | `"${VDT_BASE}_${USER}"` | dep |
 | VDT_SOCKET_PORT | | Forwarded port used to connect to websockify. | Set by user |
 | VDT_DISPLAY_PORT | Random nubmer between 1100 and 2000 | Display port used by vnc. |
 | VDT_WEBSOCKOPTS | | Additional options to pass to websockify. |
 | VDT_VNCOPTS | | Additional options to pass to vnc ||
 
+*Not complete list*
+
 ## Other Enviroment Variables
 
 | ENV_VAR  | Default | Purpose | Set/Referenced |
 | ------------- | ------------- | ------------- | ------------- |
 | XDG_CONFIG_HOME |`$HOME/.config` | Location of desktop setup. | 
-
+| XDG_DATA_HOME | | Can't remember |  |
 
 ## Notes for supporting on Mahuika
 
@@ -129,9 +132,15 @@ Run `rebuild.sh` to update. e.g. `rebuild.sh nesi-virtual-desktops_eng.sif`.
 
 
 ## Testing
-git clone {this}
-cd {this}
+```
+git clone https://github.com/nesi/nesi-virtual-desktops.git
+cd nesi-virtual-desktops
+```
+Make changes.
+Set debug and install from local.
+```
 export VDT_ROOT=$PWD
+export LOGLEVEL=DEBUG
 export VDT_TEST=True
 pip install --user .
-Set to use local directory.
+```
