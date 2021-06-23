@@ -17,6 +17,20 @@ Click the button ya dummy.
   Takes comma delimited list of scripts. If script exists in `setup_scripts` that script will be run post installation.
    e.g. `--setup=nesi,nesi_engineering` will run `./setup_scripts/nesi.sh` then `./setup_scripts/nesi.sh` 
 
+##### Installation for Testing
+```
+git clone https://github.com/nesi/nesi-virtual-desktops.git
+cd nesi-virtual-desktops
+```
+Make changes.
+Set debug and install from local.
+```
+export VDT_ROOT=$PWD
+export LOGLEVEL=DEBUG
+export VDT_TEST=True
+pip install -e --user .
+```
+
 #### Unstallation
 `pip uninstall vdt-jupyter-proxy`
 
@@ -130,17 +144,3 @@ This repo is in `/opt/nesi/vdt`
 
 Run `rebuild.sh` to update. e.g. `rebuild.sh nesi-virtual-desktops_eng.sif`. 
 
-
-## Testing
-```
-git clone https://github.com/nesi/nesi-virtual-desktops.git
-cd nesi-virtual-desktops
-```
-Make changes.
-Set debug and install from local.
-```
-export VDT_ROOT=$PWD
-export LOGLEVEL=DEBUG
-export VDT_TEST=True
-pip install --user .
-```
