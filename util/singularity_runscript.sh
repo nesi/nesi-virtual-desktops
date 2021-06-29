@@ -63,15 +63,18 @@ assert_vnc() {
         ${cmd}
         exc="$?"
         debug "returned exit code '${exc}"
-        case $exc in
-            98) debug "Server exists and is readable."; sleep $heartbeat;; # 
-            0) debug "Server started. Testing...";; 
-            29) error "Port ${VDT_DISPLAY_PORT} is in use by someone else."; (( failures++ ));; 
-            *) error "Server couldn't start, error code $exc"; (( failures++ ))
-        esac
-        sleep 5
+            case $exc in
+                98) debug "Server exists and is readable."; sleep $heartbeat;; # 
+                0) debug "Server started." && break;; 
+                29) error "Port ${VDT_DISPLAY_PORT} is in use by someone else."; (( failures++ ));; 
+                *) error "Server couldn't start, error code $exc"; (( failures++ ))
+            esac
+            sleep 5
     done
-    error "Could not start server after $max_i attempts. Try another port."
+    if (( failures >= max_failures )); then
+        error "Could not start server after $max_i attempts. Try another port."
+        exit 1
+    fi
 }
 
 chekenv(){

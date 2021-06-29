@@ -17,12 +17,12 @@ from pathlib import Path
 
 def setup_vdt():
 
-    def_vdt="/opt/nesi/vdt"
-    #def_vdt="/nesi/project/nesi99999/Callum/vdt"
+    #def_vdt="/opt/nesi/vdt"
+    def_vdt="/nesi/project/nesi99999/Callum/vdt"
 
     vdt_root = os.getenv('VDT_ROOT',def_vdt)
     account = os.environ["SLURM_JOB_ACCOUNT"]
-    os.environ["LOGLEVEL"] = "DEBUG"
+    # os.environ["LOGLEVEL"] = "DEBUG"
 
     # # See if can find central install.
     # try:
@@ -30,8 +30,6 @@ def setup_vdt():
     #     #rstudio_password = (home_path / ".rstudio_server_password").read_text()
     # except FileNotFoundError:
     #     # If no.
-
-
 
     jupyter_wrapper = f"{vdt_root}/util/jupyter_proxy_launch.sh"
     icon_path = pkg_resources.resource_filename("vdt_jupyter_proxy", "crap_icon.svg")

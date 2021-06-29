@@ -43,6 +43,8 @@ From: nvidia/cuda:11.0-cudnn8-devel-centos7
 #    -xfwm4-theme-nodoka
 	
 	yum -y install xfce4-notifyd 
+	yum -y install xfce4-systemload-plugin 
+	yum -y install xfce4-eyes-plugin # To keep eyes on Maxime.
     yum -y install gnome-terminal
 	# wtf is this
 	#yum -y groups install "X Window System"
@@ -146,6 +148,70 @@ From: nvidia/cuda:11.0-cudnn8-devel-centos7
 	# Modify startup apps.
 	rm -f  /etc/xdg/autostart/xfce-polkit.desktop	# Stop polkit nonsense
 
+	# Remove uness c sir e apps from menu
+	rm -vf /usr/share/applications/gnome-bluetooth-panel.desktop \
+	/usr/share/applications/xfce4-power-manager-settings.desktop \
+	/usr/share/applications/xfce4-session-logout.desktop \
+	/usr/share/applications/gnome-wifi-panel.desktop \
+	/usr/share/applications/gnome-removable-media-panel.desktop \
+	/usr/share/applications/gnome-printers-panel.desktop \
+	/usr/share/applications/gnome-power-panel.desktop \
+	/usr/share/applications/gnome-online-accounts-panel.desktop \
+	/usr/share/applications/exo-mail-reader.desktop \
+	/usr/share/applications/bluetooth-sendto.desktop || :
+
+	# Set default windows.
+	cat << EOF > /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml 
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xfce4-panel" version="1.0">
+  <property name="configver" type="int" value="2"/>
+  <property name="panels" type="array">
+    <value type="int" value="1"/>
+    <value type="int" value="2"/>
+    <property name="panel-1" type="empty">
+      <property name="position" type="string" value="p=6;x=0;y=0"/>
+      <property name="length" type="uint" value="100"/>
+      <property name="position-locked" type="bool" value="true"/>
+      <property name="size" type="uint" value="30"/>
+      <property name="plugin-ids" type="array">
+        <value type="int" value="1"/>
+        <value type="int" value="2"/>
+        <value type="int" value="3"/>
+        <value type="int" value="4"/>
+        <value type="int" value="5"/>
+      </property>
+    </property>
+    <property name="panel-2" type="empty">
+      <property name="position" type="string" value="p=10;x=0;y=0"/>
+      <property name="position-locked" type="bool" value="true"/>
+      <property name="plugin-ids" type="array">
+        <value type="int" value="6"/>
+        <value type="int" value="7"/>
+        <value type="int" value="8"/>
+        <value type="int" value="9"/>
+      </property>
+    </property>
+  </property>
+  <property name="plugins" type="empty">
+    <property name="plugin-1" type="string" value="applicationsmenu"/>
+    <property name="plugin-2" type="string" value="tasklist"/>
+    <property name="plugin-3" type="string" value="separator">
+      <property name="expand" type="bool" value="true"/>
+      <property name="style" type="uint" value="0"/>
+    </property>
+    <property name="plugin-4" type="string" value="pager"/>
+    <property name="plugin-5" type="string" value="clock"/>
+    <property name="plugin-6" type="string" value="showdesktop"/>
+    <property name="plugin-7" type="string" value="separator"/>
+    <property name="plugin-8" type="string" value="separator"/>
+    <property name="plugin-9" type="string" value="directorymenu">
+      <property name="base-directory" type="string" value="/home/cwal219"/>
+    </property>
+  </property>
+</channel>
+	EOF
+
+
 	cat << EOF > /etc/xdg/autostart/lmod-conf-nesi.desktop
 [Desktop Entry]
 Version=1.0
@@ -153,6 +219,7 @@ Name=conf-notification
 Type=Application
 Exec=bash -c "notify-send \"NeSI Modules\" \"Default loaded software can be set by editing \'\$VDT_SETUP\'\" --icon=preferences-other"
 EOF
+
 	cat << EOF > /etc/xdg/autostart/indev-nesi.desktop
 [Desktop Entry]
 Version=1.0

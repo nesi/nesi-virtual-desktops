@@ -4,20 +4,19 @@
 # Same as other script except different shub repo.
 
 
-
-
 if [[ $# -lt 1 ]];then echo "Not enough args"; exit 1;fi
 
-module load Singularity
+module load Singularity Python
 wosif=$(basename ${1%.*})
 
 export SINGULARITY_TMPDIR=/tmp
 export SINGULARITY_CACHEDIR=/tmp
 
-rm -rf .${wosif}.sif && mv ${wosif}.sif .${wosif}.sif || true 
+chmod 700 -R .${wosif}.sif & rm -rf .${wosif}.sif && mv ${wosif}.sif .${wosif}.sif || : 
 
-if $($USER == "nesi-apps-admin");then
+if [ "$USER" == "nesi-apps-admin" ];then
     cp /nesi/project/nesi99999/Callum/vdt/sif/vdt_base.sif .
+    chmod a+rx -v *.sif
 else 
     echo "Go here 'https://cloud.sylabs.io/library' and reset cache"
     singularity -q build -r ${wosif}.sif $1

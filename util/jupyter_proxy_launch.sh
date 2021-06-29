@@ -5,11 +5,15 @@ export VDT_HOME=${VDT_HOME:-"$HOME/.vdt"}
 export VDT_BASE_IMAGE="${VDT_BASE_IMAGE:-"${VDT_ROOT}/sif"}"
 #export VDT_LOGFILE=${VDT_LOGFILE:-"$(tty)"}
 
+export LOGLEVEL=DEBUG
+
 module purge  # > /dev/null  2>&1
 module unload XALT/NeSI -q
 module load Python Singularity/3.7.1 -q 
 
 module load CUDA
+
+echo "Using port:${1} and basepath:${2}"
 
 if [ -d ${VDT_BASE_IMAGE} ]; then
     echo  "VDT_BASE_IMAGE is directory, looking for .sif"
@@ -93,7 +97,7 @@ EOF
 
 #echo "<meta http-equiv=\"refresh\" content=\"0; URL='${2}'\"/>" 
 
-export VDT_WEBSOCKOPTS="--verbose --timeout=90"
+export VDT_WEBSOCKOPTS="--verbose " #--timeout=90"
 export SINGULARITY_BINDPATH="$SINGULARITY_BINDPATH,${temp_index_html}:/opt/noVNC/index.html"
 "$VDT_ROOT/util/singularity_wrapper.sh" run "${VDT_BASE_IMAGE}"
 

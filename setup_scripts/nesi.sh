@@ -29,7 +29,7 @@ create_icon(){
     # Path to desktop entry
     de_name="${name//[^a-zA-Z0-9]/}"
     # Add icon to desktop, and to applications list
-cat << EOF > ${XDG_DESKTOP_DIR}/${de_name}.desktop"
+cat << EOF > "${XDG_DESKTOP_DIR}/${de_name}.desktop"
 [Desktop Entry]
 Type=Application
 Exec=${2}
@@ -47,10 +47,10 @@ done
 
 }
 
-cat << EOF > ${XDG_DESKTOP_DIR}/support.desktop
+cat << EOF > "${XDG_DESKTOP_DIR}/support.desktop"
 [Desktop Entry]
 Encoding=UTF-8
-Name=Support
+Name=Support Documentation
 Type=Link
 URL=https://support.nesi.org.nz/hc/en-gb
 Icon=text-html
@@ -60,3 +60,5 @@ chmod 760 -v ${XDG_DESKTOP_DIR}/support.desktop
 
 create_directory_links
 create_icon "Terminal" "bash -c 'exo-open --launch TerminalEmulator'" "utilities-terminal"
+
+# Try remove action plugin from window. (To stop Maxime logging out >:)
