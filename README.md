@@ -8,6 +8,12 @@ See [Connecting to a Virtual Desktop](https://support.nesi.org.nz/hc/en-gb/artic
 Click the button ya dummy.
 #### Installation
 * `pip install --user git+https://github.com/nesi/nesi-virtual-desktops`
+
+| -  | - |
+| ------------- | ------------- |
+| Default  | `pip install --user --install-option="--setup=nesi" git+https://github.com/nesi/nesi-virtual-desktops` |
+| Engineering  | `pip install --user --install-option="--setup=nesi,nesi_engineering" git+https://github.com/nesi/nesi-virtual-desktops` |
+
 * Restart JupyterLab session if running.
 ##### Setuptools install options
   Setuptools arguments can be invoked when using `pip` with the `--install-option` flag.
