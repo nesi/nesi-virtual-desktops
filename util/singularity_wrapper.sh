@@ -54,8 +54,11 @@ $EB_ROOT_CUDA"
     BIND_PATH_FS="$BIND_PATH_FS,\
 /opt/nesi,\
 /nesi/project,\
+/scale_wlg_persistent/filesets/project,\
 /nesi/nobackup,\
+/scale_wlg_nobackup/filesets/nobackup,\
 $HOME:/home/$USER,\
+/scale_wlg_persistent/filesets/home/$USER,\
 $VDT_ROOT"
 
     export SINGULARITY_BINDPATH="$SINGULARITY_BINDPATH,$BIND_PATH_REQUIRED,$BIND_PATH_FS,$BIND_PATH_APPS,$BIND_PATH_CUDA"
