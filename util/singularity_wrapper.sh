@@ -98,15 +98,19 @@ $VDT_ROOT"
 create_vnc(){   
     # Set instance name
     #if [[ ! -x  "$(readlink -f "$VDT_TEMPLATES/$VDT_BASE/image")" ]];then echo "'$VDT_TEMPLATES/$VDT_BASE/image' doesn't exist!";exit 1;fi
-    cmd="singularity --debug $1"
+    if [[ $LOGLEVEL = "DEBUG" ]];then
+        cmd="singularity --debug $1"
+    else 
+        cmd="singularity $1"
+    fi
     shift
 
-    VDT_OVERLAY=${VDT_OVERLAY:-"$VDT_HOME/overlay.img"}
-
-    OVERLAY_SIZE=1000
+    # Overlay not working with our FS currently
     OVERLAY="FALSE"
     
     if [[ ${OVERLAY} == "TRUE" ]];then
+        OVERLAY_SIZE=1000
+        VDT_OVERLAY=${VDT_OVERLAY:-"$VDT_HOME/overlay.img"}
         if [[ ! -r ${VDT_OVERLAY} ]];then
             # Create overlay
             dd if=/dev/zero of=$VDT_OVERLAY bs=1M count=$OVERLAY_SIZE
