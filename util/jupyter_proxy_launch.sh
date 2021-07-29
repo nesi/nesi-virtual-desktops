@@ -5,7 +5,7 @@ export VDT_HOME=${VDT_HOME:-"$HOME/.vdt"}
 export VDT_BASE_IMAGE="${VDT_BASE_IMAGE:-"${VDT_ROOT}/sif"}"
 #export VDT_LOGFILE=${VDT_LOGFILE:-"$(tty)"}
 
-export LOGLEVEL=DEBUG
+#export LOGLEVEL=DEBUG
 
 module purge  # > /dev/null  2>&1
 module unload XALT/NeSI -q
@@ -99,4 +99,4 @@ export SINGULARITY_BINDPATH="$SINGULARITY_BINDPATH,${temp_index_html}:/opt/noVNC
 "$VDT_ROOT/util/singularity_wrapper.sh" run "${VDT_BASE_IMAGE}"
 
 # Remove tmp file
-rm ${temp_index_html}   
+rm ${temp_index_html}
