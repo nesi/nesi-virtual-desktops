@@ -17,8 +17,8 @@ from pathlib import Path
 
 def setup_vdt():
 
-    def_vdt="/opt/nesi/vdt"
-    #def_vdt="/nesi/project/nesi99999/Callum/vdt"
+     #def_vdt="/opt/nesi/vdt"
+    def_vdt="/nesi/project/nesi99999/Callum/vdt"
 
     vdt_root = os.getenv('VDT_ROOT',def_vdt)
     account = os.environ["SLURM_JOB_ACCOUNT"]

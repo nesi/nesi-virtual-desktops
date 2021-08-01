@@ -35,7 +35,7 @@ class InstallCommand(install):
 
 setup(
     name="vdt_jupyter_proxy",
-    version="2.3.0",
+    version="2.4.0",
     description="launch vdt from jupyterproxy",
     url="git-repo-here",
     packages=find_packages(),
