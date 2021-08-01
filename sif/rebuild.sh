@@ -6,7 +6,8 @@
 
 if [[ $# -lt 1 ]];then echo "Not enough args"; exit 1;fi
 
-module load Singularity Python
+module load Singularity/3.8.0 Python
+module unload XALT
 wosif=$(basename ${1%.*})
 
 export SINGULARITY_TMPDIR=/tmp

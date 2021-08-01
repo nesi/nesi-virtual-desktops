@@ -3,13 +3,18 @@ export VDT_ROOT="${VDT_ROOT:-"$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" >
 export VDT_SOCKET_PORT=${1}
 export VDT_HOME=${VDT_HOME:-"$HOME/.vdt"}
 export VDT_BASE_IMAGE="${VDT_BASE_IMAGE:-"${VDT_ROOT}/sif"}"
-#export VDT_LOGFILE=${VDT_LOGFILE:-"$(tty)"}
 
+export LOGLEVEL=DEBUG
+
+if [[ $LOGLEVEL = "DEBUG" ]];then
+  echo "Debug is set! This will significantly slow launch."
+fi
+#export VDT_LOGFILE=${VDT_LOGFILE:-"$(tty)"}
 #export LOGLEVEL=DEBUG
 
 module purge  # > /dev/null  2>&1
-module unload XALT/NeSI -q
-module load Python Singularity/3.7.1 -q 
+module unload XALT -q
+module load Python Singularity/3.8.0 -q 
 
 module load CUDA
 
