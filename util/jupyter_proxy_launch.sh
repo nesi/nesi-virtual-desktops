@@ -59,7 +59,7 @@ cat << EOF > "$temp_index_html"
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
-}you can do it on cmdline but it's not worth it.
+}
 .animate-bottom {
   position: relative;
   -webkit-animation-name: animatebottom;
@@ -78,7 +78,10 @@ cat << EOF > "$temp_index_html"
 </style>
 <script>
 function onFrameLoad() {
-  document.getElementById("throbber").style.display = "none";--setup=nesi,nesi_engineering
+  document.getElementById("throbber").style.display = "none";
+  document.getElementById("vdt").style.display = "block";
+};
+</script>
 </head>
 <div id="throbber"></div>
 <iframe id="vdt" src='${2}' onload="onFrameLoad(this)" style="display:none,position:fixed; top:0; left:0; bottom:0; right:0; width:100%; height:100%; border:none; margin:0; padding:0; overflow:hidden; z-index:999999;">
