@@ -22,7 +22,8 @@ set_env(){
 /usr/bin/man,\
 /usr/bin/nano,\
 /usr/bin/unzip,\
-/usr/bin/vim"
+/usr/bin/vim,
+/usr/bin/strace"
 
     BIND_PATH_REQUIRED="$BIND_PATH_REQUIRED,\
 /run,\
