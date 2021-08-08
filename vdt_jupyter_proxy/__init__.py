@@ -21,7 +21,7 @@ def setup_vdt():
     #def_vdt="/nesi/project/nesi99999/Callum/vdt"
 
     vdt_root = os.getenv('VDT_ROOT',def_vdt)
-    account = os.environ["SLURM_JOB_ACCOUNT"]
+#    account = os.environ["SLURM_JOB_ACCOUNT"]
     # os.environ["LOGLEVEL"] = "DEBUG"
 
     # # See if can find central install.
