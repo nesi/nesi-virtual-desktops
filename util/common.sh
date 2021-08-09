@@ -2,19 +2,15 @@
 
 # Log levels.
 # Fix this later.
-
-
 VDT_HOME=${VDT_HOME:-"$HOME/.vdt"}
 VDT_LOCKFILES=${VDT_LOCKFILES:-"$VDT_ROOT/lockfiles"} 
-#VDT_TEMPLATES=${VDT_TEMPLATES:-"$VDT_ROOT/templates"}
 VDT_LOGFILE=${VDT_LOGFILE:-"/dev/null"}
 support_docs="https://support.nesi.org.nz/hc/en-gb/articles/360001600235-Connecting-to-a-Virtual-Desktop"
 
 debug(){
-    if [[ -n ${verbose} || $LOGLEVEL = "DEBUG" ]];then
+    if [[ $LOGLEVEL = "DEBUG" ]];then
         echo "DEBUG: ${FUNCNAME[1]}::${BASH_LINENO[-1]} ${BASH_LINENO[-1]} $*"
     fi
-    echo "$*" >> "${VDT_LOGFILE}"
 }
 
 info(){
@@ -28,7 +24,6 @@ warning(){
 error(){
     echo -e "\e[91mError:${FUNCNAME[1]}::${BASH_LINENO[-1]}:\e[39m $*" | tee ${VDT_LOGFILE} >&2 
     return 1
-    ##exit 1
 }
 
 vex () {

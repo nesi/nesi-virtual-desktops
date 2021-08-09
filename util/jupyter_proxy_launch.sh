@@ -4,7 +4,7 @@ export VDT_SOCKET_PORT=${1}
 export VDT_HOME=${VDT_HOME:-"$HOME/.vdt"}
 export VDT_BASE_IMAGE="${VDT_BASE_IMAGE:-"${VDT_ROOT}/sif"}"
 
-export LOGLEVEL=DEBUG
+# export LOGLEVEL=DEBUG
 
 if [[ $LOGLEVEL = "DEBUG" ]];then
   echo "Debug is set! This will significantly slow launch."
@@ -16,6 +16,7 @@ module purge  # > /dev/null  2>&1
 module unload XALT -q
 module load Python Singularity/3.8.0 -q 
 
+# Should check if GPU avail first
 module load CUDA
 
 echo "Using port:${1} and basepath:${2}"
