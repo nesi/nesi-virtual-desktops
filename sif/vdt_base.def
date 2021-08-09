@@ -42,6 +42,9 @@ From: nvidia/cuda:11.0-cudnn8-devel-centos7
 #    =xfce4-terminal
 #    -xfwm4-theme-nodoka
 	
+	# ANSYS DEPS 
+	yum install alsa-lib at-spi2-atk at-spi2-core atk avahi-libs bzip2-libs cyrus-sasl-lib elfutils-libelf elfutils-libs
+
 	yum -y install xfce4-notifyd 
 	yum -y install xfce4-systemload-plugin 
 	yum -y install xfce4-eyes-plugin # To keep eyes on Maxime.
@@ -50,6 +53,9 @@ From: nvidia/cuda:11.0-cudnn8-devel-centos7
 	#yum -y groups install "X Window System"
 
 	yum -y install libXp # For ANSYS EM
+	yum -y install libX11
+	yum -y install libXext
+
 	yum -y install git
 	yum -y install wget
 	yum -y install libgcc
@@ -58,17 +64,16 @@ From: nvidia/cuda:11.0-cudnn8-devel-centos7
     yum -y install numpy
 	yum -y install bzip2 
 	yum -y install motif # For MAPDL
-	yum -y install libX11
 	yum -y install libstdc++
 	yum -y install ca-certificates
 	yum -y install glibc
+	yum -y install gpm-libs #for vim
 	yum -y install giflib # For ANSYS EM
 	yum -y install yum-utils
 	yum -y install xdg-utils
 	yum -y install python
 	yum -y install python3
 	yum -y install polkit
-	yum -y install libXext
 	yum -y install cmake3
 	yum -y install cmake3-gui
 	yum -y install libglvnd-egl
@@ -84,9 +89,10 @@ From: nvidia/cuda:11.0-cudnn8-devel-centos7
 	yum -y install bash-completion 
 	yum -y install libcanberra-gtk3
 	yum -y install hwloc-libs #For ANSYS 2019R3
-	yum -y install libXext-devel.x86_64
 	yum -y install bash-completion-extras
 	yum -y install gcc-c++ # Needed to compile Websocketify rebind lib.
+	yum -y install man
+	yum -y install man-pages
 	
 	yum -y install tcl-8.5.13-8.el7.x86_64 \
 	lua-filesystem-1.6.2-2.el7.x86_64 \
