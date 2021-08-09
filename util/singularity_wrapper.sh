@@ -22,7 +22,7 @@ set_env(){
 /usr/bin/man,\
 /usr/bin/nano,\
 /usr/bin/unzip,\
-/usr/bin/vim,
+/usr/bin/vim,\
 /usr/bin/strace"
 
     BIND_PATH_REQUIRED="$BIND_PATH_REQUIRED,\
@@ -39,6 +39,7 @@ set_env(){
 /usr/include,\
 /etc/opt/slurm,\
 /etc/X11/,\
+/etc/profile,\
 /opt/slurm,\
 /usr/lib64/libGL.so.1.2.0,\
 /usr/lib64/libmunge.so,\
@@ -66,6 +67,10 @@ $VDT_ROOT"
     export SINGULARITYENV_CUDA_ROOT="${EBROOTCUDA}"
     export SINGULARITYENV_CUDA_PATH="${EBROOTCUDA}"
     export SINGULARITYENV_EBROOTCUDA="${EBROOTCUDA}"
+
+    # Set by Jupyter. 
+    # If not unset will stop propigation of env to children under srun
+    unset SLURM_EXPORT_ENV
 
     # If environment setup for desktop flavor.
     if [[ -f "${VDT_TEMPLATES}/${VDT_BASE}/pre.sh" ]];then
