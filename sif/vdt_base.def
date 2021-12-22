@@ -5,7 +5,7 @@ From: nvidia/cuda:11.0-cudnn8-devel-centos7
 %post
     export TURBOVNC_VERSION=2.2.4
     export WEBSOCKIFY_VERSION=0.9.0
-    export FIREFOX_VERSION=9.0
+    export FIREFOX_VERSION=90.0
     export VGL_VERSION=2.6.3
     export DESKTOP_VERSION=2.0
 
@@ -134,8 +134,8 @@ From: nvidia/cuda:11.0-cudnn8-devel-centos7
 	set +e
 
 	# Install Firefox
-	wget https://download-installer.cdn.mozilla.net/pub/firefox/releases/32.0.2/linux-x86_64/en-US/firefox-32.0.2.tar.bz2
-	tar -jxvf firefox-32.0.2.tar.bz2 -C /usr/local/
+	wget http://ftp.mozilla.org/pub/firefox/releases/${FIREFOX_VERSION}/linux-x86_64/en-US/firefox-${FIREFOX_VERSION}.tar.bz2
+	tar -jxvf firefox-${FIREFOX_VERSION}.tar.bz2 -C /usr/local/
 	ln -s /usr/local/firefox/firefox /usr/bin/firefox
 
 	# Patch webs for nicer messages
