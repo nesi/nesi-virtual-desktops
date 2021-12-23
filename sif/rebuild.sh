@@ -4,9 +4,10 @@
 # Same as other script except different shub repo.
 
 
-if [[ $# -lt 1 ]];then echo "Not enough args"; exit 1;fi
+if [[ $# -lt 1 ]];then echo "Not enough args. Usage: $(basename $0) container-name[.sif|.def] "; exit 1;fi
 
-module load Singularity/3.8.0 Python
+module purge
+module load Singularity/3.8.5
 module unload XALT
 wosif=$(basename ${1%.*})
 
