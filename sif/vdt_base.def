@@ -43,14 +43,12 @@ From: nvidia/cuda:11.0-cudnn8-devel-centos7
 #    -xfwm4-theme-nodoka
 	
 	# ANSYS DEPS 
-	yum install alsa-lib at-spi2-atk at-spi2-core atk avahi-libs bzip2-libs cyrus-sasl-lib elfutils-libelf elfutils-libs
+	yum -y install alsa-lib at-spi2-atk at-spi2-core atk avahi-libs bzip2-libs cyrus-sasl-lib elfutils-libelf elfutils-libs
 
 	yum -y install xfce4-notifyd 
 	yum -y install xfce4-systemload-plugin 
 	yum -y install xfce4-eyes-plugin # To keep eyes on Maxime.
     yum -y install gnome-terminal
-	# wtf is this
-	#yum -y groups install "X Window System"
 
 	yum -y install libXp # For ANSYS EM
 	yum -y install libX11
@@ -138,6 +136,10 @@ From: nvidia/cuda:11.0-cudnn8-devel-centos7
 	tar -jxvf firefox-${FIREFOX_VERSION}.tar.bz2 -C /usr/local/
 	ln -s /usr/local/firefox/firefox /usr/bin/firefox
 
+	# Install Chrome
+	wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
+    yum localinstall google-chrome-stable_current_x86_64.rpm
+
 	# Patch webs for nicer messages
 	wget https://raw.githubusercontent.com/nesi/nesi-virtual-desktops/main/dep/nesi_websockify.patch
 	patch --verbose /opt/websockify/websockify/websocketproxy.py < nesi_websockify.patch
@@ -150,6 +152,13 @@ From: nvidia/cuda:11.0-cudnn8-devel-centos7
 	#GPU stuff 
 	#distribution=$(. /etc/os-release;echo $ID$VERSION_ID) && curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.repo | sudo tee /etc/yum.repos.d/nvidia-docker.repo
 	#yum clean expire-cache
+
+	#==========================#
+	# XDG STUFF
+	#==========================#
+
+	#
+	mkdir -pv ${XDG_CONFIG_DIRS:=/etc/xdg}
 
 	# Modify startup apps.
 	rm -f  /etc/xdg/autostart/xfce-polkit.desktop	# Stop polkit nonsense
@@ -211,7 +220,6 @@ From: nvidia/cuda:11.0-cudnn8-devel-centos7
     <property name="plugin-7" type="string" value="separator"/>
     <property name="plugin-8" type="string" value="separator"/>
     <property name="plugin-9" type="string" value="directorymenu">
-      <property name="base-directory" type="string" value="/home/cwal219"/>
     </property>
   </property>
 </channel>
@@ -223,7 +231,7 @@ From: nvidia/cuda:11.0-cudnn8-devel-centos7
 Version=1.0
 Name=conf-notification
 Type=Application
-Exec=bash -c "notify-send \"NeSI Modules\" \"Default loaded software can be set by editing \'\$VDT_SETUP\'\" --icon=preferences-other"
+Exec=bash -c "notify-send \"NeSI Modules\" \"Default loaded software can be set by editing \'\$VDT_SETUP\'\" --icon=preferences-other -t=180"
 EOF
 
 	cat << EOF > /etc/xdg/autostart/indev-nesi.desktop
@@ -231,9 +239,10 @@ EOF
 Version=1.0
 Name=conf-notification
 Type=Application
-Exec=bash -c "notify-send \"In Development\" \"This service is still in early development. Please report bugs, make suggestions, etc here: \'https://github.com/nesi/nesi-virtual-desktops\'\ or email Callum \'callum.walley@nesi.org.nz\'" --icon=preferences-other"
+Exec=bash -c "notify-send \"In Development\" \"This service is still in early development. Please report bugs, make suggestions, etc here: \'https://github.com/nesi/nesi-virtual-desktops\' or email Callum \'callum.walley@nesi.org.nz\'\" --icon=preferences-other -t=180"
 EOF
 	chmod 0644 /etc/xdg/autostart/indev-nesi.desktop
+
 %environment
 	export PATH=${PATH}:/opt/TurboVNC/bin
 	
