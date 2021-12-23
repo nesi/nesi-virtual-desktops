@@ -6,3 +6,4 @@ novnc*
 websockify*
 .deprecated/*
 *.egg-info
+*.sif
