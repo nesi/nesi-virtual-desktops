@@ -4,3 +4,5 @@ lockfiles/*
 .vscode
 novnc*
 websockify*
+.deprecated/*
+*.egg-info
