@@ -3,7 +3,7 @@
 # Make nec is sary directories
 mkdir -vp "${XDG_DESKTOP_DIR:=$HOME/Desktop}"
 mkdir -vp "${XDG_DATA_HOME:=$HOME/.local/share}"
-mkdir -vp "${VDT_HOME:=$HOME/.vdt}"
+mkdir -vp "${XDG_CONFIG_HOME:=$HOME/.config}/vdt"
 
 create_icon(){
     name=$1
@@ -42,7 +42,7 @@ if [ ! -f ${VDT_HOME}/vdtrc.sh ];then
 fi
 
 # Add required module commands.
-cat << EOF >> ${VDT_HOME}/vdtrc.sh
+cat << EOF >> "${XDG_CONFIG_HOME}/vdt/vdtrc.sh"
 module load ANSYS/2020R2
 module load COMSOL/5.5
 module load ABAQUS/2020
@@ -50,4 +50,4 @@ module load MATLAB/2019b
 module load OpenFOAM
 EOF
 
-chmod 760 -v "${VDT_HOME}/vdtrc.sh"
+chmod 760 -v "${XDG_CONFIG_HOME}/vdt/vdtrc.sh"

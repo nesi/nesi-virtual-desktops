@@ -1,8 +1,9 @@
 #!/bin/bash -e
 
+#TODO: Delete this script
+
 # Log levels.
 # Fix this later.
-VDT_HOME=${VDT_HOME:-"$HOME/.vdt"}
 VDT_LOCKFILES=${VDT_LOCKFILES:-"$VDT_ROOT/lockfiles"} 
 VDT_LOGFILE=${VDT_LOGFILE:-"/dev/null"}
 support_docs="https://support.nesi.org.nz/hc/en-gb/articles/360001600235-Connecting-to-a-Virtual-Desktop"

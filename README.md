@@ -119,7 +119,7 @@ However, unlike with `SINGULARITYENV_` the prefix will be kept.
 | ------------- | ------------- | ------------- | ------------- |
 | VDT_LOGFILE  | `"/dev/null"` | Location of logfile. | `vncserver -log`/`util/common.sh` 
 | VDT_ROOT  |  | Location of this repo. |  /`sif/vdt_base.def`,`util/common.sh` |
-| VDT_HOME | `"$HOME/.vdt"` | | `util/common.sh` |
+| VDT_HOME | DEPRICATED replace with `"$XDG_CONFIG_HOME/.vdt"` | | `util/common.sh` |
 | VDT_SETUP |`$VDT_HOME/vdt_setup.conf`| Location of setup file. ||
 | VDT_LOCKFILES | `"$VDT_ROOT/lockfiles"` | dep | `util/common.sh` 
 | VDT_LOCKFILE | `"$VDT_LOCKFILES/"` | dep | `util/common.sh` 

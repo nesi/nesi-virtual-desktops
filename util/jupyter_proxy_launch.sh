@@ -1,7 +1,9 @@
 #!/bin/bash
+
+#TODO Delete this script.
+
 export VDT_ROOT="${VDT_ROOT:-"$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd -P)")"}"
 export VDT_SOCKET_PORT=${1}
-export VDT_HOME=${VDT_HOME:-"$HOME/.vdt"}
 export VDT_BASE_IMAGE="${VDT_BASE_IMAGE:-"${VDT_ROOT}/sif"}"
 
 # export LOGLEVEL=DEBUG
@@ -32,8 +34,8 @@ fi
 
 # Create a temporary index.html file, bind over existing one.
 # Sets parameter for noVNC to point to correct websocket path. 
-mkdir -p "${VDT_HOME}"
-temp_index_html=$(mktemp "$VDT_HOME/XXX")
+mkdir -p "${XDG_DATA_HOME:=$HOME/.local/share}/vdt"
+temp_index_html=$(mktemp "$XDG_DATA_HOME/vdt/XXX")
 
 # Maybe could be external css
 cat << EOF > "$temp_index_html"
