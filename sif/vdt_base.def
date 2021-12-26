@@ -91,7 +91,11 @@ From: nvidia/cuda:11.0-cudnn8-devel-centos7
 	yum -y install gcc-c++ # Needed to compile Websocketify rebind lib.
 	yum -y install man
 	yum -y install man-pages
-	
+	yum -y install zlib-devel  # For pillow
+	yum -y install libjpeg-turbo-devel # For pillow
+
+    yum -y install e2fsprogs # For image overlay. (image default mke2fs too old)
+
 	yum -y install tcl-8.5.13-8.el7.x86_64 \
 	lua-filesystem-1.6.2-2.el7.x86_64 \
 	lua-devel-5.1.4-15.el7.x86_64 \
@@ -104,7 +108,8 @@ From: nvidia/cuda:11.0-cudnn8-devel-centos7
 	lua-5.1.4-15.el7.x86_64 
 	
 	# Generic python
-	python3 -m pip install numpy scipy matplotlib ipython jupyter pandas
+	python3 -m pip install numpy #scipy matplotlib ipython jupyter pandas
+	# Comment out til pillow is fixed
 
 	# Virtual GL
 	mkdir -p /etc/yum.repos.d
@@ -223,8 +228,13 @@ From: nvidia/cuda:11.0-cudnn8-devel-centos7
     </property>
   </property>
 </channel>
-	EOF
+EOF
 
+# <property name="plugin-19" type="string" value="launcher">
+#       <property name="items" type="array">
+#         <value type="string" value="16245944913.desktop"/>
+#       </property>
+#     </property>
 
 	cat << EOF > /etc/xdg/autostart/lmod-conf-nesi.desktop
 [Desktop Entry]
@@ -249,7 +259,6 @@ EOF
 	# General
 	export TERM="xterm-256color"
 	export SHELL=/bin/bash
-
 	export EDITOR=gedit
 	export BROWSER=firefox
 
