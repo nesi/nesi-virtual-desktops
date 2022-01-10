@@ -3,6 +3,7 @@ from setuptools.command.install import install
 import os
 import subprocess
 
+module_out=subprocess.check_output("module -t avail | grep \"^R/\" | tail -n +2", stderr=subprocess.STDOUT, shell=True).decode("utf-8").strip()
 
 class InstallCommand(install):
     user_options = install.user_options + [
@@ -18,7 +19,7 @@ class InstallCommand(install):
 
     def run(self):
         if self.setup:
-            avail_setup=[]
+            avail_versions=[]
             for file in os.listdir("setup_scripts"):
                 if file.endswith(".sh"):
                     avail_setup.append(file[:-3])
@@ -30,6 +31,7 @@ class InstallCommand(install):
                 else:
                     print(f"'{setup_script}' is not a valid setup script.")
                     print(f"Valid options are {','.join(avail_setup)}")
+        # self.setup
 
         install.run(self)
 

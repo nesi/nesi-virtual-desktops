@@ -22,3 +22,9 @@ From: cal/mahuika/rocky8-nesi:base
 	git clone https://github.com/juanjoDiaz/noVNC.git /opt/noVNC
 	echo "<meta http-equiv=\"refresh\" content=\"0; URL='vnc.html'\"/>" > /opt/noVNC/index.html
 	
+  dnf -y install epel-release
+
+dnf config-manager --set-enabled powertools
+dnf -y copr enable stenstorp/lightdm
+dnf -y groupinstall "xfce"
+dnf -y install lightdm

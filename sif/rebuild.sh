@@ -29,7 +29,6 @@ fi
 
 # stat -c "%Y" $arg
 
-
 #wosif=$(basename ${1%.*})
 #echo $wosif
 #exit 
