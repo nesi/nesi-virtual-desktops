@@ -1,137 +1,31 @@
-Bootstrap: docker
-From: nvidia/cuda:11.0-cudnn8-devel-centos7
+Bootstrap: library
+From: cal/mahuika/rocky8-nesi:vis
 %help
     see https://github.com/nesi/nesi-virtual-desktops
 %post
-    export TURBOVNC_VERSION=2.2.4
-    export WEBSOCKIFY_VERSION=0.9.0
+	
     export FIREFOX_VERSION=90.0
     export VGL_VERSION=2.6.3
-    export DESKTOP_VERSION=2.0
+    export DESKTOP_VERSION=3.0
 
-	yum -y update
-	yum -y upgrade 
-	yum -y install epel-release
-
-	yum -y --enablerepo=epel install VirtualGL
-	
-	yum -y groupinstall "Xfce"
-	# =Thunar
-	# =xfce4-panel
-	# =xfce4-session
-	# =xfce4-settings
-	# =xfconf
-	# =xfdesktop
-	# =xfwm4
-
-# 	Default Packages:
-#    -NetworkManager-gnome
-#    =gdm
-#    -leafpad
-#    =openssh-askpass
-#    =orage
-#    =polkit-gnome
-#    =thunar-archive-plugin
-#    =thunar-volman
-#    =tumbler
-#    =xfce4-appfinder
-#    -xfce4-icon-theme
-#    =xfce4-power-manager
-#    =xfce4-pulseaudio-plugin
-#    =xfce4-session-engines
-#    =xfce4-terminal
-#    -xfwm4-theme-nodoka
+	systemctl set-default graphical.target
+    
+	yum -y install epel-release 
+    yum -y install dnf-plugins-core
+    yum -y install glibc-langpack-en
 	
 	# ANSYS DEPS 
-	yum -y install alsa-lib at-spi2-atk at-spi2-core atk avahi-libs bzip2-libs cyrus-sasl-lib elfutils-libelf elfutils-libs
+	#yum -y install alsa-lib at-spi2-atk at-spi2-core atk avahi-libs bzip2-libs cyrus-sasl-lib elfutils-libelf elfutils-libs
 
-	yum -y install xfce4-notifyd 
-	yum -y install xfce4-systemload-plugin 
-	yum -y install xfce4-eyes-plugin # To keep eyes on Maxime.
+	#yum -y install xfce4-notifyd 
+	#yum -y install xfce4-systemload-plugin 
+	#yum -y install xfce4-eyes-plugin # To keep eyes on Maxime.
     yum -y install gnome-terminal
 
 	yum -y install libXp # For ANSYS EM
 	yum -y install libX11
 	yum -y install libXext
 
-	yum -y install git
-	yum -y install wget
-	yum -y install libgcc
-	yum -y install gedit
-    yum -y install patch
-    yum -y install numpy
-	yum -y install bzip2 
-	yum -y install motif # For MAPDL
-	yum -y install libstdc++
-	yum -y install ca-certificates
-	yum -y install glibc
-	yum -y install gpm-libs #for vim
-	yum -y install giflib # For ANSYS EM
-	yum -y install yum-utils
-	yum -y install xdg-utils
-	yum -y install python
-	yum -y install python3
-	yum -y install polkit
-	yum -y install cmake3
-	yum -y install cmake3-gui
-	yum -y install libglvnd-egl
-	yum -y install qt-devel
-	yum -y install qt5-qtbase-devel
-	yum -y install turbojpeg
-	yum -y install diffutils
-	yum -y install mesa-libGL 
-	yum -y install mesa-libGL-devel
-	yum -y install mesa-libGLU
-	yum -y install mesa-libGLU-devel
-	yum -y install libvncserver
-	yum -y install bash-completion 
-	yum -y install libcanberra-gtk3
-	yum -y install hwloc-libs #For ANSYS 2019R3
-	yum -y install bash-completion-extras
-	yum -y install gcc-c++ # Needed to compile Websocketify rebind lib.
-	yum -y install man
-	yum -y install man-pages
-	yum -y install zlib-devel  # For pillow
-	yum -y install libjpeg-turbo-devel # For pillow
-
-    yum -y install e2fsprogs # For image overlay. (image default mke2fs too old)
-
-	yum -y install tcl-8.5.13-8.el7.x86_64 \
-	lua-filesystem-1.6.2-2.el7.x86_64 \
-	lua-devel-5.1.4-15.el7.x86_64 \
-    tcl-devel-8.5.13-8.el7.x86_64 \
-	lua-bitop-1.0.2-3.el7.x86_64 \
-	lua-json-1.3.2-2.el7.noarch \
-	lua-term-0.03-3.el7.x86_64 \
-	lua-lpeg-0.12-1.el7.x86_64 \
-	lua-posix-32-2.el7.x86_64 \
-	lua-5.1.4-15.el7.x86_64 
-	
-	# Generic python
-	python3 -m pip install numpy #scipy matplotlib ipython jupyter pandas
-	# Comment out til pillow is fixed
-
-	# Virtual GL
-	mkdir -p /etc/yum.repos.d
-    cd /etc/yum.repos.d
-	wget https://virtualgl.org/pmwiki/uploads/Downloads/VirtualGL.repo
-    yum -y install VirtualGL
-	
-	# TurboVNC
-	wget https://sourceforge.net/projects/turbovnc/files/${TURBOVNC_VERSION}/turbovnc-${TURBOVNC_VERSION}.x86_64.rpm -q
-  	yum install -y turbovnc-${TURBOVNC_VERSION}.x86_64.rpm
-  	rm -rf turbovnc-${TURBOVNC_VERSION}.x86_64.rpm
-	
-	# Websockify
-    mkdir -p /opt/websockify
-  	wget https://github.com/novnc/websockify/archive/master.tar.gz -q -O - | tar xzf - -C /opt/websockify --strip-components=1
-	
-	# noVNC
-	mkdir -p /opt/noVNC
-  	#git clone https://github.com/novnc/noVNC/ /opt/noVNC
-	# Optional. Adds better copy paste support
-	git clone https://github.com/juanjoDiaz/noVNC.git /opt/noVNC
-	echo "<meta http-equiv=\"refresh\" content=\"0; URL='vnc.html'\"/>" > /opt/noVNC/index.html
 	
 	# Non essential stuff below.
 	set +e
@@ -236,12 +130,17 @@ EOF
 #       </property>
 #     </property>
 
+#Custom plugins
+/usr/share/xfce4/panel-plugins
+./.config/xfce4/panel/
+
+
 	cat << EOF > /etc/xdg/autostart/lmod-conf-nesi.desktop
 [Desktop Entry]
 Version=1.0
 Name=conf-notification
 Type=Application
-Exec=bash -c "notify-send \"NeSI Modules\" \"Default loaded software can be set by editing \'\$VDT_SETUP\'\" --icon=preferences-other -t=180"
+Exec=bash -c "notify-send \"NeSI Modules\" \"Default loaded software can be set by editing \'\$VDT_SETUP\'\" --icon=preferences-other -t=500"
 EOF
 
 	cat << EOF > /etc/xdg/autostart/indev-nesi.desktop
@@ -252,15 +151,3 @@ Type=Application
 Exec=bash -c "notify-send \"In Development\" \"This service is still in early development. Please report bugs, make suggestions, etc here: \'https://github.com/nesi/nesi-virtual-desktops\' or email Callum \'callum.walley@nesi.org.nz\'\" --icon=preferences-other -t=180"
 EOF
 	chmod 0644 /etc/xdg/autostart/indev-nesi.desktop
-
-%environment
-	export PATH=${PATH}:/opt/TurboVNC/bin
-	
-	# General
-	export TERM="xterm-256color"
-	export SHELL=/bin/bash
-	export EDITOR=gedit
-	export BROWSER=firefox
-
-%runscript 
-    . "${VDT_ROOT}/util/singularity_runscript.sh" 
