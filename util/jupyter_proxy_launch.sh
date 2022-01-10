@@ -1,113 +1,152 @@
 #!/bin/bash
 
-#TODO Delete this script.
+set -eo pipefail
+
+################################################################################
+# Help                                                                         #
+################################################################################
+usage() {
+  echo "usage: $0 [port-socket] [bind-path] [-d]"
+  exit 1
+  echo
+}
+#######################################
+# Wrapper script, excecutes arguments in singularity image with some standard NeSI bind paths.
+#
+# Arguments:
+#   C
+# Inputs Varia Required:
+#   SIFPATH: Path to singularity image file. Should be built image of '.def contained int the 'conf' directory.
+#            Needs to be absolute path, and bound path
+# Env Variables Optional:
+#   LOGLEVEL: [DEBUG]
+#   SINGULARITY_BINDPATH: Singularity bind path.
+#######################################
 
 export VDT_ROOT="${VDT_ROOT:-"$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd -P)")"}"
 export VDT_SOCKET_PORT=${1}
 export VDT_BASE_IMAGE="${VDT_BASE_IMAGE:-"${VDT_ROOT}/sif"}"
 
-# export LOGLEVEL=DEBUG
+export VDT_RUNSCRIPT="$VDT_ROOT/util/singularity_runscript.sh"
 
-if [[ $LOGLEVEL = "DEBUG" ]];then
+if (( $# < 2 )); then
+  usage
+fi
+
+echo "Using port:${1} and basepath:${2}"
+
+if [[ $LOGLEVEL = "DEBUG" ]]; then
   echo "Debug is set! This will significantly slow launch."
 fi
-#export VDT_LOGFILE=${VDT_LOGFILE:-"$(tty)"}
-#export LOGLEVEL=DEBUG
 
-module purge  # > /dev/null  2>&1
+# Create Conf and data dirs.
+
+VDT_DATA="${XDG_DATA_HOME:=$HOME/.local/share}/vdt"
+VDT_CONF="${XDG_DATA_HOME:=$HOME/.conf}/vdt"
+
+mkdir -vp ${VDT_DATA}
+mkdir -vp ${VDT_CONF}
+
+# Load / unload required modules.
+module purge # > /dev/null  2>&1
 module unload XALT -q
-module load Python Singularity/3.8.0 -q 
+module load Python Singularity/3.8.5 -q
 
 # Should check if GPU avail first
 module load CUDA
 
-echo "Using port:${1} and basepath:${2}"
-
+# If pointing to directory, use sif in there.
+# TODO only works for dirs with 1 sif
 if [ -d ${VDT_BASE_IMAGE} ]; then
-    echo  "VDT_BASE_IMAGE is directory, looking for .sif"
-    VDT_BASE_IMAGE="${VDT_BASE_IMAGE}/*.sif"
+  echo "VDT_BASE_IMAGE is directory, looking for .sif"
+  VDT_BASE_IMAGE="${VDT_BASE_IMAGE}/*.sif"
 fi
+# Check sif is valid
 if [ ! -x ${VDT_BASE_IMAGE} ]; then
-    echo "'${VDT_BASE_IMAGE}' is not a valid container"
-    exit 1
-fi 
+  echo "'${VDT_BASE_IMAGE}' is not a valid container"
+  exit 1
+fi
 
-# Create a temporary index.html file, bind over existing one.
-# Sets parameter for noVNC to point to correct websocket path. 
-mkdir -p "${XDG_DATA_HOME:=$HOME/.local/share}/vdt"
-temp_index_html=$(mktemp "$XDG_DATA_HOME/vdt/XXX")
-
-# Maybe could be external css
-cat << EOF > "$temp_index_html"
-<head>
-<style>
-#throbber {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  z-index: 1;
-  width: 120px;
-  height: 120px;
-  margin: -76px 0 0 -76px;
-  border: 16px solid #f3f3f3;
-  border-radius: 50%;
-  border-top: 16px solid #3498db;
-  -webkit-animation: spin 2s linear infinite;
-  animation: spin 2s linear infinite;
-}
-@-webkit-keyframes spin {
-  0% { -webkit-transform: rotate(0deg); }
-  100% { -webkit-transform: rotate(360deg); }
-}
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-.animate-bottom {
-  position: relative;
-  -webkit-animation-name: animatebottom;
-  -webkit-animation-duration: 1s;
-  animation-name: animatebottom;
-  animation-duration: 1s
-}
-@-webkit-keyframes animatebottom {
-  from { bottom:-100px; opacity:0 } 
-  to { bottom:0px; opacity:1 }
-}
-@keyframes animatebottom { 
-  from{ bottom:-100px; opacity:0 } 
-  to{ bottom:0; opacity:1 }
-}
-</style>
-<script>
-function onFrameLoad() {
-  document.getElementById("throbber").style.display = "none";
-  document.getElementById("vdt").style.display = "block";
-};
-</script>
-</head>
-<div id="throbber"></div>
-<iframe id="vdt" src='${2}' onload="onFrameLoad(this)" style="display:none,position:fixed; top:0; left:0; bottom:0; right:0; width:100%; height:100%; border:none; margin:0; padding:0; overflow:hidden; z-index:999999;">
-    <h1>insert throbber here</h1>
-</iframe>
+# Bind minimal paths
+SINGULARITY_BIND='/home'
+while read D; do
+  if [[ -d $D ]]; then
+    SINGULARITY_BIND=$SINGULARITY_BIND,$D
+  else
+    echo "$D not found."
+  fi
+done <<EOF
+/etc/hosts
+/etc/opt/slurm
+/var/run/munge
+/opt/slurm
+/opt/nesi
+/scale_wlg_persistent
+/scale_wlg_nobackup
+/nesi
+/cm
+/var/lib/sss/mc
+/opt/nesi
+/nesi/project
+/scale_wlg_persistent/filesets/project
+/nesi/nobackup
+/scale_wlg_nobackup/filesets/nobackup
+${VDT_ROOT}"
 EOF
 
-# cat << EOF > "$temp_index_html"
-# <script>
-# function onFrameLoad() {
-#   alert('myframe is loaded');
-# };
-# </script>
-# <iframe src='${2}' onload="onFrameLoad(this)" style="position:fixed; top:0; left:0; bottom:0; right:0; width:100%; height:100%; border:none; margin:0; padding:0; overflow:hidden; z-index:999999;">
-#     <h1>insert throbber here</h1>
-# </iframe>
-# EOF
 
-#echo "<meta http-equiv=\"refresh\" content=\"0; URL='${2}'\"/>" 
+export SINGULARITY_BIND
+export SINGULARITYENV_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
+export SINGULARITYENV_PATH="$PATH"
+unset SLURM_EXPORT_ENV
 
-export VDT_WEBSOCKOPTS="--verbose " #--timeout=90"
-export SINGULARITY_BINDPATH="$SINGULARITY_BINDPATH,${temp_index_html}:/opt/noVNC/index.html"
-"$VDT_ROOT/util/singularity_wrapper.sh" run "${VDT_BASE_IMAGE}"
+# If environment setup for desktop flavor.
+# if [[ -f "${VDT_TEMPLATES}/${VDT_BASE}/pre.sh" ]]; then
+#   source "${VDT_TEMPLATES}/${VDT_BASE}/pre.sh"
+# fi
 
-# Remove tmp file
-rm ${temp_index_html}
+if [[ $LOGLEVEL = "DEBUG" ]]; then
+  cmd="singularity --debug shell"
+else
+  cmd="singularity exec"
+fi
+
+# Try set up overlay
+OVERLAY="TRUE"
+
+if [[ ${OVERLAY} == "TRUE" ]]; then
+
+  export OVERLAY_FILE="$VDT_DATA/image_overlay"
+
+  if [ ! -f "$OVERLAY_FILE" ];then
+    export COUNT="10000"
+    export BS="1M"
+
+    # Run mkfs command within container
+    singularity exec $VDT_BASE_IMAGE bash -c " \
+        mkdir -p overlay_tmp/upper overlay_tmp/work && \
+        dd if=/dev/zero of=$OVERLAY_FILE count=$COUNT bs=$BS && \
+        mkfs.ext3 -d overlay_tmp $OVERLAY_FILE && \
+        rm -rf overlay_tmp \
+        "
+  fi
+  cmd="$cmd --overlay $OVERLAY_FILE"
+fi
+
+
+cmd="$cmd $VDT_BASE_IMAGE $VDT_RUNSCRIPT"
+
+
+#"VDT_SOCKET_PORT" "VDT_DISPLAY_PORT"
+
+echo "$cmd"
+${cmd}
+
+
+
+
+# chekenv(){
+#     for var in "$@"; do
+#         if [[ -z ${!var} ]]; then error "'\$${var}' not set, did you launch this container correctly?";fi 
+#     done
+# }
