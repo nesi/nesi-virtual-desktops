@@ -26,5 +26,6 @@ From: cal/mahuika/rocky8-nesi:base
 
 dnf config-manager --set-enabled powertools
 dnf -y copr enable stenstorp/lightdm
-dnf -y groupinstall "xfce"
+dnf -y --setopt=group_package_types="mandatory" groupinstall "xfce" # Most default is trash.
 dnf -y install lightdm
+dnf -y install slurm-gui
