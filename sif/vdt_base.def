@@ -7,7 +7,7 @@ From: cal/mahuika/rocky8-nesi:vis
     export FIREFOX_VERSION=95.0
     export VGL_VERSION=2.6.3
     export DESKTOP_VERSION=3.0
-	export REPOPATH="https://github.com/nesi/nesi-virtual-desktops"
+	export REPOPATH="https://github.com/nesi/nesi-virtual-desktops/"
 
 	systemctl set-default graphical.target
     
@@ -21,7 +21,7 @@ From: cal/mahuika/rocky8-nesi:vis
 	#yum -y install xfce4-notifyd 
 	#yum -y install xfce4-systemload-plugin 
 	#yum -y install xfce4-eyes-plugin # To keep eyes on Maxime.
-    yum -y install gnome-terminal
+    yum -y install gnome-terminal # Good backup terminal.
 
 	yum -y install libXp # For ANSYS EM
 	yum -y install libX11
@@ -39,15 +39,15 @@ From: cal/mahuika/rocky8-nesi:vis
 	# Install Chrome
 	wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
     yum localinstall google-chrome-stable_current_x86_64.rpm
-
 	# Patch webs for nicer messages
-	wget https://raw.githubusercontent.com/nesi/nesi-virtual-desktops/main/dep/nesi_websockify.patch
+	wget $REPOPATH/raw/main/dep/nesi_websockify.patch
 	patch --verbose /opt/websockify/websockify/websocketproxy.py < nesi_websockify.patch
 
 	# VScode
-	rpm --import https://packages.microsoft.com/keys/microsoft.asc
-	echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> /etc/yum.repos.d/vscode.repo
-	yum -y install code
+	# Commenting out for now to speed up build
+	# rpm --import https://packages.microsoft.com/keys/microsoft.asc
+	# echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> /etc/yum.repos.d/vscode.repo
+	# yum -y install code
 
 	#GPU stuff 
 	#distribution=$(. /etc/os-release;echo $ID$VERSION_ID) && curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.repo | sudo tee /etc/yum.repos.d/nvidia-docker.repo
@@ -58,30 +58,14 @@ From: cal/mahuika/rocky8-nesi:vis
 	#==========================#
 
 	# Mainy doing this to set rather than mkdir
-	mkdir -pv ${XDG_CONFIG_DIRS:=/etc/xdg}
-
-# These should no longer be getting added.
-# 	# Modify startup apps. # Stop polkit nonsense
-# 	rm -f  /etc/xdg/autostart/xfce-polkit.desktop \
-# 	org.gnome.SettingsDaemon.Smartcard.desktop
-# org.gnome.SettingsDaemon.Wacom.desktop
-# xfce4-screensaver.desktop
-# xfce4-power-manager.desktop
-# org.gnome.SettingsDaemon.Sharing.desktop
+	mkdir -pv "${XDG_CONFIG_DIRS:=/etc/xdg}"
 
 	# Some of these no longer being installed
-	# rm -vf /usr/share/applications/gnome-bluetooth-panel.desktop \
-	# /usr/share/applications/xfce4-power-manager-settings.desktop \
-	# /usr/share/applications/xfce4-session-logout.desktop \
-	# /usr/share/applications/gnome-wifi-panel.desktop \
-	# /usr/share/applications/gnome-removable-media-panel.desktop \
-	# /usr/share/applications/gnome-printers-panel.desktop \
-	# /usr/share/applications/gnome-power-panel.desktop \
-	# /usr/share/applications/gnome-online-accounts-panel.desktop \
-	# /usr/share/applications/exo-mail-reader.desktop \
-	# /usr/share/applications/bluetooth-sendto.desktop || :
+	rm -vf /usr/share/applications/xfce4-power-manager-settings.desktop 
+	rm -vf /usr/share/applications/xfce4-session-logout.desktop
+    rm -vf  /etc/xdg/autostart/xfce-polkit.desktop
+
 	
 	# "Skel" files applied at build.
-	
-	wget $REPOPATH/skel.tar
-	tar -xvf skel.tar -C /
+	wget $REPOPATH/raw/main/sif/skel.tar
+	tar -xvpf skel.tar --strip-components=1 -C / 
