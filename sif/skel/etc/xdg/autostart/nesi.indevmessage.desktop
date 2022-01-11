@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Name=conf-notification
+Type=Application
+#Exec=bash -c "notify-send \"In Development\" \"This service is still in early development. Please report bugs, make suggestions, etc here: \'https://github.com/nesi/nesi-virtual-desktops\' or email Callum \'callum.walley@nesi.org.nz\'\" --icon=preferences-other -t=500"
+Exec=bash -c "\
+  zenity --notification\
+    --window-icon="warning"\
+    --title="In Development"\
+    --text=\"This service is still in early development. Please report bugs, make suggestions, etc here: \'https://github.com/nesi/nesi-virtual-desktops\' or email Callum \'callum.walley@nesi.org.nz\'\"""

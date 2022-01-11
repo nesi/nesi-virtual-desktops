@@ -1,0 +1,13 @@
+# zenity --warning --no-wrap --text="Are you sure?\nThis will end parent JupyterHub session." &&\
+# vnc_lockfile="$(ls -lAtr ~/.vnc | tail -n1)";\
+# vnc_lockfile="${vnc_lockfile%%\.*}";\
+# scancel ${SLURM_JOBID}&\
+# vncserver -kill :${vnc_lockfile##*\:}\
+# || exit
+
+zenity --warning --no-wrap --text="Are you sure?\nThis will end parent JupyterHub session." &&\
+(vnc_lockfile="$(ls -lAtr ~/.vnc | tail -n1)";\
+ vnc_lockfile="${vnc_lockfile%%\.*}";\
+ scancel -Q ${SLURM_JOBID};\
+ vncserver -kill :${vnc_lockfile##*\:}) ||\
+(echo "something else")

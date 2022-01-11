@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Log Out
+Comment=Log out of current VDT/Jupyter session.
+Exec=bash -e "/opt/vdt/endSession.sh"
+Icon=xfsm-logout
+Path=
+Terminal=false
+StartupNotify=false

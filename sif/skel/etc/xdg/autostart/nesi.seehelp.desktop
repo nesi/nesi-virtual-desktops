@@ -1,0 +1,5 @@
+[Desktop Entry]
+Version=1.0
+Name=conf-notification
+Type=Application
+Exec=bash -c "notify-send \"help\" \"See VDT help on bottom panel\" --icon=preferences-other -t=500"
