@@ -4,9 +4,10 @@ From: cal/mahuika/rocky8-nesi:vis
     see https://github.com/nesi/nesi-virtual-desktops
 %post
 	
-    export FIREFOX_VERSION=90.0
+    export FIREFOX_VERSION=95.0
     export VGL_VERSION=2.6.3
     export DESKTOP_VERSION=3.0
+	export REPOPATH="https://github.com/nesi/nesi-virtual-desktops"
 
 	systemctl set-default graphical.target
     
@@ -56,98 +57,31 @@ From: cal/mahuika/rocky8-nesi:vis
 	# XDG STUFF
 	#==========================#
 
-	#
+	# Mainy doing this to set rather than mkdir
 	mkdir -pv ${XDG_CONFIG_DIRS:=/etc/xdg}
 
-	# Modify startup apps.
-	rm -f  /etc/xdg/autostart/xfce-polkit.desktop	# Stop polkit nonsense
+# These should no longer be getting added.
+# 	# Modify startup apps. # Stop polkit nonsense
+# 	rm -f  /etc/xdg/autostart/xfce-polkit.desktop \
+# 	org.gnome.SettingsDaemon.Smartcard.desktop
+# org.gnome.SettingsDaemon.Wacom.desktop
+# xfce4-screensaver.desktop
+# xfce4-power-manager.desktop
+# org.gnome.SettingsDaemon.Sharing.desktop
 
-	# Remove uness c sir e apps from menu
-	rm -vf /usr/share/applications/gnome-bluetooth-panel.desktop \
-	/usr/share/applications/xfce4-power-manager-settings.desktop \
-	/usr/share/applications/xfce4-session-logout.desktop \
-	/usr/share/applications/gnome-wifi-panel.desktop \
-	/usr/share/applications/gnome-removable-media-panel.desktop \
-	/usr/share/applications/gnome-printers-panel.desktop \
-	/usr/share/applications/gnome-power-panel.desktop \
-	/usr/share/applications/gnome-online-accounts-panel.desktop \
-	/usr/share/applications/exo-mail-reader.desktop \
-	/usr/share/applications/bluetooth-sendto.desktop || :
-
-	# Set default windows.
-	cat << EOF > /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml 
-<?xml version="1.0" encoding="UTF-8"?>
-<channel name="xfce4-panel" version="1.0">
-  <property name="configver" type="int" value="2"/>
-  <property name="panels" type="array">
-    <value type="int" value="1"/>
-    <value type="int" value="2"/>
-    <property name="panel-1" type="empty">
-      <property name="position" type="string" value="p=6;x=0;y=0"/>
-      <property name="length" type="uint" value="100"/>
-      <property name="position-locked" type="bool" value="true"/>
-      <property name="size" type="uint" value="30"/>
-      <property name="plugin-ids" type="array">
-        <value type="int" value="1"/>
-        <value type="int" value="2"/>
-        <value type="int" value="3"/>
-        <value type="int" value="4"/>
-        <value type="int" value="5"/>
-      </property>
-    </property>
-    <property name="panel-2" type="empty">
-      <property name="position" type="string" value="p=10;x=0;y=0"/>
-      <property name="position-locked" type="bool" value="true"/>
-      <property name="plugin-ids" type="array">
-        <value type="int" value="6"/>
-        <value type="int" value="7"/>
-        <value type="int" value="8"/>
-        <value type="int" value="9"/>
-      </property>
-    </property>
-  </property>
-  <property name="plugins" type="empty">
-    <property name="plugin-1" type="string" value="applicationsmenu"/>
-    <property name="plugin-2" type="string" value="tasklist"/>
-    <property name="plugin-3" type="string" value="separator">
-      <property name="expand" type="bool" value="true"/>
-      <property name="style" type="uint" value="0"/>
-    </property>
-    <property name="plugin-4" type="string" value="pager"/>
-    <property name="plugin-5" type="string" value="clock"/>
-    <property name="plugin-6" type="string" value="showdesktop"/>
-    <property name="plugin-7" type="string" value="separator"/>
-    <property name="plugin-8" type="string" value="separator"/>
-    <property name="plugin-9" type="string" value="directorymenu">
-    </property>
-  </property>
-</channel>
-EOF
-
-# <property name="plugin-19" type="string" value="launcher">
-#       <property name="items" type="array">
-#         <value type="string" value="16245944913.desktop"/>
-#       </property>
-#     </property>
-
-#Custom plugins
-/usr/share/xfce4/panel-plugins
-./.config/xfce4/panel/
-
-
-	cat << EOF > /etc/xdg/autostart/lmod-conf-nesi.desktop
-[Desktop Entry]
-Version=1.0
-Name=conf-notification
-Type=Application
-Exec=bash -c "notify-send \"NeSI Modules\" \"Default loaded software can be set by editing \'\$VDT_SETUP\'\" --icon=preferences-other -t=500"
-EOF
-
-	cat << EOF > /etc/xdg/autostart/indev-nesi.desktop
-[Desktop Entry]
-Version=1.0
-Name=conf-notification
-Type=Application
-Exec=bash -c "notify-send \"In Development\" \"This service is still in early development. Please report bugs, make suggestions, etc here: \'https://github.com/nesi/nesi-virtual-desktops\' or email Callum \'callum.walley@nesi.org.nz\'\" --icon=preferences-other -t=180"
-EOF
-	chmod 0644 /etc/xdg/autostart/indev-nesi.desktop
+	# Some of these no longer being installed
+	# rm -vf /usr/share/applications/gnome-bluetooth-panel.desktop \
+	# /usr/share/applications/xfce4-power-manager-settings.desktop \
+	# /usr/share/applications/xfce4-session-logout.desktop \
+	# /usr/share/applications/gnome-wifi-panel.desktop \
+	# /usr/share/applications/gnome-removable-media-panel.desktop \
+	# /usr/share/applications/gnome-printers-panel.desktop \
+	# /usr/share/applications/gnome-power-panel.desktop \
+	# /usr/share/applications/gnome-online-accounts-panel.desktop \
+	# /usr/share/applications/exo-mail-reader.desktop \
+	# /usr/share/applications/bluetooth-sendto.desktop || :
+	
+	# "Skel" files applied at build.
+	
+	wget $REPOPATH/skel.tar
+	tar -xvf skel.tar -C /
