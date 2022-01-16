@@ -6,7 +6,8 @@ set -eo pipefail
 # Help                                                                         #
 ################################################################################
 usage() {
-  echo "usage: $0 [port-socket] [bind-path] [-d]"
+  echo "usage: $0 [socket-port] [bind-path] []"
+  echo "  socket-port must be between 1024 and 65525"
   exit 1
   echo
 }
@@ -33,19 +34,25 @@ if (( $# < 2 )); then
   usage
 fi
 
-echo "Using port:${1} and basepath:${2}"
-
-if [[ $LOGLEVEL = "DEBUG" ]]; then
-  echo "Debug is set! This will significantly slow launch."
+if (( $1 < 1024 || $1 > 65535 ));then
+  echo "  socket-port must be between 1024 and 65525. (Not '$1')"
+  exit 1
 fi
 
 # Create Conf and data dirs.
-
 VDT_DATA="${XDG_DATA_HOME:=$HOME/.local/share}/vdt"
 VDT_CONF="${XDG_DATA_HOME:=$HOME/.conf}/vdt"
 
 mkdir -vp ${VDT_DATA}
 mkdir -vp ${VDT_CONF}
+
+if [ -x "${VDT_CONF}/pre.bash" ]; then
+ source "${VDT_CONF}/pre.bash"
+fi
+
+if [[ $LOGLEVEL = "DEBUG" ]]; then
+  echo "Debug is set! This will significantly slow launch."
+fi
 
 # Load / unload required modules.
 module purge # > /dev/null  2>&1
@@ -112,7 +119,7 @@ else
 fi
 
 # Try set up overlay
-OVERLAY="TRUE"
+OVERLAY="FALSE"
 
 if [[ ${OVERLAY} == "TRUE" ]]; then
 
