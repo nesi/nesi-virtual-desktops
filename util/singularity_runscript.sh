@@ -6,6 +6,10 @@ export PATH="$PATH:/opt/slurm/bin:/opt/nesi/vdt/bin"
 export CPATH="$CPATH:/opt/slurm/include"
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/opt/slurm/lib64:/opt/slurm/lib64/slurm"
 
+if [ -x "${XDG_DATA_HOME:=$HOME/.conf}/vdt/post.bash" ]; then
+ source "${XDG_DATA_HOME:=$HOME/.conf}/vdt/post.bash"
+fi
+
 # CUDA specific.
 if [[ -n ${EBROOTCUDA} ]];then
     export LD_LIBRARY_PATH="/cm/local/apps/cuda/libs/current/lib64:$EBROOTCUDA/lib64:$EBROOTCUDA/extras/CUPTI/lib64:$EBROOTCUDA/nvvm/lib64:$LD_LIBRARY_PATH"
