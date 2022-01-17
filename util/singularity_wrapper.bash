@@ -42,6 +42,7 @@ fi
 
 # Parse inputs
 # TODO: Maybe have other paramters flaggable.
+params=""
 while (("$#")); do
     case "$1" in
     -h | --help)
@@ -71,16 +72,18 @@ module unload XALT -q
 module load Python Singularity/3.8.5 -q
 
 # Set default env variables.
-export VDT_ROOT="${VDT_ROOT:-"$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd -P)")"}"
-export VDT_BASE_IMAGE="${VDT_BASE_IMAGE:-"${VDT_ROOT}/sif"}"
-export VDT_RUNSCRIPT="${VDT_RUNSCRIPT:-"${VDT_ROOT}/util/singularity_runscript.sh"}"
-export VDT_OVERLAY="${VDT_OVERLAY:-"FALSE"}"
-export VDT_GPU="${VDT_GPU:-"FALSE"}"
+VDT_ROOT="${VDT_ROOT:-"$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd -P)")"}"
+VDT_BASE_IMAGE="${VDT_BASE_IMAGE:-"${VDT_ROOT}/sif"}"
+VDT_RUNSCRIPT="${VDT_RUNSCRIPT:-"${VDT_ROOT}/util/singularity_runscript.bash"}"
+VDT_OVERLAY="${VDT_OVERLAY:-"FALSE"}"
+VDT_GPU="${VDT_GPU:-"FALSE"}"
 
 # Overlay specific variables.
-export VDT_OVERLAY_FILE="${VDT_OVERLAY_FILE:-"${XDG_DATA_HOME:=$HOME/.conf}/vdt/image_overlay"}"
-export VDT_OVERLAY_COUNT="${VDT_OVERLAY_COUNT:-"10000"}"
-export VDT_OVERLAY_BS="${VDT_OVERLAY_BS:-"1M"}"
+VDT_OVERLAY_FILE="${VDT_OVERLAY_FILE:-"${XDG_DATA_HOME:=$HOME/.conf}/vdt/image_overlay"}"
+VDT_OVERLAY_COUNT="${VDT_OVERLAY_COUNT:-"10000"}"
+VDT_OVERLAY_BS="${VDT_OVERLAY_BS:-"1M"}"
+
+LOGLEVEL="${LOGLEVEL:-"INFO"}"
 
 # Check validity of SIF
 # If pointing to directory, use sif in there.
@@ -90,7 +93,7 @@ if [ -d ${VDT_BASE_IMAGE} ]; then
     # TODO only works for dirs with 1 sif
 fi
 # Check sif is valid
-if [ ! -x ${VDT_BASE_IMAGE} ]; then
+if [[ ! -x ${VDT_BASE_IMAGE} ]]; then
     echo "'${VDT_BASE_IMAGE}' is not a valid container"
     exit 1
 fi

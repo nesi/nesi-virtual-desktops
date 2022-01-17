@@ -1,5 +1,5 @@
 #!/bin/bash -e
-set -eu -o pipefail
+set -e -o pipefail
 
 ################################################################################
 # Help:                                                                      
@@ -33,6 +33,10 @@ set -eu -o pipefail
 #     This is to allow control over environment even if user cannot change command execution.
 #################################################################################
 
+if (($# < 2)); then
+    echo "Not enough inputs." && exit 1
+fi
+
 if [ -f "${XDG_CONFIG_HOME:=$HOME/.conf}/vdt/post.bash" ]; then
     # Fix permissions if required.
     if [ ! -x "${XDG_CONFIG_HOME:=$HOME/.conf}/vdt/post.bash" ]; then
@@ -60,8 +64,8 @@ fi
 vdt_display_port="$(python -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1]); s.close()')"
 
 # Start websockify and vncserver.
-/opt/websockify/run ${VDT_WEBSOCKOPTS} localhost:$VDT_SOCKET_PORT :$((vdt_display_port + 5900)) &
-/opt/TurboVNC/bin/vncserver "${VDT_VNCOPTS} :${vdt_display_port}"
-# TODO: Proccess suicide pact
+/opt/websockify/run ${VDT_WEBSOCKOPTS} localhost:${1} :$((vdt_display_port + 5900)) &
+/opt/TurboVNC/bin/vncserver ${VDT_VNCOPTS} :${vdt_display_port}
 
+# TODO: Proccess suicide pact
 wait
