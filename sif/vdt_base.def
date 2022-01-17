@@ -68,4 +68,4 @@ From: cal/mahuika/rocky8-nesi:vis
 	
 	# "Skel" files applied at build.
 	wget $REPOPATH/raw/main/sif/skel.tar
-	tar -xvpf skel.tar --strip-components=1 -C / 
+	tar --strip-components=1  -xvpf skel.tar

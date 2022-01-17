@@ -2,34 +2,42 @@
 set -eu -o pipefail
 
 ################################################################################
-# Help                                                                         #
-################################################################################
-# Runscript, identical in purpose to %runscript inside container.
-# Starts VNC server pointing to noVNC. Port redirected with websockify.
-# Usage
-#   ./singularity_runscript.bash  socketport  localhost
-# Arguments
-#   socketport: Local port that Websockify will forward to.
-#   basepath:   Endpoint basepath. 'localhost' for testing.
+# Help:                                                                      
+#     Runscript, identical in purpose to %runscript inside container.
+#     Starts VNC server pointing to noVNC. Port redirected with websockify.
+#
+# Usage:
+#     ./singularity_runscript.bash  socketport  localhost
+# Arguments:
+#     socketport: Local port that Websockify will forward to.
+#     basepath:   Endpoint basepath. 'localhost' for testing.
 # Global:
-#   PATH
-#   CPATH
-#   LD_LIBRARY_PATH
-#       Paths to be appended.
-#   EBROOTCUDA = ""
-#       If set indicated CUDA loaded by LMOD, will add required CUDA paths.
-#   XDG_DATA_HOME = ${HOME}/.local/share
-#       Data files, following XDG specification.
-#   VDT_WEBSOCKOPTS = "-wm xfce4-session -autokill -securitytypes TLSNone,X509None,None"
-#       Additional options to pass to websockify.
-#       See https://linux.die.net/man/1/websockify 
-#   VDT_VNCOPTS = ""
-#       Additional options to pass to vncserver. 
-#       See https://linux.die.net/man/1/vncserver
-#######################################
+#     PATH
+#     CPATH
+#     LD_LIBRARY_PATH
+#         Paths to be appended.
+#     EBROOTCUDA = ""
+#         If set indicated CUDA loaded by LMOD, will add required CUDA paths.
+#     XDG_DATA_HOME = ${HOME}/.local/share
+#         Data files, following XDG specification.
+#     XDG_CONFIG_HOME = ${HOME}/.config
+#         Data files, following XDG specification.
+#     VDT_WEBSOCKOPTS = "-wm xfce4-session -autokill -securitytypes TLSNone,X509None,None"
+#         Additional options to pass to websockify.
+#         See https://linux.die.net/man/1/websockify
+#     VDT_VNCOPTS = ""
+#         Additional options to pass to vncserver.
+#         See https://linux.die.net/man/1/vncserver
+# Config:
+#     If there is a bash script located at "${XDG_CONFIG_HOME}/vdt/post.bash", this will be sourced.
+#     This is to allow control over environment even if user cannot change command execution.
+#################################################################################
 
-
-if [ -x "${XDG_CONFIG_HOME:=$HOME/.conf}/vdt/post.bash" ]; then
+if [ -f "${XDG_CONFIG_HOME:=$HOME/.conf}/vdt/post.bash" ]; then
+    # Fix permissions if required.
+    if [ ! -x "${XDG_CONFIG_HOME:=$HOME/.conf}/vdt/post.bash" ]; then
+        chmod 700 "${XDG_CONFIG_HOME:=$HOME/.conf}/vdt/post.bash"
+    fi
     source "${XDG_CONFIG_HOME:=$HOME/.conf}/vdt/post.bash"
 fi
 
