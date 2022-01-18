@@ -7,6 +7,9 @@ See [Connecting to a Virtual Desktop](https://support.nesi.org.nz/hc/en-gb/artic
 ### Through JupyterHub
 Click the button ya dummy.
 #### Installation
+
+TODO: Setup scripts.
+
 * `pip install --user git+https://github.com/nesi/nesi-virtual-desktops`
 
 | -  | - |
@@ -31,9 +34,6 @@ cd nesi-virtual-desktops
 Make changes.
 Set debug and install from local.
 ```
-export VDT_ROOT=$PWD
-export LOGLEVEL=DEBUG
-export VDT_TEST=True
 pip install -e --user .
 ```
 
@@ -43,44 +43,36 @@ pip install -e --user .
 ## Files
 ```
 vdt/
-├── bin/
-│   ├── vdt
-│   ├── vdt_clean
-│   ├── vdt_kill
-│   ├── vdt_list
-│   ├── vdt_shell
-│   └── vdt_start
 ├── dep/
 │   └── nesi_websockify.patch
+├── jupyter_proxy_vdt/
+│   ├── __init__.py
+│   └── icon.svg
 ├── setup_scripts/
 │   ├── nesi_engineering.sh
 │   └── nesi.sh
 ├── sif/
 │   ├── rebuild.sh
+│   ├── rocky8.def
+│   ├── rocky8vis.def
 │   └── vdt_base.def
 ├── tests/
 │   └── test.sh
 ├── util/
-│   ├── common.sh
-│   ├── jupyter_proxy_launch.sh
 │   ├── singularity_runscript.sh
 │   └── singularity_wrapper.sh
-├── vdt_jupyter_proxy/
-│   ├── __init__.py
-│   └── crap_icon.svg
 ├── setup.py
-├── vdt
+├── CUSTOMISATION.md
 └── README.md
 ```
 
-### `bin/`
-For terrible code that should be thrown away.
-User commands. Elaborate here maybe.
-From mostly dep'd non-jupyter use.
 ### `dep/`
 Dependencies. When developing, have copies of them here. 
 #### `nesi_websockify.diff`
 A patchfile used during container build.
+### `jupyter_proxy_vdt/`
+Suff for python setuptools.
+#### `__init__.py`
 ### `setup_scripts/`
 Optional scripts designed to be run at first time setup.
 #### `nesi.sh`
@@ -102,8 +94,6 @@ Script for singularity %runscript. Launched inside container on startup.
 Wraps container launch, sets bind paths etc.
 #### `jupyter_proxy_launch.sh`
 Entry point for jupyter proxy.
-### `vdt_jupyter_proxy/`
-Suff for python setuptools.
 ### `README.md`
 Don't
 ### `setup.py`
