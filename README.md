@@ -40,6 +40,15 @@ pip install -e --user .
 #### Unstallation
 `pip uninstall vdt-jupyter-proxy`
 
+## Customisation
+Most of the customisation of the desktop can be done from within,
+panels, desktop, software preferences.
+### `pre.bash`
+Enviroment set in `singularity_wrapper.bash` can be changed by creating a file `$XDG_CONFIG_HOME/vdt/pre.bash`
+
+### `pre.bash`
+Enviroment set in `singularity_wrapper.bash` can be changed by creating a file `$XDG_CONFIG_HOME/vdt/pre.bash`
+
 ## Files
 ```
 vdt/
@@ -83,8 +92,14 @@ Engineering flavour desktop.
 For singularity stuff. Probably put image here.
 #### `rebuild.sh`
 Run to rebuild
+#### `rocky8.def` 
+#### `rocky8vis.def` 
 #### `vdt_base.def` 
 Main definition file
+
+### `sif/skel`
+Files to modify during container build.
+
 ### `tests/`
 ### `util/`
 Stuff thats not supposed to be user facing.
@@ -92,8 +107,6 @@ Stuff thats not supposed to be user facing.
 Script for singularity %runscript. Launched inside container on startup.
 #### `singularity_wrapper.sh`
 Wraps container launch, sets bind paths etc.
-#### `jupyter_proxy_launch.sh`
-Entry point for jupyter proxy.
 ### `README.md`
 Don't
 ### `setup.py`
@@ -103,7 +116,7 @@ Any variable starting with `VDT_` will be passed to the container during start.
 However, unlike with `SINGULARITYENV_` the prefix will be kept. 
 `SINGULARITYENV_ENV`  ->  `ENV` 
 
-`DT_ENV`  ->  `VDT_ENV`
+`VDT_ENV`  ->  `VDT_ENV`
 
 | ENV_VAR  | Default | Purpose | Set/Referenced |
 | ------------- | ------------- | ------------- | ------------- |
@@ -129,14 +142,11 @@ However, unlike with `SINGULARITYENV_` the prefix will be kept.
 | ENV_VAR  | Default | Purpose | Set/Referenced |
 | ------------- | ------------- | ------------- | ------------- |
 | XDG_CONFIG_HOME |`$HOME/.config` | Location of desktop setup. | 
-| XDG_DATA_HOME | | Can't remember |  |
+| XDG_DATA_HOME |`$HOME/.local/share` | `Overlay image is stored here` |  |
 
 ## Notes for supporting on Mahuika
 
-This repo is in `/opt/nesi/vdt`
-
-
-~~Currently storing all `.sif` files in `/opt/nesi/containers/images`, `image` in template should link here.~~
+~~Currently storing all `.sif` files in `/opt/nesi/containers/`, `image` in template should link here.~~
 
 Run `rebuild.sh` to update. e.g. `rebuild.sh nesi-virtual-desktops_eng.sif`. 
 
