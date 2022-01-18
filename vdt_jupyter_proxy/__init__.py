@@ -1,43 +1,21 @@
 import os
 import subprocess
 import pkg_resources
+from pkg_resources import resource_filename
 from pathlib import Path
-
-
-# def get_singularity_path():
-#     """find the path for singularity executable on NeSI"""
-#     cmd_result = subprocess.run(
-#         "module load Singularity && which singularity",
-#         capture_output=True,
-#         shell=True,
-#         timeout=10,
-#     )
-#     return cmd_result.stdout.strip().decode()
-
 
 def setup_vdt():
 
-     #def_vdt="/opt/nesi/vdt"
-    def_vdt="/opt/nesi/vdt"
-
-    vdt_root = os.getenv('VDT_ROOT',def_vdt)
-#    account = os.environ["SLURM_JOB_ACCOUNT"]
-    # os.environ["LOGLEVEL"] = "DEBUG"
-
-    # # See if can find central install.
-    # try:
-    #     jupyter_wrapper
-    #     #rstudio_password = (home_path / ".rstudio_server_password").read_text()
-    # except FileNotFoundError:
-    #     # If no.
-
-    jupyter_wrapper = f"{vdt_root}/util/jupyter_proxy_launch.sh"
-    icon_path = pkg_resources.resource_filename("vdt_jupyter_proxy", "crap_icon.svg")
-    launcher_title = "VirtualDesktopTest" if "VDT_TEST" in os.environ else "VirtualDesktop"
+    pkg_path = "vdt_jupyter_proxy"
+    icon_path = resource_filename(pkg_path, "crap_icon.svg")
+    wrapper_path = resource_filename(pkg_path, "singularity_wrapper.bash")
+    runscript_path = resource_filename(pkg_path, "singularity_runscript.bash") # Is inferred in wrapper.
+    launcher_title = "VirtualDesktop"
 
     return {
-    'command': [jupyter_wrapper, '{port}', 'vnc.html?path={base_url}vdt/vnc.html&autoconnect=true&resize=remote' ],
+    'command': [wrapper_path, '{port}', 'vnc.html?path={base_url}vdt/vnc.html&autoconnect=true&resize=remote' ],
     'timeout': 300,
+    "environment": {"VDT_BASE_IMAGE": "/opt/nesi/containers/vdt_base/dev_vdt_base.sif"},
     'absolute_url': False,
     'new_browser_tab':True,
         "launcher_entry": {
