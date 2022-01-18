@@ -6,7 +6,7 @@ from pathlib import Path
 
 def setup_vdt():
 
-    pkg_path = "vdt_jupyter_proxy"
+    pkg_path = "jupyter_proxy_vdt"
     icon_path = resource_filename(pkg_path, "crap_icon.svg")
     wrapper_path = resource_filename(pkg_path, "singularity_wrapper.bash")
     runscript_path = resource_filename(pkg_path, "singularity_runscript.bash") # Is inferred in wrapper.
