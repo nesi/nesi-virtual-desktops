@@ -21,9 +21,15 @@ xfce4-panel -r
 
 
 ## Modifying 'skel' files.
+```
 cd sif
 tar -cpf  skel.tar skel
 git add skel
+git commit -m 'updated skel'
+git push origin main
+```
+
+Then rebuild
 
 ## Rebuilding image using syslab remote build service.
 ```
