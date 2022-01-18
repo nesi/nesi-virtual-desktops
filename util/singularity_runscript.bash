@@ -33,7 +33,7 @@ set -e -o pipefail
 #     This is to allow control over environment even if user cannot change command execution.
 #################################################################################
 
-if (($# < 2)); then
+if (($# < 1)); then
     echo "Not enough inputs." && exit 1
 fi
 

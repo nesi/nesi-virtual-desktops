@@ -57,7 +57,7 @@ while (("$#")); do
 done
 eval set -- "$params"
 
-if (($# < 2)); then
+if (($# < 1)); then
     echo "Not enough inputs." && usage && exit 1
 fi
 
@@ -155,7 +155,7 @@ if [[ ${VDT_OVERLAY} == "TRUE" ]]; then
     cmd="${cmd} --overlay ${VDT_OVERLAY_FILE}"
 fi
 
-cmd="${cmd} ${VDT_BASE_IMAGE} ${VDT_RUNSCRIPT} ${1} ${2}"
+cmd="${cmd} ${VDT_BASE_IMAGE} ${VDT_RUNSCRIPT} ${1}"
 
 echo "$cmd"
 ${cmd}
