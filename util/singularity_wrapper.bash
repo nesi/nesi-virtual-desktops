@@ -15,11 +15,11 @@ set -eu -o pipefail
 #    VDT_BASE_IMAGE                  ${VDT_ROOT}/sif
 #    VDT_RUNSCRIPT                   ${VDT_ROOT}/util/singularity_runscript.bash
 #    VDT_GPU                         ""
-#    VDT_OVERLAY                     ""
+#    VDT_OVERLAY                     "FALSE"
 #    VDT_OVERLAY_FILE                ${XDG_DATA_HOME}/vdt/image_overlay
 #    VDT_OVERLAY_COUNT               10000
 #    VDT_OVERLAY_BS                  1M
-#    LOGLEVEL                        ""
+#    LOGLEVEL                        "INFO"
 #    SINGULARITY_BIND                ""
 #    SINGULARITYENV_LD_LIBRARY_PATH  $LD_LIBRARY_PATH
 #    SINGULARITYENV_PATH             $PATH

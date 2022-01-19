@@ -45,9 +45,37 @@ Most of the customisation of the desktop can be done from within,
 panels, desktop, software preferences.
 ### `pre.bash`
 Enviroment set in `singularity_wrapper.bash` can be changed by creating a file `$XDG_CONFIG_HOME/vdt/pre.bash`
+Anything you want to run *before* launching the container put in here.
+See [Set inside container]().
+#### pre.bash
+```
+export VDT_BASE_IMAGE="~/my_custom_container.sif"  # Use a different image file.
+export VDT_RUNSCRIPT="~/my_custom_runscript"  # Use a different runscript.
 
-### `pre.bash`
-Enviroment set in `singularity_wrapper.bash` can be changed by creating a file `$XDG_CONFIG_HOME/vdt/pre.bash`
+export OVERLAY="TRUE"
+export BROWSER="chrome"         # Desktop session will inherit this.
+
+module load ANSYS/2021R2        # Any modules you want to be loaded in main instance go here.
+```
+
+
+### `post.bash`
+Enviroment set in `runscript_wrapper.bash` can be changed by creating a file `$XDG_CONFIG_HOME/vdt/post.bash`
+
+Things you may wish to set here are:
+VDT_WEBSOCKOPTS, VDT_VNCOPTS, any changes to the wm enviroment, any changes to path, this include module files.
+
+#### post.bash
+```
+
+export VDT_VNCOPTS="-depth 16"  # This will start a 16bit desktop
+export BROWSER="chrome"         # Desktop session will inherit this.
+
+module load ANSYS/2021R2        # Any modules you want to be loaded in main instance go here.
+```
+
+### Custom container
+You can build your own container bootstrapping off `vdt_base.sif`/`rocky8vis.sif` and then overwrite the default by setting `VDT_BASE_IMAGE` in `pre.bash`.
 
 ## Files
 ```
@@ -120,21 +148,18 @@ However, unlike with `SINGULARITYENV_` the prefix will be kept.
 
 | ENV_VAR  | Default | Purpose | Set/Referenced |
 | ------------- | ------------- | ------------- | ------------- |
-| VDT_LOGFILE  | `"/dev/null"` | Location of logfile. | `vncserver -log`/`util/common.sh` 
-| VDT_ROOT  |  | Location of this repo. |  /`sif/vdt_base.def`,`util/common.sh` |
-| VDT_HOME | DEPRICATED replace with `"$XDG_CONFIG_HOME/.vdt"` | | `util/common.sh` |
-| VDT_SETUP |`$VDT_HOME/vdt_setup.conf`| Location of setup file. ||
-| VDT_LOCKFILES | `"$VDT_ROOT/lockfiles"` | dep | `util/common.sh` 
-| VDT_LOCKFILE | `"$VDT_LOCKFILES/"` | dep | `util/common.sh` 
-| VDT_TEMPLATES | `"$VDT_ROOT/templates"` | dep|`util/common.sh` 
-| VDT_BASE | `"default"` | dep |||
+| VDT_ROOT  | wrapper location | Location of this repo. | `singularity_wrapper.bash`|
+| VDT_TEMPLATES | `"$VDT_ROOT/templates"` | N/A
 | VDT_BASE_IMAGE | `"default"` | dep |||
-| VDT_INSTANCE_NAME | `"${VDT_BASE}_${USER}"` | dep |
-| VDT_SOCKET_PORT | | Forwarded port used to connect to websockify. | Set by user |
-| VDT_DISPLAY_PORT | Random nubmer between 1100 and 2000 | Display port used by vnc. |
-| VDT_WEBSOCKOPTS | | Additional options to pass to websockify. |
-| VDT_VNCOPTS | | Additional options to pass to vnc ||
-
+| VDT_WEBSOCKOPTS | `""` | Additional options to pass to websockify. |
+| VDT_VNCOPTS | `""` | Additional options to pass to vnc ||
+| VDT_RUNSCRIPT | `${VDT_ROOT}/util/singularity_runscript.bash` | runscript to use. |
+| VDT_GPU | `""` | Whether to bind CUDA TODO: |
+| VDT_OVERLAY | `"FALSE"` | |
+| VDT_OVERLAY_FILE | `${XDG_DATA_HOME}/vdt/image_overlay` | |
+| VDT_OVERLAY_COUNT | `10000` | |
+| VDT_OVERLAY_BS | `1M` | |
+| LOGLEVEL | `"INFO"` | |
 *Not complete list*
 
 ## Other Enviroment Variables
@@ -143,7 +168,7 @@ However, unlike with `SINGULARITYENV_` the prefix will be kept.
 | ------------- | ------------- | ------------- | ------------- |
 | XDG_CONFIG_HOME |`$HOME/.config` | Location of desktop setup. | 
 | XDG_DATA_HOME |`$HOME/.local/share` | `Overlay image is stored here` |  |
-
+| EBROOTCUDA | "" | If set indicated CUDA loaded by LMOD, will add required CUDA paths. |
 ## Notes for supporting on Mahuika
 
 ~~Currently storing all `.sif` files in `/opt/nesi/containers/`, `image` in template should link here.~~

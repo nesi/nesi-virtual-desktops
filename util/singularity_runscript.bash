@@ -10,7 +10,6 @@ set -e -o pipefail
 #     ./singularity_runscript.bash  socketport  localhost
 # Arguments:
 #     socketport: Local port that Websockify will forward to.
-#     basepath:   Endpoint basepath. 'localhost' for testing.
 # Global:
 #     PATH
 #     CPATH
