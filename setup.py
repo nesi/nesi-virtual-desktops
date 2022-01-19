@@ -36,15 +36,15 @@ class InstallCommand(install):
         install.run(self)
 
 setup(
-    name="vdt_jupyter_proxy",
-    version="2.4.0",
+    name="jupyter_proxy_vdt",
+    version="3.0.0",
     description="launch vdt from jupyterproxy",
     url="git-repo-here",
     packages=find_packages(),
     python_requires=">3.8",
-    package_data={"vdt_jupyter_proxy": ["crap_icon.svg"]},
+    package_data={"jupyter_proxy_vdt": ["crap_icon.svg"]},
     entry_points={
-        "jupyter_serverproxy_servers": ["vdt = vdt_jupyter_proxy:setup_vdt"]
+        "jupyter_serverproxy_servers": ["vdt = jupyter_proxy_vdt:setup_vdt"]
     },
     cmdclass={
         'install': InstallCommand,
