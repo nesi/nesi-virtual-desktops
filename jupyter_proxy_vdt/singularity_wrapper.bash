@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eu -o pipefail
+set -evu -o pipefail
 
 ################################################################################
 # Help                                                                         #
@@ -73,8 +73,9 @@ module load Python Singularity/3.8.5 -q
 
 # Set default env variables.
 VDT_ROOT="${VDT_ROOT:-"$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd -P)")"}"
-VDT_BASE_IMAGE="${VDT_BASE_IMAGE:-"${VDT_ROOT}/sif"}"
-VDT_RUNSCRIPT="${VDT_RUNSCRIPT:-"${VDT_ROOT}/util/singularity_runscript.bash"}"
+#VDT_BASE_IMAGE="${VDT_BASE_IMAGE:-"${VDT_ROOT}/sif"}"
+VDT_BASE_IMAGE="/opt/nesi/containers/vdt_base/dev_vdt_base.sif"
+VDT_RUNSCRIPT="${VDT_RUNSCRIPT:-"${VDT_ROOT}/singularity_runscript.bash"}"
 VDT_OVERLAY="${VDT_OVERLAY:-"FALSE"}"
 VDT_GPU="${VDT_GPU:-"FALSE"}"
 
@@ -85,8 +86,11 @@ VDT_OVERLAY_BS="${VDT_OVERLAY_BS:-"1M"}"
 
 LOGLEVEL="${LOGLEVEL:-"INFO"}"
 
+env
+
 # Check validity of SIF
 # If pointing to directory, use sif in there.
+echo "$VDT_BASE_IMAGE"
 if [ -d ${VDT_BASE_IMAGE} ]; then
     echo "VDT_BASE_IMAGE is directory, looking for .sif"
     VDT_BASE_IMAGE="${VDT_BASE_IMAGE}/*.sif"

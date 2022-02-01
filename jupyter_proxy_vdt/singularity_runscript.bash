@@ -1,5 +1,5 @@
 #!/bin/bash -e
-set -e -o pipefail
+set -ev -o pipefail
 
 ################################################################################
 # Help:                                                                      
@@ -36,6 +36,8 @@ if (($# < 1)); then
     echo "Not enough inputs." && exit 1
 fi
 
+env
+
 if [ -f "${XDG_CONFIG_HOME:=$HOME/.conf}/vdt/post.bash" ]; then
     # Fix permissions if required.
     if [ ! -x "${XDG_CONFIG_HOME:=$HOME/.conf}/vdt/post.bash" ]; then
@@ -45,7 +47,7 @@ if [ -f "${XDG_CONFIG_HOME:=$HOME/.conf}/vdt/post.bash" ]; then
 fi
 
 # Append Paths
-export PATH="$PATH:/opt/slurm/bin:/opt/nesi/vdt/bin"
+export PATH="$PATH:/opt/slurm/bin" #:/opt/nesi/vdt/bin"
 export CPATH="$CPATH:/opt/slurm/include"
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/opt/slurm/lib64:/opt/slurm/lib64/slurm"
 
