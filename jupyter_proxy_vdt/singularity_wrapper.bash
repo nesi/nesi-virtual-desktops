@@ -1,46 +1,43 @@
-#!/bin/bash
-set -evu -o pipefail
+#!/usr/bin/env bash
+set -eu -o pipefail
 
-################################################################################
-# Help                                                                         #
-#     Runscript, identical in purpose to %runscript inside container.
-#     Starts VNC server pointing to noVNC. Port redirected with websockify.
-# Usage
-#    ./singularity_wrapper.bash [-h] [--help] socketport  localhost
-# Arguments
-#    socketport: Local port that Websockify will forward to.
-#    basepath:   Endpoint basepath. 'localhost' for testing.
-# Global:
-#    VDT_ROOT                        script directory.
-#    VDT_BASE_IMAGE                  ${VDT_ROOT}/sif
-#    VDT_RUNSCRIPT                   ${VDT_ROOT}/util/singularity_runscript.bash
-#    VDT_GPU                         ""
-#    VDT_OVERLAY                     "FALSE"
-#    VDT_OVERLAY_FILE                ${XDG_DATA_HOME}/vdt/image_overlay
-#    VDT_OVERLAY_COUNT               10000
-#    VDT_OVERLAY_BS                  1M
-#    LOGLEVEL                        "INFO"
-#    SINGULARITY_BIND                ""
-#    SINGULARITYENV_LD_LIBRARY_PATH  $LD_LIBRARY_PATH
-#    SINGULARITYENV_PATH             $PATH
-# Global(Inherited by runscript):
-#    VDT_WEBSOCKOPTS                 ""
-#    VDT_VNCOPTS                     ""
-# Config:
-#     If there is a bash script located at "${XDG_CONFIG_HOME}/vdt/post.bash", this will be sourced.
-#     This is to allow control over environment even if user cannot change command execution.
-#######################################
 
-usage() {
-    echo "usage: $0 socket-port bind-path"
-    exit 0
+usage(){
+	cat <<EOF
+Help                                                                         #
+    Runscript, identical in purpose to %runscript inside container.
+    Starts VNC server pointing to noVNC. Port redirected with websockify.
+Usage
+   ./singularity_wrapper.bash [-h] [--help] socketport
+Arguments
+   socketport: Local port that Websockify will forward to.
+Global:
+   VDT_ROOT                        script directory.
+   VDT_BASE_IMAGE                  ${VDT_ROOT}/sif
+   VDT_RUNSCRIPT                   ${VDT_ROOT}/util/singularity_runscript.bash
+   VDT_GPU                         ""
+   VDT_OVERLAY                     "FALSE"
+   VDT_OVERLAY_FILE                ${XDG_DATA_HOME}/vdt/image_overlay
+   VDT_OVERLAY_COUNT               10000
+   VDT_OVERLAY_BS                  1M
+   LOGLEVEL                        "INFO"
+   SINGULARITY_BIND                ""
+   SINGULARITYENV_LD_LIBRARY_PATH  $LD_LIBRARY_PATH
+   SINGULARITYENV_PATH             $PATH
+Global(Inherited by runscript):
+   VDT_WEBSOCKOPTS                 ""
+   VDT_VNCOPTS                     ""
+Config:
+    If there is a bash script located at "${XDG_CONFIG_HOME}/vdt/post.bash", this will be sourced.
+    This is to allow control over environment even if user cannot change command execution.
+EOF
 }
 
 if [ -x "${XDG_CONFIG_HOME:=$HOME/.conf}/vdt/pre.bash" ]; then
     source "${XDG_CONFIG_HOME:=$HOME/.conf}/vdt/pre.bash"
 fi
 
-# Parse inputs
+# Parse flags
 # TODO: Maybe have other paramters flaggable.
 params=""
 while (("$#")); do
@@ -57,12 +54,12 @@ while (("$#")); do
 done
 eval set -- "$params"
 
-if (($# < 1)); then
+if [[ $# -le 0 ]]; then
     echo "Not enough inputs." && usage && exit 1
 fi
 
 if (($1 < 1024 || $1 > 65535)); then
-    echo "  socket-port must be between 1024 and 65525. (Not '$1')"
+    echo "  socket-port must be between 1024 and 65525. (Not '$1')" && usage && exit 1
     exit 1
 fi
 
@@ -72,7 +69,8 @@ module unload XALT -q
 module load Python Singularity/3.8.5 -q
 
 # Set default env variables.
-VDT_ROOT="${VDT_ROOT:-"$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd -P)")"}"
+VDT_ROOT="${VDT_ROOT:-"$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd -P)"}"
+echo VDT_ROOT
 #VDT_BASE_IMAGE="${VDT_BASE_IMAGE:-"${VDT_ROOT}/sif"}"
 VDT_BASE_IMAGE="/opt/nesi/containers/vdt_base/dev_vdt_base.sif"
 VDT_RUNSCRIPT="${VDT_RUNSCRIPT:-"${VDT_ROOT}/singularity_runscript.bash"}"
@@ -85,8 +83,6 @@ VDT_OVERLAY_COUNT="${VDT_OVERLAY_COUNT:-"10000"}"
 VDT_OVERLAY_BS="${VDT_OVERLAY_BS:-"1M"}"
 
 LOGLEVEL="${LOGLEVEL:-"INFO"}"
-
-env
 
 # Check validity of SIF
 # If pointing to directory, use sif in there.
