@@ -37,14 +37,14 @@ class InstallCommand(install):
 
 setup(
     name="jupyter_proxy_vdt",
-    version="3.0.1",
+    version="3.0.5",
     description="launch vdt from jupyterproxy",
     url="https://github.com/nesi/nesi-virtual-desktops",
     packages=find_packages(),
     python_requires=">3.8",
     package_data={"jupyter_proxy_vdt": ["crap_icon.svg", "singularity_wrapper.bash", "singularity_runscript.bash"]},
     entry_points={
-        "jupyter_serverproxy_servers": ["vdt = jupyter_proxy_vdt:setup_vdt"]
+        "jupyter_serverproxy_servers": ["jupyter_proxy_vdt = jupyter_proxy_vdt:setup_jupyter_proxy_vdt"]
     },
     cmdclass={
         'install': InstallCommand,

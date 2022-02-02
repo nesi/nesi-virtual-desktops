@@ -5,7 +5,7 @@ import pkg_resources
 from pkg_resources import resource_filename
 from pathlib import Path
 
-def setup_vdt():
+def setup_jupyter_proxy_vdt():
 
     pkg_path = "jupyter_proxy_vdt"
     icon_path = resource_filename(pkg_path, "crap_icon.svg")
