@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -ev -o pipefail
+set -e -o pipefail
 
 usage(){
 	cat <<EOF
@@ -37,12 +37,12 @@ if [[ $# -le 0 ]]; then
     echo "Not enough inputs." && usage && exit 1
 fi
 
-if [ -f "${XDG_CONFIG_HOME:=$HOME/.conf}/vdt/post.bash" ]; then
+if [ -f "${XDG_CONFIG_HOME:=$HOME/.config}/vdt/post.bash" ]; then
     # Fix permissions if required.
-    if [ ! -x "${XDG_CONFIG_HOME:=$HOME/.conf}/vdt/post.bash" ]; then
-        chmod 700 "${XDG_CONFIG_HOME:=$HOME/.conf}/vdt/post.bash"
+    if [ ! -x "${XDG_CONFIG_HOME:=$HOME/.config}/vdt/post.bash" ]; then
+        chmod 700 "${XDG_CONFIG_HOME:=$HOME/.config}/vdt/post.bash"
     fi
-    source "${XDG_CONFIG_HOME:=$HOME/.conf}/vdt/post.bash"
+    source "${XDG_CONFIG_HOME:=$HOME/.config}/vdt/post.bash"
 fi
 
 # Append Paths
