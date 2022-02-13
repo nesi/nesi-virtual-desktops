@@ -14,13 +14,13 @@ def setup_jupyter_proxy_vdt():
 
     pkg_version = pkg_resources.require(pkg_path)[0].version
     launcher_title = f"Virtual Desktop {pkg_version}"
-    pkg_resources.re
+    
     return {
-    'command': [wrapper_path, '{port}', 'vnc.html?path={base_url}vdt/vnc.html&autoconnect=true&resize=remote' ],
-    'timeout': 300,
+    "command": [wrapper_path, "{port}", "vnc.html?path={base_url}vdt/vnc.html&autoconnect=true&resize=remote"],
+    "timeout": 300,
     "environment": {"VDT_BASE_IMAGE": "/opt/nesi/containers/vdt_base/dev_vdt_base.sif"},
-    'absolute_url': False,
-    'new_browser_tab':True,
+    "absolute_url": False,
+    "new_browser_tab":True,
         "launcher_entry": {
             "icon_path": icon_path,
             "title": launcher_title,
