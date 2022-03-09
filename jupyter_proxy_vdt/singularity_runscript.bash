@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e -o pipefail
 
-usage(){
-	cat <<EOF
+usage() {
+    cat <<EOF
 Help:                                                                      
     Runscript, identical in purpose to '%runscript' inside a singularity recipie.
     Starts VNC server pointing to noVNC. Port redirected with websockify.

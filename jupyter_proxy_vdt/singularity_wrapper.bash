@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e -o pipefail
 
-usage(){
-	cat <<EOF
+usage() {
+    cat <<EOF
 Help                                                                         #
     Runscript, identical in purpose to %runscript inside container.
     Starts VNC server pointing to noVNC. Port redirected with websockify.
@@ -101,13 +101,13 @@ if [[ ! -x ${VDT_BASE_IMAGE} ]]; then
 fi
 
 # TODO: Should check if GPU avail first
-if [[ ${VDT_GPU} == "TRUE" ]];then
+if [[ ${VDT_GPU} == "TRUE" ]]; then
     module load CUDA
 fi
 
 # Bind minimal paths
 export SINGULARITY_BINDPATH="${SINGULARITY_BINDPATH:-\
-"/home,\
+        "/home,\
 /scale_wlg_persistent/filesets/project,\
 /etc/hosts,\
 /etc/opt/slurm,\
@@ -137,8 +137,8 @@ for ev in "VDT_WEBSOCKOPTS" "VDT_VNCOPTS"; do
 done
 
 # Create conf and data dirs.
-mkdir -vp   "${XDG_DATA_HOME:-$HOME/.local/share}/vdt" \
-            "${XDG_DATA_HOME:-$HOME/.config}/vdt"
+mkdir -vp "${XDG_DATA_HOME:-$HOME/.local/share}/vdt" \
+    "${XDG_DATA_HOME:-$HOME/.config}/vdt"
 
 # Build command.
 if [[ $LOGLEVEL = "DEBUG" ]]; then
@@ -158,11 +158,11 @@ if [[ ${VDT_OVERLAY} == "TRUE" ]]; then
     fi
     cmd="${cmd} --overlay ${VDT_OVERLAY_FILE}"
     # If using overlay, replace index file.
-    echo "<meta http-equiv=\"refresh\" content=\"0; URL='${2}'\"/>" > "/opt/noVNC/index.html"
+    echo "<meta http-equiv=\"refresh\" content=\"0; URL='${2}'\"/>" >"/opt/noVNC/index.html"
 else
     # If not using overlay, need to mount redirect file.
     temp_index_html=$(mktemp "${TMPDIR:-"/tmp"}/XXX")
-    echo "<meta http-equiv=\"refresh\" content=\"0; URL='${2}'\"/>" > "$temp_index_html"
+    echo "<meta http-equiv=\"refresh\" content=\"0; URL='${2}'\"/>" >"$temp_index_html"
 
     export SINGULARITY_BINDPATH="$SINGULARITY_BINDPATH,${temp_index_html}:/opt/noVNC/index.html"
 fi
