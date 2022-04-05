@@ -21,6 +21,7 @@ From: cal/mahuika/rocky8-nesi:vis
 	#yum -y install xfce4-notifyd 
 	#yum -y install xfce4-systemload-plugin 
 	#yum -y install xfce4-eyes-plugin # To keep eyes on Maxime.
+	yum -y install xfce4-terminal # not in epel for some reason?
     yum -y install gnome-terminal # Good backup terminal.
 
 	yum -y install libXp # For ANSYS EM
