@@ -18,6 +18,8 @@ From: cal/mahuika/rocky8-nesi:vis
 	# ANSYS DEPS 
 	#yum -y install alsa-lib at-spi2-atk at-spi2-core atk avahi-libs bzip2-libs cyrus-sasl-lib elfutils-libelf elfutils-libs
 
+	yum -y groupinstall "Xfce"
+
 	#yum -y install xfce4-notifyd 
 	#yum -y install xfce4-systemload-plugin 
 	#yum -y install xfce4-eyes-plugin # To keep eyes on Maxime.
@@ -28,7 +30,11 @@ From: cal/mahuika/rocky8-nesi:vis
 	yum -y install libX11
 	yum -y install libXext
 
-	
+	yum -y install mesa-libGL
+	yum -y install mesa-libGL-devel
+	yum -y install mesa-libGLU
+	yum -y install mesa-libGLU-devel
+
 	# Non essential stuff below.
 	set +e
 
