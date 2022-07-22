@@ -69,7 +69,7 @@ fi
 # Load / unload required modules.
 module purge # > /dev/null  2>&1
 module unload XALT -q
-module load Python Singularity/3.9.4 -q
+module load Python Singularity/3.9.8 -q
 
 # Set default env variables.
 VDT_ROOT="${VDT_ROOT:-"$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd -P)"}"
@@ -107,7 +107,7 @@ fi
 
 # Bind minimal paths
 export SINGULARITY_BINDPATH="${SINGULARITY_BINDPATH:-\
-        "/home,\
+                "/home,\
 /scale_wlg_persistent/filesets/project,\
 /etc/hosts,\
 /etc/opt/slurm,\

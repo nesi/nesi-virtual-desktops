@@ -7,7 +7,7 @@
 if [[ $# -lt 1 ]];then echo "Not enough args. Usage: $(basename $0) container-name[.sif|.def] "; exit 1;fi
 
 module purge
-module load Singularity/3.9.4
+module load Singularity/3.9.8
 module unload XALT
 wosif=$(basename ${1%.*})
 
