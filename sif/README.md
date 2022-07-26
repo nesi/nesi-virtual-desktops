@@ -13,8 +13,6 @@
 
 # Local desktop files
 ~/.local/share/applications
-
-
 ./.config/xfce4/panel/
 xfce4-panel -r
 
