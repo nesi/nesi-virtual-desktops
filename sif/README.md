@@ -23,7 +23,7 @@ xfce4-panel -r
 ## Modifying 'skel' files.
 ```
 cd sif
-tar -cpf  skel.tar skel
+tar -cf  skel.tar skel
 git add skel
 git commit -m 'updated skel'
 git push origin main
@@ -39,3 +39,13 @@ Then rebuild
 Where `image.def` is the def file of the image you want to build.
 
 ## Uploading to syslab cloud
+
+## Image files on NeSI.
+
+New builds should be placed 
+
+```
+/opt/nesi/containers/vdt_base/vdt_base_0-0-0.sif
+```
+
+Symlink `vdt_base.sif` should point to the newest version.

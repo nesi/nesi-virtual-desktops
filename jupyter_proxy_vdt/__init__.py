@@ -26,7 +26,7 @@ def setup_jupyter_proxy_vdt():
         ],
         "timeout": 300,
         "environment": {
-            "VDT_BASE_IMAGE": "/opt/nesi/containers/vdt_base/dev_vdt_base.sif"
+            "VDT_BASE_IMAGE": "/opt/nesi/containers/vdt_base/vdt_base.sif"
         },
         "absolute_url": False,
         "new_browser_tab": True,
