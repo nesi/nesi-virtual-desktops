@@ -45,7 +45,7 @@ class InstallCommand(install):
 
 setup(
     name="jupyter_proxy_vdt",
-    version="2.4.2",
+    version="2.4.3",
     description="launch vdt from jupyterproxy",
     url="https://github.com/nesi/nesi-virtual-desktops",
     packages=find_packages(),
