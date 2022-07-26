@@ -53,11 +53,6 @@
     <property name="plugin-4" type="string" value="clock">
       <property name="items" type="empty" />
     </property>
-    <property name="plugin-5" type="string" value="launcher">
-      <property name="items" type="array">
-        <value type="string" value="logOut.desktop" />
-      </property>
-    </property>
     <property name="plugin-6" type="string" value="showdesktop" />
     <property name="plugin-7" type="string" value="separator" />
     <property name="plugin-8" type="string" value="launcher">
