@@ -75,4 +75,7 @@ From: cal/mahuika/rocky8-nesi:vis
 	
 	# "Skel" files applied at build.
 	wget $REPOPATH/raw/main/sif/skel.tar
-	tar --strip-components=1  -xvpf skel.tar
+	tar --strip-components=1 --no-same-owner -xvf skel.tar
+	chmod -vR 755 /usr 
+	chmod -vR 755 /etc
+	
