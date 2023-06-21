@@ -1,23 +1,32 @@
-# Container inheritence
+# Images
+- rocky8.sif  
+  - rocky8vis.sif
+    - rocky8vdt.sif
 
-- rocky8.sif
-- rocky8vis.sif
-- vdt_base.sif
+## rocky8.sif  
+Contains image modelled on NeSI env.
 
+## rocky8vis.sif  
+Contains visualisation tools.
 
+## rocky8vdt.sif  
+Specific container used for this package.
 
 # Custom plugins
-# Global desktop files
+
+# Paths
+## Global desktop files
 /usr/share/xfce4/panel/plugins
 /usr/share/applications
 
-# Local desktop files
+## Local desktop files
 ~/.local/share/applications
 ./.config/xfce4/panel/
 xfce4-panel -r
 
-
-
+# Skel
+pseudo skel files 
+/etc/skel/
 ## Modifying 'skel' files.
 ```
 cd sif
