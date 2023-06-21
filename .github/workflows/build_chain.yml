@@ -2,7 +2,6 @@
 # TODO ensure artefacts have limited lifetime on github packages
 # TODO cancel current workflow if new run on the same branch, see https://stackoverflow.com/a/67939898
 name: Build container image
-
 on:
   workflow_dispatch:
   push:
@@ -26,23 +25,26 @@ jobs:
           sudo apt-get install -y ./${APPTAINER_SRC##*/}"
       - uses: actions/checkout@v3
       - name: Build First Container
-      - run: export IMAGE_NAME="rocky8"
-      - run: sudo apptainer build ${IMAGE_NAME}.sif ${IMAGE_NAME}.def
-        working-directory: ./sif        
-      - run: |
-          echo ${{ secrets.GITHUB_TOKEN }} | singularity remote login -u ${{ secrets.GHCR_USERNAME }} --password-stdin oras://ghcr.io
-          singularity push conf/rocky8.sif "oras://ghcr.io/${GITHUB_REPOSITORY}/${IMAGE_NAME}:latest
+        working-directory: ./sif    
+        env:
+          IMAGE_NAME: rocky8
+        run: |
+           sudo apptainer build ${IMAGE_NAME}.sif ${IMAGE_NAME}.def
+           echo ${{ secrets.GITHUB_TOKEN }} | singularity remote login -u ${{ secrets.GHCR_USERNAME }} --password-stdin oras://ghcr.io
+           singularity push ${IMAGE_NAME}.sif "oras://ghcr.io/${GITHUB_REPOSITORY}/${IMAGE_NAME}:latest
       - name: Build Second Container
-      - run: export IMAGE_NAME="rocky8vis"
-      - run: sudo apptainer build ${IMAGE_NAME}.sif ${IMAGE_NAME}.def
-        working-directory: ./sif        
-      - run: |
-          echo ${{ secrets.GITHUB_TOKEN }} | singularity remote login -u ${{ secrets.GHCR_USERNAME }} --password-stdin oras://ghcr.io
-          singularity push conf/rocky8.sif "oras://ghcr.io/${GITHUB_REPOSITORY}/${IMAGE_NAME}:latest
+        working-directory: ./sif    
+        env:
+          IMAGE_NAME: rocky8vis
+        run: |
+           sudo apptainer build ${IMAGE_NAME}.sif ${IMAGE_NAME}.def
+           echo ${{ secrets.GITHUB_TOKEN }} | singularity remote login -u ${{ secrets.GHCR_USERNAME }} --password-stdin oras://ghcr.io
+           singularity push ${IMAGE_NAME}.sif "oras://ghcr.io/${GITHUB_REPOSITORY}/${IMAGE_NAME}:latest
       - name: Build Third Container
-      - run: export IMAGE_NAME="rocky8vdt"
-      - run: sudo apptainer build ${IMAGE_NAME}.sif ${IMAGE_NAME}.def
-        working-directory: ./sif        
-      - run: |
-          echo ${{ secrets.GITHUB_TOKEN }} | singularity remote login -u ${{ secrets.GHCR_USERNAME }} --password-stdin oras://ghcr.io
-          singularity push conf/rocky8.sif "oras://ghcr.io/${GITHUB_REPOSITORY}/${IMAGE_NAME}:latest
+        working-directory: ./sif    
+        env:
+          IMAGE_NAME: rocky8vdt
+        run: |
+           sudo apptainer build ${IMAGE_NAME}.sif ${IMAGE_NAME}.def
+           echo ${{ secrets.GITHUB_TOKEN }} | singularity remote login -u ${{ secrets.GHCR_USERNAME }} --password-stdin oras://ghcr.io
+           singularity push ${IMAGE_NAME}.sif "oras://ghcr.io/${GITHUB_REPOSITORY}/${IMAGE_NAME}:latest
