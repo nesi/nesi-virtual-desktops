@@ -1,0 +1,77 @@
+Bootstrap: library
+From: cal/mahuika/rocky8-nesi:vis
+%help
+    see https://github.com/nesi/nesi-virtual-desktops
+%post
+	
+    export FIREFOX_VERSION=95.0
+    export VGL_VERSION=2.6.3
+    export DESKTOP_VERSION=3.0
+    export REPOPATH="https://github.com/nesi/nesi-virtual-desktops/"
+
+    systemctl set-default graphical.target
+    
+    yum -y install epel-release 
+    yum -y install dnf-plugins-core
+    yum -y install glibc-langpack-en
+	
+    # ANSYS DEPS 
+    #yum -y install alsa-lib at-spi2-atk at-spi2-core atk avahi-libs bzip2-libs cyrus-sasl-lib elfutils-libelf elfutils-libs
+
+    yum -y groupinstall "Xfce"
+    yum -y install xfce4-terminal # not in epel for some reason?
+    yum -y install gnome-terminal # Good backup terminal.
+
+    yum -y install libXp # For ANSYS EM
+    yum -y install libX11
+    yum -y install libXext
+
+    yum -y install mesa-libGL
+    yum -y install mesa-libGL-devel
+    yum -y install mesa-libGLU
+    yum -y install mesa-libGLU-devel
+
+    # Non essential stuff below.
+    set +e
+
+    # Install Firefox
+    wget http://ftp.mozilla.org/pub/firefox/releases/${FIREFOX_VERSION}/linux-x86_64/en-US/firefox-${FIREFOX_VERSION}.tar.bz2
+    tar -jxvf firefox-${FIREFOX_VERSION}.tar.bz2 -C /usr/local/
+    ln -s /usr/local/firefox/firefox /usr/bin/firefox
+
+    # Install Chrome
+    wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
+    yum localinstall google-chrome-stable_current_x86_64.rpm
+    # Patch webs for nicer messages
+    wget $REPOPATH/raw/main/dep/nesi_websockify.patch
+    patch --verbose /opt/websockify/websockify/websocketproxy.py < nesi_websockify.patch
+
+    # VScode
+    # Comment out for now to speed up build.
+    rpm --import https://packages.microsoft.com/keys/microsoft.asc
+    echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> /etc/yum.repos.d/vscode.repo
+    yum -y install code
+
+    #GPU stuff 
+    #distribution=$(. /etc/os-release;echo $ID$VERSION_ID) && curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.repo | sudo tee /etc/yum.repos.d/nvidia-docker.repo
+    #yum clean expire-cache
+
+    #==========================#
+    # XDG STUFF
+    #==========================#
+
+    # Mainy doing this to set rather than mkdir
+    mkdir -pv "${XDG_CONFIG_DIRS:=/etc/xdg}"
+
+    # Some of these no longer being installed
+    rm -vf /usr/share/applications/xfce4-power-manager-settings.desktop 
+    rm -vf /usr/share/applications/xfce4-session-logout.desktop
+    rm -vf /etc/xdg/autostart/xfce-polkit.desktop
+
+	
+    # "Skel" files applied at build.
+    wget $REPOPATH/raw/main/sif/skel.tar
+    tar --strip-components=1 --no-same-owner -xvf skel.tar
+    chmod -vR 755 /usr 
+    chmod -vR 755 /etc
+	
