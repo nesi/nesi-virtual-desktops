@@ -31,7 +31,7 @@ jobs:
         run: |
            sudo apptainer build ${IMAGE_NAME}.sif ${IMAGE_NAME}.def
            echo ${{ secrets.GITHUB_TOKEN }} | singularity remote login -u ${{ secrets.GHCR_USERNAME }} --password-stdin oras://ghcr.io
-           singularity push ${IMAGE_NAME}.sif "oras://ghcr.io/${GITHUB_REPOSITORY}/${IMAGE_NAME}:latest
+           singularity push ${IMAGE_NAME}.sif "oras://ghcr.io/${GITHUB_REPOSITORY}/${IMAGE_NAME}:latest"
       - name: Build Second Container
         working-directory: ./sif    
         env:
@@ -39,7 +39,7 @@ jobs:
         run: |
            sudo apptainer build ${IMAGE_NAME}.sif ${IMAGE_NAME}.def
            echo ${{ secrets.GITHUB_TOKEN }} | singularity remote login -u ${{ secrets.GHCR_USERNAME }} --password-stdin oras://ghcr.io
-           singularity push ${IMAGE_NAME}.sif "oras://ghcr.io/${GITHUB_REPOSITORY}/${IMAGE_NAME}:latest
+           singularity push ${IMAGE_NAME}.sif "oras://ghcr.io/${GITHUB_REPOSITORY}/${IMAGE_NAME}:latest"
       - name: Build Third Container
         working-directory: ./sif    
         env:
@@ -47,4 +47,4 @@ jobs:
         run: |
            sudo apptainer build ${IMAGE_NAME}.sif ${IMAGE_NAME}.def
            echo ${{ secrets.GITHUB_TOKEN }} | singularity remote login -u ${{ secrets.GHCR_USERNAME }} --password-stdin oras://ghcr.io
-           singularity push ${IMAGE_NAME}.sif "oras://ghcr.io/${GITHUB_REPOSITORY}/${IMAGE_NAME}:latest
+           singularity push ${IMAGE_NAME}.sif "oras://ghcr.io/${GITHUB_REPOSITORY}/${IMAGE_NAME}:latest"
