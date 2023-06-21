@@ -1,7 +1,11 @@
 # Images
-- rocky8.sif  
-  - rocky8vis.sif
-    - rocky8vdt.sif
+ rocky8.sif 
+     |
+     V
+ rocky8vis.sif
+     |
+     V
+ rocky8vdt.sif
 
 ## rocky8.sif  
 Contains image modelled on NeSI env.
