@@ -7,7 +7,7 @@ From: rockylinux/rockylinux:8.5
     yum -y install dnf-plugins-core
     yum -y install glibc-langpack-en
     
-    PYTHON_VERSION=3.9  # also used later
+    PYTHON_VERSION=39  # also used later
     yum -y module install python$PYTHON_VERSION  # Why is the module not "python3"!
     yum -y module install swig:4.0  # rather than 3.0
     yum -y module install ruby:2.7  # rather than 2.5
