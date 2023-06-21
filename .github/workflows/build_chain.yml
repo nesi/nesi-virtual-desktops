@@ -22,7 +22,7 @@ jobs:
       - name: Install Apptainer
         run: |
           wget $APPTAINER_SRC
-          sudo apt-get install -y ./${APPTAINER_SRC##*/}"
+          sudo apt-get install -y ./${APPTAINER_SRC##*/}
       - uses: actions/checkout@v3
       - name: Build First Container
         working-directory: ./sif    
