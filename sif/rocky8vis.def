@@ -1,5 +1,5 @@
-Bootstrap: library
-From: cal/mahuika/rocky8-nesi:base
+Bootstrap: ghcr.io
+From: nesi/nesi-virtual-desktops/rocky8:latest
 
 %post
     wget -q https://sourceforge.net/projects/virtualgl/files/2.6.5/VirtualGL-2.6.5.x86_64.rpm
