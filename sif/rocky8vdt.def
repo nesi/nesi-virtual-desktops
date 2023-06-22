@@ -1,5 +1,6 @@
-Bootstrap: library
-From: cal/mahuika/rocky8-nesi:vis
+Bootstrap: oras
+From: ghcr.io/nesi/nesi-virtual-desktops/rocky8vis:latest
+
 %help
     see https://github.com/nesi/nesi-virtual-desktops
 %post
