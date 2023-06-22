@@ -1,13 +1,15 @@
+# if way to detect what file changed, then all actions can go in this file.
 name: Build rocky8vis image
 on:
-  workflow_dispatch:
+  registry_package:
   push:
     paths:
       - "sif/rocky8vis.def"
-env:
-  APPTAINER_SRC: "https://github.com/apptainer/apptainer/releases/download/v1.1.0-rc.2/apptainer_1.1.0-rc.2_amd64.deb"
 jobs:
-  build-rocky8vis:
+  build-rocky8vis:       
+    if: |
+      ( ${{ github.event_name }} == 'registry_package' && ${{ github.registry_package.name == 'rocky8' }} ) ||
+      ( ${{ github.event_name == 'push' }} )
     uses: ./.github/workflows/build.yml
     with:
         image-name: rocky8vis

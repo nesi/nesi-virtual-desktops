@@ -1,11 +1,8 @@
 name: Build rocky8 image
 on:
-  workflow_dispatch:
   push:
     paths:
       - "sif/rocky8.def"
-env:
-  APPTAINER_SRC: "https://github.com/apptainer/apptainer/releases/download/v1.1.0-rc.2/apptainer_1.1.0-rc.2_amd64.deb"
 jobs:
   build-rocky8:
     uses: ./.github/workflows/build.yml

@@ -1,8 +1,15 @@
 
-# TODO ensure artefacts have limited lifetime on github packages
-# TODO cancel current workflow if new run on the same branch, see https://stackoverflow.com/a/67939898
 name: Build container images
 on:
+  workflow_dispatch:
+    inputs:
+      image-name:
+        required: true
+        type: choice
+        options: 
+        - rocky8
+        - rocky8vis
+        - rocky8vdt
   workflow_call:
     inputs:
       image-name:
