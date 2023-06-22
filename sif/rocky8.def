@@ -1,0 +1,100 @@
+Bootstrap: docker
+From: rockylinux/rockylinux:8.5
+
+%post
+    yum -y upgrade
+    
+    yum -y install dnf-plugins-core
+    yum -y install glibc-langpack-en
+    
+    PYTHON_VERSION=3.9  # also used later
+    yum -y module install python${PYTHON_VERSION//./}  # Why is the module not "python3"!
+    yum -y module install swig:4.0  # rather than 3.0
+    yum -y module install ruby:2.7  # rather than 2.5
+    yum -y module install postgresql:13/client # rather than 10/server
+    yum -y module install subversion:1.14  # rather than 1.10
+    #yum -y module install perl:5.30  # rather than 5.26
+    
+    yum -y install yum-utils
+    yum-config-manager -y --enable powertools
+    yum -y install epel-release
+    yum-config-manager -y --enable epel
+    
+    yum -y install --allowerasing coreutils  # coreutils-single doesn't provide /usr/bin/pinky
+    yum -y install --allowerasing libcurl    # libcurl-minimal doesn't include ssh access
+    yum -y install man
+    yum -y install man-pages 
+    
+    # System things, these are just guesses, no doubt there are many more needed
+    yum -y install logrotate net-tools nvme-cli sssd tcpdump
+    yum -y install golang-github-prometheus-node-exporter
+    
+    # Slurm
+    # Note: brings in things for which we might want to add -devel packages: hdf5, libgfortram
+    # yum -y install slurm slurm-pmi slurm-perlapi
+
+    # Infiniband
+    #yum -y group install 'Infiniband Support'
+    #yum -y install libibverbs
+    #yum -y install libibverbs-utils
+    yum -y install librdmacm
+    #yum -y install librdmacm-utils
+    #yum -y install rdma-core
+    yum -y install ibacm
+    #yum -y install infiniband-diags
+    #yum -y install libibmad
+    #yum -y install libibumad
+    
+    # Tools
+    yum -y install bison byacc flex                                        # parsing
+    yum -y install gnuplot intltool dos2unix GraphicsMagick jq             # misc
+    yum -y install man-pages gdb ctags patchutils diffutils                # dev
+    yum -y install libtool m4 autoconf automake make patch                 # building
+    yum -y install wget curl rsync mailx telnet lynx                       # network
+    yum -y install bzip2 zip unzip bsdtar p7zip                            # compression
+    yum -y install which time sudo strace ltrace lsof quota file patchelf  # system
+    yum -y install psmisc                                                  # system
+    yum -y install munge Lmod datamash stress pigz                         # HPC
+    yum -y install perl ruby bc                                            # interpreters
+    yum -y install subversion git git-lfs                                  # version control
+    yum -y install vim-enhanced emacs emacs-nox nano gedit micro ed        # editors
+    yum -y install fish zsh ksh tcsh bash-completion                       # shells
+    yum -y install tmux screen mc tree htop pspg expect                    # terminal things
+    yum -y install pdsh pdsh-rcmd-ssh   # pdsh-mod-slurm                   # pdsh
+    yum -y install xterm xorg-x11-server-Xvfb                              # X11
+    
+    # Libraries which user programs can reasonably build against
+    function install_devel {
+        yum -y install ${@/%/-devel}
+    }
+    install_devel glibc glib2 libcurl libdb libdrm libffi libidn libssh2 gdbm
+    install_devel munge libjwt json-c compat-lua                                       # slurm
+    install_devel readline ncurses                                                     # terminal 
+    install_devel cairo gd fontconfig libfontenc freetype graphite2 harfbuzz           # drawing and fonts
+    install_devel jbigkit libjpeg-turbo libpng libtiff giflib libwebp                  # images
+    install_devel expat gettext libunistring libxml2 libxslt pcre pcre2                # text
+    install_devel libICE libX11 libXdmcp libXext libXfont2 libXrandr libXrender libXaw # X11
+    install_devel libXft libXmu libXpm libXScrnSaver libXt libXtst libXv libxkbfile    # X11
+    install_devel libxshmfence libxcb freeglut motif gtk2 gtk3 qt5-qtbase tcl tk       # GUIs
+    install_devel bzip2 libzstd lzo snappy xz zlib libarchive                          # compression
+    install_devel hwloc numactl lm_sensors                                             # hardware
+    install_devel mariadb-connector-c libquadmath java-latest-openjdk numactl          # misc
+    
+    # For existing binaries
+    yum -y install libpng12 libpng15
+    yum -y install compat-openssl10 ncurses-compat-libs   # and compat-libtiff3 ?
+    yum -y install libnsl
+    
+    yum-config-manager -y --enable baseos-debug
+    yum -y install glibc-debuginfo
+    
+    yum -y install python${PYTHON_VERSION//./}-psycopg2 
+    pip${PYTHON_VERSION} install sqlalchemy
+    pip${PYTHON_VERSION} install python-dateutil
+    pip${PYTHON_VERSION} install click-completion
+    alternatives --set python /usr/bin/python3
+    
+    # Experimental below here
+    set +e
+    
+    yum clean all    # Save 75 MB?
