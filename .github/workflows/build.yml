@@ -6,6 +6,7 @@ on:
       image-name:
         required: true
         type: choice
+        description: 'Dependant images will also be rebuilt'
         options: 
         - rocky8
         - rocky8vis
