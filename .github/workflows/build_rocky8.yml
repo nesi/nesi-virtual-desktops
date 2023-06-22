@@ -8,6 +8,6 @@ env:
   APPTAINER_SRC: "https://github.com/apptainer/apptainer/releases/download/v1.1.0-rc.2/apptainer_1.1.0-rc.2_amd64.deb"
 jobs:
   build-rocky8:
-    uses: nesi-virtual-desktops/.github/workflows/build.yml@v1
+    uses: ./.github/workflows/build.yml@v1
     with:
         image-name: rocky8
