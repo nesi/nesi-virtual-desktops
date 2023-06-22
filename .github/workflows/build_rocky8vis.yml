@@ -1,4 +1,4 @@
-name: Build rocky8 image
+name: Build rocky8vis image
 on:
   workflow_dispatch:
   push:
@@ -7,7 +7,7 @@ on:
 env:
   APPTAINER_SRC: "https://github.com/apptainer/apptainer/releases/download/v1.1.0-rc.2/apptainer_1.1.0-rc.2_amd64.deb"
 jobs:
-  build:
-    uses: container-build-chain/.github/workflows/build.yml@v1
+  build-rocky8vis:
+    uses: nesi-virtual-desktops/.github/workflows/build.yml@v1
     with:
         image-name: rocky8vis
