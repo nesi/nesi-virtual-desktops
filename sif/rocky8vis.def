@@ -1,4 +1,4 @@
-Bootstrap: docker
+Bootstrap: oras
 From: ghcr.io/nesi/nesi-virtual-desktops/rocky8:latest
 
 %post
