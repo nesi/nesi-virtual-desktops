@@ -8,10 +8,11 @@ on:
 jobs:
   test:   
       runs-on: ubuntu-latest
-      steps: |
-         echo "event name: ${{ github.event_name }}"
-         echo "event name: ${{ github.registry_package }}"
-         echo "event name: ${{ github.registry_package.name }}"
+      steps:
+          - run: |
+              echo "event name: ${{ github.event_name }}"
+              echo "event name: ${{ github.registry_package }}"
+              echo "event name: ${{ github.registry_package.name }}"
 
   build-rocky8vis:       
     if: |
