@@ -5,7 +5,7 @@
 ### Basic
 See [Connecting to a Virtual Desktop](https://support.nesi.org.nz/hc/en-gb/articles/360001600235-Connecting-to-a-Virtual-Desktop).
 ### Through JupyterHub
-Click the button ya dummy.
+Click the icon labelled 'VirtualDesktop'. The desktop instance will last as long as your Jupyter session.
 #### Installation
 
 TODO: Setup scripts.
