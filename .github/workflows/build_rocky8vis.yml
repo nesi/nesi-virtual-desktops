@@ -6,6 +6,13 @@ on:
     paths:
       - "sif/rocky8vis.def"
 jobs:
+  test:   
+      runs-on: ubuntu-latest
+      steps: |
+         echo "event name: ${{ github.event_name }}"
+         echo "event name: ${{ github.registry_package }}"
+         echo "event name: ${{ github.registry_package.name }}"
+
   build-rocky8vis:       
     if: |
       ( ${{ github.event_name }} == 'registry_package' && ${{ github.registry_package.name == 'rocky8' }} ) ||
