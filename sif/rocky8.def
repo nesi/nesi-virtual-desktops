@@ -31,7 +31,7 @@ From: rockylinux/rockylinux:8.5
     
     # Slurm
     # Note: brings in things for which we might want to add -devel packages: hdf5, libgfortram
-    # yum -y install slurm slurm-pmi slurm-perlapi
+    yum -y install slurm slurm-pmi slurm-perlapi slurm-libpmi
 
     # Infiniband
     #yum -y group install 'Infiniband Support'
