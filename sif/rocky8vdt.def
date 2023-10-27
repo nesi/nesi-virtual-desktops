@@ -11,30 +11,26 @@ From: ghcr.io/nesi/nesi-virtual-desktops/rocky8vis:latest
     export REPOPATH="https://github.com/nesi/nesi-virtual-desktops/"
 
     systemctl set-default graphical.target
-    
-    dnf -y install dnf-plugins-core
-    dnf -y install glibc-langpack-en
-	
+    	
     # ANSYS DEPS 
     #yum -y install alsa-lib at-spi2-atk at-spi2-core atk avahi-libs bzip2-libs cyrus-sasl-lib elfutils-libelf elfutils-libs
 
     dnf -y groupinstall "Xfce"
-    dnf -y install xfce4-terminal # not in epel for some reason?
     dnf -y install gnome-terminal # Good backup terminal.
 
     # Non essential stuff below.
     set +e
 
     # Install Firefox
-    wget http://ftp.mozilla.org/pub/firefox/releases/${FIREFOX_VERSION}/linux-x86_64/en-US/firefox-${FIREFOX_VERSION}.tar.bz2
+    wget -nv  http://ftp.mozilla.org/pub/firefox/releases/${FIREFOX_VERSION}/linux-x86_64/en-US/firefox-${FIREFOX_VERSION}.tar.bz2
     tar -jxvf firefox-${FIREFOX_VERSION}.tar.bz2 -C /usr/local/
     ln -s /usr/local/firefox/firefox /usr/bin/firefox
 
     # Install Chrome
-    wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
+    wget -nv  https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
     yum localinstall google-chrome-stable_current_x86_64.rpm
     # Patch webs for nicer messages
-    wget $REPOPATH/raw/main/dep/nesi_websockify.patch
+    wget -nv  $REPOPATH/raw/main/dep/nesi_websockify.patch
     patch --verbose /opt/websockify/websockify/websocketproxy.py < nesi_websockify.patch
 
     # VScode
@@ -61,8 +57,8 @@ From: ghcr.io/nesi/nesi-virtual-desktops/rocky8vis:latest
 
 	
     # "Skel" files applied at build.
-    wget $REPOPATH/raw/main/sif/skel.tar
+    wget -nv  $REPOPATH/raw/main/sif/skel.tar
     tar --strip-components=1 --no-same-owner -xvf skel.tar
-    chmod -vR 755 /usr 
-    chmod -vR 755 /etc
+    chmod -R 755 /usr 
+    chmod -R 755 /etc
 	
