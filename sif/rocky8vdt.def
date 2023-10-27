@@ -12,25 +12,15 @@ From: ghcr.io/nesi/nesi-virtual-desktops/rocky8vis:latest
 
     systemctl set-default graphical.target
     
-    yum -y install epel-release 
-    yum -y install dnf-plugins-core
-    yum -y install glibc-langpack-en
+    dnf -y install dnf-plugins-core
+    dnf -y install glibc-langpack-en
 	
     # ANSYS DEPS 
     #yum -y install alsa-lib at-spi2-atk at-spi2-core atk avahi-libs bzip2-libs cyrus-sasl-lib elfutils-libelf elfutils-libs
 
-    yum -y groupinstall "Xfce"
-    yum -y install xfce4-terminal # not in epel for some reason?
-    yum -y install gnome-terminal # Good backup terminal.
-
-    yum -y install libXp # For ANSYS EM
-    yum -y install libX11
-    yum -y install libXext
-
-    yum -y install mesa-libGL
-    yum -y install mesa-libGL-devel
-    yum -y install mesa-libGLU
-    yum -y install mesa-libGLU-devel
+    dnf -y groupinstall "Xfce"
+    dnf -y install xfce4-terminal # not in epel for some reason?
+    dnf -y install gnome-terminal # Good backup terminal.
 
     # Non essential stuff below.
     set +e
