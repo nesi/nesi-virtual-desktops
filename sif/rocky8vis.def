@@ -4,8 +4,9 @@ From: ghcr.io/nesi/nesi-virtual-desktops/rocky8:latest
 %post
 
     dnf config-manager --set-enabled powertools
+    dnf config-manager --set-enabled devel
 
-    dnf -y install qt5-devel
+    dnf -y install qt5-devel qt5-qtbase-devel
 
     dnf -y copr enable stenstorp/lightdm
     dnf -y --setopt=group_package_types="mandatory" groupinstall "xfce" # Most default is trash.
@@ -23,7 +24,7 @@ From: ghcr.io/nesi/nesi-virtual-desktops/rocky8:latest
 
     # Websockify
     mkdir -p /opt/websockify
-  	wget -nv https://github.com/novnc/websockify/archive/master.tar.gz -q -O - | tar xzf - -C /opt/websockify --strip-components=1
+    wget -nv https://github.com/novnc/websockify/archive/master.tar.gz -q -O - | tar xzf - -C /opt/websockify --strip-components=1
 	
     # noVNC
     mkdir -p /opt/noVNC
