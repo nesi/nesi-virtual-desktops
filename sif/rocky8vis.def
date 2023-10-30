@@ -6,7 +6,8 @@ From: ghcr.io/nesi/nesi-virtual-desktops/rocky8:latest
     dnf config-manager --set-enabled powertools
     dnf config-manager --set-enabled devel
 
-    dnf -y install qt5-devel qt5-qtbase-devel
+    dnf -y install qt5-devel qt5-qtbase-devel mesa-libGLU-devel
+
 
     dnf -y copr enable stenstorp/lightdm
     dnf -y --setopt=group_package_types="mandatory" groupinstall "xfce" # Most default is trash.
